@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Market Signals</title>
+<style>
+  :root {
+    color-scheme: light;
+    --page: #f9f9f7; --surface: #fcfcfb; --ink: #0b0b0b; --ink-2: #52514e; --muted: #898781;
+    --grid: #e1e0d9; --ring: rgba(11, 11, 11, 0.10); --track: #ecebe6; --good: #0ca30c;
+    /* diverging pair: blue = beat Nifty, red = lagged, grey = no real move */
+    --up: #2a78d6; --down: #e34948; --mid: #a3a29b;
+    --up-bg: color-mix(in srgb, var(--up) 12%, transparent); --down-bg: color-mix(in srgb, var(--down) 12%, transparent);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
+      --grid: #2c2c2a; --ring: rgba(255, 255, 255, 0.10); --track: #2a2a28;
+      --up: #3987e5; --down: #e66767; --mid: #6d6c66;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--ink); font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 1120px; margin: 0 auto; padding: 28px 16px 48px; }
+  header { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; justify-content: space-between; margin-bottom: 22px; }
+  h1 { font-size: 22px; font-weight: 650; margin: 0; }
+  .sub { color: var(--ink-2); margin: 2px 0 0; max-width: 680px; }
+  nav a { color: var(--ink-2); font-size: 13px; text-decoration: none; border-bottom: 1px solid var(--grid); }
+  .live { display: inline-flex; align-items: center; gap: 8px; color: var(--ink-2); font-size: 13px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--good); }
+  .card { background: var(--surface); border: 1px solid var(--ring); border-radius: 12px; padding: 18px 20px; }
+  .card h2 { font-size: 15px; font-weight: 600; margin: 0; }
+  .why { color: var(--muted); font-size: 13px; margin: 2px 0 14px; }
+  .grid { display: grid; gap: 14px; }
+  .kpis { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); margin-bottom: 14px; }
+  .two { grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); margin: 14px 0; }
+  .kpi .label { color: var(--ink-2); font-size: 13px; }
+  .kpi .value { font-size: 28px; font-weight: 650; margin: 2px 0; font-variant-numeric: tabular-nums; }
+  .kpi .value small { font-size: 15px; color: var(--muted); font-weight: 500; }
+  .kpi .note { color: var(--muted); font-size: 12px; }
+
+  /* signal rows: one per sentiment, bar = average 3-day return vs Nifty around a zero line */
+  .sig { display: grid; grid-template-columns: 96px 1fr 70px; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--grid); }
+  .sig:last-child { border-bottom: 0; }
+  .track { position: relative; height: 22px; }
+  .track::before { content: ""; position: absolute; left: 50%; top: -4px; bottom: -4px; width: 1px; background: var(--ink-2); opacity: .5; }
+  .track i { position: absolute; top: 4px; height: 14px; border-radius: 4px; }
+  .sig .v { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .sig small { display: block; color: var(--muted); font-size: 12px; font-weight: 400; }
+  .spread { margin-top: 12px; padding: 10px 12px; border-radius: 8px; background: var(--track); color: var(--ink-2); font-size: 13px; }
+  .spread b { color: var(--ink); }
+
+  .scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th { text-align: left; font-weight: 500; color: var(--muted); font-size: 12px; padding: 0 10px 8px 0; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+  td { padding: 9px 10px 9px 0; border-bottom: 1px solid var(--grid); vertical-align: top; }
+  tr:last-child td { border-bottom: 0; }
+  td.num, th.num { text-align: right; white-space: nowrap; }
+  .head { max-width: 460px; }
+  .co { color: var(--muted); font-size: 12px; display: block; }
+  .chip { display: inline-flex; align-items: center; gap: 5px; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+  .chip.positive { background: var(--up-bg); color: var(--up); }
+  .chip.negative { background: var(--down-bg); color: var(--down); }
+  .chip.neutral, .chip.unclear { background: var(--track); color: var(--ink-2); }
+  .cat { color: var(--ink-2); font-size: 12px; white-space: nowrap; }
+  .ret.up { color: var(--up); font-weight: 600; } .ret.down { color: var(--down); font-weight: 600; } .ret.flat { color: var(--muted); }
+  .how { color: var(--muted); font-size: 12px; white-space: nowrap; }
+  .catrow { display: grid; grid-template-columns: 1fr 60px 70px; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--grid); font-size: 13px; }
+  .catrow:last-child { border-bottom: 0; }
+  .catrow span:not(:first-child) { text-align: right; font-variant-numeric: tabular-nums; }
+  .note { color: var(--muted); font-size: 12px; margin-top: 10px; }
+  .empty { color: var(--muted); padding: 12px 0; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div>
+      <h1>Market Signals</h1>
+      <p class="sub">Small Llamas label Indian small-cap headlines (Apr–Oct 2026) as positive, negative or neutral. Here's what each stock actually did over the next 3 trading days, compared with the Nifty index.</p>
+    </div>
+    <div style="text-align:right">
+      <div class="live"><span class="dot"></span><span id="updated">connecting…</span></div>
+      <nav><a href="/">← Home</a></nav>
+    </div>
+  </header>
+
+  <section class="grid kpis">
+    <div class="card kpi"><div class="label">Headlines labelled</div><div class="value" id="k-done">–</div><div class="note" id="k-done-note"></div></div>
+    <div class="card kpi"><div class="label">Labels kept</div><div class="value" id="k-kept">–</div><div class="note">all 3 voters agreed, now or after the hint</div></div>
+    <div class="card kpi"><div class="label">Re-checking with a hint</div><div class="value" id="k-hint">–</div><div class="note">voters disagreed; judge gave one hint, never the answer</div></div>
+    <div class="card kpi"><div class="label">Label matched the price</div><div class="value" id="k-match">–</div><div class="note" id="k-match-note"></div></div>
+    <div class="card kpi"><div class="label">Signal spread</div><div class="value" id="k-spread">–</div><div class="note">positive minus negative, avg 3-day return vs Nifty</div></div>
+  </section>
+
+  <section class="card">
+    <h2>Does the label line up with the move?</h2>
+    <p class="why">Average return vs Nifty over the 3 trading days after the headline, grouped by the network's label. A bar to the right means the stocks beat the index.</p>
+    <div id="signals"><div class="empty">No labelled headlines yet.</div></div>
+    <div class="spread" id="spread-note">The spread appears once both positive and negative headlines are labelled.</div>
+  </section>
+
+  <section class="card" style="margin-top:14px">
+    <h2>Judge</h2>
+    <p class="why">The judge only steps in when the 3 voters disagree. It gives one hint, never the answer; 3 fresh votes must then all agree.</p>
+    <div id="judge"></div>
+    <h2 style="margin-top:18px">What the hint achieved</h2>
+    <p class="why">Headlines that went to a hint round and finished it. Without the hint, all of them would have been thrown away.</p>
+    <div class="bar" id="hint-bar" style="display:flex;gap:2px;height:14px;border-radius:7px;overflow:hidden;background:var(--track)"></div>
+    <div id="hint-effect" style="margin-top:10px"></div>
+  </section>
+
+  <section class="grid two">
+    <div class="card">
+      <h2>By kind of headline</h2>
+      <p class="why">Which kinds of news moved the stock? Average 3-day return vs Nifty.</p>
+      <div class="catrow" style="color:var(--muted);font-size:12px"><span>Category</span><span>Count</span><span>Avg 3d</span></div>
+      <div id="cats"><div class="empty">–</div></div>
+    </div>
+    <div class="card">
+      <h2>How to read this</h2>
+      <p class="why" style="margin-bottom:8px">This is a test of label quality, not a trading tip.</p>
+      <p style="margin:0 0 8px">Nodes see only the headline and the company name, never the price. Returns are filled in from real market data after a label is settled.</p>
+      <p style="margin:0 0 8px">If the consensus labels are meaningful, <b>positive</b> headlines should beat the index more often than <b>negative</b> ones. A gap near zero means the labels carry no price signal.</p>
+      <p style="margin:0;color:var(--muted)">Up / down = beat or lagged Nifty by more than 1%. Past headlines only; earlier trading tests on this data never beat random picks.</p>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Latest labelled headlines</h2>
+    <p class="why">Newest settled labels first, with what the stock did next.</p>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Date</th><th>Headline</th><th>Signal</th><th>Kind</th><th>Decided by</th><th class="num">3-day vs Nifty</th><th class="num">Match</th></tr></thead>
+        <tbody id="feed"></tbody>
+      </table>
+    </div>
+    <div class="empty" id="feed-empty">Waiting for the first settled labels…</div>
+  </section>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+const pct = (x, d = 2) => (x == null || isNaN(x) ? "–" : (x > 0 ? "+" : "") + Number(x).toFixed(d) + "%");
+const CAT = { earnings: "Earnings", analyst: "Analyst call", price_move: "Price move", deal_order: "Deal / order", corporate_action: "Corporate action",
+  regulatory_legal: "Regulatory / legal", management: "Management", listicle_promo: "Listicle / promo", other: "Other", unclear: "Unclear", "?": "–" };
+const ICON = { positive: "▲", negative: "▼", neutral: "●", unclear: "?" };
+const SENT_ORDER = ["positive", "neutral", "negative", "unclear"];
+
+// Did the price go the way the label suggests? positive → beat Nifty by >1%, negative → lagged by >1%,
+// neutral → stayed within ±1%. Unclear labels aren't scored.
+function matches(s, d3) {
+  if (d3 == null || !["positive", "negative", "neutral"].includes(s)) return null;
+  return s === "positive" ? d3 > 1 : s === "negative" ? d3 < -1 : Math.abs(d3) <= 1;
+}
+const matchMark = (s, d3) => {
+  const m = matches(s, d3);
+  return m === null ? `<span class="how">–</span>` : m ? `<span style="color:var(--up);font-weight:700">✓</span>` : `<span style="color:var(--down);font-weight:700">✗</span>`;
+};
+
+function render(d) {
+  const c = d.counts;
+  const done = c.kept + c.dropped;
+  $("k-done").innerHTML = `${done.toLocaleString("en-IN")} <small>/ ${c.total.toLocaleString("en-IN")}</small>`;
+  $("k-done-note").textContent = `${c.pending.toLocaleString("en-IN")} still in first-round voting`;
+  $("k-kept").textContent = c.kept.toLocaleString("en-IN");
+  $("k-hint").textContent = (c.rechecking + c.waiting_hint).toLocaleString("en-IN");
+
+  const by = Object.fromEntries(d.by_sentiment.map((r) => [r.label, r]));
+  const rows = SENT_ORDER.filter((k) => by[k]);
+  const maxAbs = Math.max(1, ...rows.map((k) => Math.abs(by[k].avg_d3 || 0)));
+  $("signals").innerHTML = rows.length ? rows.map((k) => {
+    const r = by[k], v = r.avg_d3 || 0, w = (Math.abs(v) / maxAbs) * 48;
+    const color = k === "positive" ? "var(--up)" : k === "negative" ? "var(--down)" : "var(--mid)";
+    const left = v >= 0 ? 50 : 50 - w;
+    return `<div class="sig"><span><span class="chip ${k}">${ICON[k]} ${k}</span><small>${r.n} headlines</small></span>
+      <div class="track"><i style="left:${left}%;width:${Math.max(w, 0.6)}%;background:${color}"></i></div>
+      <span class="v">${pct(v)}<small>${Math.round((r.up_rate || 0) * 100)}% up · ${Math.round((r.down_rate || 0) * 100)}% down</small></span></div>`;
+  }).join("") : `<div class="empty">No labelled headlines yet.</div>`;
+  // Hit rate over all settled labels: share where the price went the way the label suggests.
+  const scored = ["positive", "negative", "neutral"].filter((k) => by[k]);
+  const hits = scored.reduce((s, k) => s + by[k].n * (k === "positive" ? by[k].up_rate : k === "negative" ? by[k].down_rate : 1 - by[k].up_rate - by[k].down_rate), 0);
+  const total = scored.reduce((s, k) => s + by[k].n, 0);
+  $("k-match").textContent = total ? Math.round((hits / total) * 100) + "%" : "–";
+  $("k-match-note").textContent = total ? `${Math.round(hits).toLocaleString("en-IN")} of ${total.toLocaleString("en-IN")} labels matched the move (random ≈ 33%)` : "";
+  if (by.positive && by.negative) {
+    const s = by.positive.avg_d3 - by.negative.avg_d3;
+    $("k-spread").textContent = pct(s);
+    $("spread-note").innerHTML = `Positive-labelled headlines averaged <b>${pct(by.positive.avg_d3)}</b>, negative ones <b>${pct(by.negative.avg_d3)}</b>: a gap of <b>${pct(s)}</b> over 3 days. Small samples swing a lot; this firms up as more headlines settle.`;
+  }
+
+  $("cats").innerHTML = d.by_category.length ? d.by_category.map((r) =>
+    `<div class="catrow"><span>${esc(CAT[r.label] || r.label)}</span><span>${r.n}</span><span class="ret ${r.avg_d3 > 1 ? "up" : r.avg_d3 < -1 ? "down" : "flat"}">${pct(r.avg_d3, 1)}</span></div>`).join("")
+    : `<div class="empty">–</div>`;
+
+  const J = { first: 0, hint: 0, partial: 0, dropped: 0, unclear: 0 };
+  for (const r of d.judge || []) {
+    if (r.status === "dropped") J.dropped += r.n;
+    else if (r.how === "unanimous") J.first += r.n;
+    else if (/^hint/.test(r.how)) J.hint += r.n;
+    else J.partial += r.n;
+    J.unclear += r.with_unclear || 0;
+  }
+  const JNAME = { "groq:openai/gpt-oss-120b": "GPT-OSS 120B (Groq)", "groq:qwen/qwen3.8-27b": "Qwen 3.8 27B (Groq)", "groq:openai/gpt-oss-20b": "GPT-OSS 20B (Groq)",
+    "@cf/meta/llama-3.3-70b-instruct-fp8-fast": "Llama 3.3 70B", "@cf/meta/llama-4-scout-17b-16e-instruct": "Llama 4 Scout", "openrouter:google/gemma-4-31b-it:free": "Gemma 4 31B" };
+  const jrow = (label, n, note) => `<div class="catrow"><span>${label}<span class="co">${note}</span></span><span></span><span style="font-weight:600">${n.toLocaleString("en-IN")}</span></div>`;
+  $("judge").innerHTML =
+    jrow("Kept · all 3 agreed first time", J.first, "no judge needed") +
+    jrow("Kept · agreed after the hint", J.hint, "judge hinted, 3 fresh votes all agreed") +
+    jrow("Kept in part", J.partial, "one label agreed, the other stayed unclear") +
+    jrow("Waiting for a hint", c.waiting_hint, "judge writes it within a minute") +
+    jrow("Re-checking with the hint", c.rechecking, "3 fresh votes in progress") +
+    jrow("Thrown out", J.dropped, "still no agreement after the hint") +
+    jrow("Hints written", (d.hint_models || []).reduce((s, h) => s + h.n, 0),
+      (d.hint_models || []).map((h) => `${esc(JNAME[h.model] || h.model)}: ${h.n}`).join(" · ") || "–");
+
+  const H = d.hint_effect || {};
+  const hp = (a) => (H.finished ? Math.round((a / H.finished) * 100) + "%" : "–");
+  $("hint-bar").innerHTML = H.finished ? [[H.full, "var(--up)"], [H.part, "var(--mid)"], [H.lost, "var(--down)"]]
+    .filter(([n]) => n > 0).map(([n, c]) => `<i style="display:block;flex-grow:${n};background:${c}"></i>`).join("") : "";
+  $("hint-effect").innerHTML = H.finished ?
+    jrow("Accepted after hint", H.full, `${hp(H.full)} · both labels agreed`) +
+    jrow("Partly accepted", H.part, `${hp(H.part)} · one label agreed, one unclear`) +
+    jrow("Rejected after hint", H.lost, `${hp(H.lost)} · still no agreement, thrown out`) +
+    jrow("Rescued in total", H.full + H.part, `out of ${H.finished.toLocaleString("en-IN")} headlines that needed a hint`) +
+    jrow("Disputed labels settled", H.fields_settled, `of ${H.fields.toLocaleString("en-IN")} labels the voters disagreed on (${H.fields ? Math.round((H.fields_settled / H.fields) * 100) : 0}%)`)
+    : `<div class="empty">No hint rounds finished yet.</div>`;
+
+  $("feed-empty").hidden = d.recent.length > 0;
+  $("feed").innerHTML = d.recent.map((r) => {
+    const [s, k] = String(r.final_answer || "").split("|");
+    const how = r.resolved_by === "unanimous" ? "3 of 3 agreed" : /^hint/.test(r.resolved_by) ? "agreed after hint" : r.resolved_by === "partial" ? "partly agreed" : esc(r.resolved_by);
+    const cls = r.d3 > 1 ? "up" : r.d3 < -1 ? "down" : "flat";
+    return `<tr><td class="how">${esc((r.date || "").slice(0, 10))}</td>
+      <td class="head">${esc(r.question)}<span class="co">${esc(r.company)} · ${esc((r.symbol || "").replace(/\.NS$/, ""))}</span></td>
+      <td><span class="chip ${esc(s)}">${ICON[s] || ""} ${esc(s)}</span></td>
+      <td class="cat">${esc(CAT[k] || k)}</td><td class="how">${how}</td>
+      <td class="num ret ${cls}">${pct(r.d3, 1)}</td><td class="num">${matchMark(s, r.d3)}</td></tr>`;
+  }).join("");
+  $("updated").textContent = "Live · updated " + new Date(d.now).toLocaleTimeString();
+}
+
+async function refresh() {
+  if (document.hidden) return;
+  try { render(await (await fetch("/api/news", { cache: "no-store" })).json()); }
+  catch { $("updated").textContent = "Reconnecting…"; }
+}
+refresh();
+setInterval(refresh, 5000);
+document.addEventListener("visibilitychange", refresh);
+</script>
+</body>
+</html>

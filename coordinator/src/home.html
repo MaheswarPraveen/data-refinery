@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Data Refinery</title>
+<style>
+  :root {
+    color-scheme: light;
+    --page: #f9f9f7; --surface: #fcfcfb; --ink: #0b0b0b; --ink-2: #52514e; --muted: #898781;
+    --grid: #e1e0d9; --ring: rgba(11, 11, 11, 0.10); --track: #ecebe6; --good: #0ca30c;
+    --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
+      --grid: #2c2c2a; --ring: rgba(255, 255, 255, 0.10); --track: #2a2a28;
+      --s1: #3987e5; --s2: #d95926; --s3: #199e70;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--ink); font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 1120px; margin: 0 auto; padding: 28px 16px 48px; }
+  header { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; justify-content: space-between; margin-bottom: 22px; }
+  h1 { font-size: 24px; font-weight: 650; margin: 0; }
+  .sub { color: var(--ink-2); margin: 4px 0 0; max-width: 640px; }
+  .live { display: inline-flex; align-items: center; gap: 8px; color: var(--ink-2); font-size: 13px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--good); }
+  .card { background: var(--surface); border: 1px solid var(--ring); border-radius: 12px; padding: 18px 20px; }
+  .grid { display: grid; gap: 14px; }
+  .kpis { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); margin-bottom: 14px; }
+  .kpi .label { color: var(--ink-2); font-size: 13px; }
+  .kpi .value { font-size: 28px; font-weight: 650; margin: 2px 0; font-variant-numeric: tabular-nums; }
+  .kpi .value small { font-size: 15px; color: var(--muted); font-weight: 500; }
+  .kpi .note { color: var(--muted); font-size: 12px; }
+  .runs { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); margin-bottom: 14px; }
+  a.run { display: block; color: inherit; text-decoration: none; transition: border-color .15s; }
+  a.run:hover { border-color: var(--s1); }
+  .run .top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .run h2 { font-size: 17px; margin: 0; }
+  .badge { font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+  .badge.done { background: var(--track); color: var(--ink-2); }
+  .badge.live { background: color-mix(in srgb, var(--good) 15%, transparent); color: var(--good); }
+  .run p { color: var(--ink-2); margin: 6px 0 14px; }
+  .bar { display: flex; height: 10px; border-radius: 5px; overflow: hidden; background: var(--track); gap: 2px; }
+  .bar i { display: block; height: 100%; }
+  .facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 14px; }
+  .facts b { display: block; font-size: 18px; font-variant-numeric: tabular-nums; }
+  .facts span { color: var(--muted); font-size: 12px; }
+  .go { margin-top: 14px; color: var(--s1); font-weight: 600; font-size: 13px; }
+  .how { color: var(--ink-2); }
+  .how ol { margin: 8px 0 0; padding-left: 20px; }
+  .how li { margin-bottom: 4px; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div>
+      <h1>Data Refinery</h1>
+      <p class="sub">Small Llama models on volunteer GPUs answer the same question independently. Only answers they agree on become data.</p>
+    </div>
+    <div class="live"><span class="dot"></span><span id="updated">connecting…</span></div>
+  </header>
+
+  <section class="grid kpis">
+    <div class="card kpi"><div class="label">Votes cast</div><div class="value" id="k-votes">–</div><div class="note" id="k-votes-note"></div></div>
+    <div class="card kpi"><div class="label">Items refined</div><div class="value" id="k-items">–</div><div class="note">settled across all runs</div></div>
+    <div class="card kpi"><div class="label">Kept as data</div><div class="value" id="k-kept">–</div><div class="note" id="k-kept-note"></div></div>
+    <div class="card kpi"><div class="label">Nodes online</div><div class="value" id="k-nodes">–</div><div class="note">Kaggle GPUs voting right now</div></div>
+    <div class="card kpi"><div class="label">Honeypots passed</div><div class="value" id="k-hp">–</div><div class="note">hidden test items with known answers</div></div>
+  </section>
+
+  <section class="grid runs">
+    <a class="card run" href="/gsm8k">
+      <div class="top"><h2>Maths word problems (GSM8K)</h2><span class="badge" id="g-badge">–</span></div>
+      <p>Grade-school maths with known answers, so the refinery itself can be graded.</p>
+      <div class="bar" id="g-bar"></div>
+      <div class="facts">
+        <div><b id="g-acc">–</b><span>kept answers correct</span></div>
+        <div><b id="g-kept">–</b><span>kept / problems</span></div>
+        <div><b id="g-single">74%</b><span>a single vote alone</span></div>
+      </div>
+      <div class="go">Open the analysis →</div>
+    </a>
+    <a class="card run" href="/news">
+      <div class="top"><h2>Market headlines (India small caps)</h2><span class="badge" id="n-badge">–</span></div>
+      <p>1,872 headlines from Apr–Oct 2026, newer than any Llama. Labelled for sentiment and kind, then checked against real price moves.</p>
+      <div class="bar" id="n-bar"></div>
+      <div class="facts">
+        <div><b id="n-done">–</b><span>labelled</span></div>
+        <div><b id="n-kept">–</b><span>labels kept</span></div>
+        <div><b id="n-hint">–</b><span>re-checking with a hint</span></div>
+      </div>
+      <div class="go">Open the live signals →</div>
+    </a>
+  </section>
+
+  <section class="card how">
+    <b>How a label is decided</b>
+    <ol>
+      <li>Three different nodes answer, each with a random Llama model and instruction style.</li>
+      <li>All three agree: kept.</li>
+      <li>They don't: a large judge model gives one hint (never the answer), three fresh votes try again, and only unanimous answers are kept.</li>
+      <li>Hidden honeypots with known answers catch cheating nodes, which get quarantined.</li>
+    </ol>
+  </section>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+const fmt = (n) => Number(n || 0).toLocaleString("en-IN");
+const pct = (a, b) => (b ? Math.round((a / b) * 1000) / 10 + "%" : "–");
+
+function bar(it) {
+  const parts = [[it.unanimous, "var(--s1)"], [it.judge_accepted, "var(--s2)"], [it.disputed, "var(--s3)"], [it.no_majority + it.judge_rejected, "var(--muted)"]];
+  return parts.filter(([n]) => n > 0).map(([n, c]) => `<i style="flex-grow:${n};background:${c}"></i>`).join("") +
+    (it.pending ? `<i style="flex-grow:${it.pending};background:transparent"></i>` : "");
+}
+
+function render(d) {
+  const T = d.by_task || {};
+  const all = Object.values(T);
+  const sum = (k) => all.reduce((s, t) => s + (t[k] || 0), 0);
+  const kept = sum("unanimous") + sum("judge_accepted");
+  const settled = kept + sum("no_majority") + sum("judge_rejected");
+  $("k-votes").textContent = fmt(d.activity.votes_total);
+  $("k-votes-note").textContent = `${fmt(d.activity.votes_10min)} in the last 10 minutes`;
+  $("k-items").textContent = fmt(settled);
+  $("k-kept").textContent = fmt(kept);
+  $("k-kept-note").textContent = settled ? `${pct(kept, settled)} of settled items` : "";
+  const online = d.nodes.filter((n) => n.online).length;
+  $("k-nodes").innerHTML = `${online} <small>/ ${d.nodes.length}</small>`;
+  const hpN = d.nodes.reduce((s, n) => s + n.honeypots, 0), hpOk = d.nodes.reduce((s, n) => s + n.honeypots_ok, 0);
+  $("k-hp").textContent = pct(hpOk, hpN);
+
+  const g = T.gsm8k, n = T.news;
+  if (g) {
+    const gk = g.unanimous + g.judge_accepted;
+    $("g-badge").className = "badge " + (g.pending ? "live" : "done");
+    $("g-badge").textContent = g.pending ? "Live" : "Finished";
+    $("g-bar").innerHTML = bar(g);
+    $("g-acc").textContent = pct(g.accepted_correct, gk);
+    $("g-kept").textContent = `${fmt(gk)} / ${fmt(g.total - g.honeypots)}`;
+  }
+  if (n) {
+    const nk = n.unanimous + n.judge_accepted, nd = nk + n.no_majority + n.judge_rejected;
+    $("n-badge").className = "badge " + (n.pending || n.disputed ? "live" : "done");
+    $("n-badge").textContent = n.pending || n.disputed ? "Live" : "Finished";
+    $("n-bar").innerHTML = bar(n);
+    $("n-done").textContent = `${fmt(nd)} / ${fmt(n.total - n.honeypots)}`;
+    $("n-kept").textContent = fmt(nk);
+    $("n-hint").textContent = fmt(n.disputed);
+  }
+  $("updated").textContent = "Live · updated " + new Date(d.now).toLocaleTimeString();
+}
+
+async function refresh() {
+  if (document.hidden) return;
+  try { render(await (await fetch("/api/stats", { cache: "no-store" })).json()); }
+  catch { $("updated").textContent = "Reconnecting…"; }
+}
+refresh();
+setInterval(refresh, 5000);
+document.addEventListener("visibilitychange", refresh);
+</script>
+</body>
+</html>

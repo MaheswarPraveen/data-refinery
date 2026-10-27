@@ -1,0 +1,36 @@
+name = "data-refinery"
+main = "src/index.js"
+compatibility_date = "2025-10-01"
+
+# Lets src/index.js `import dashboard from "./dashboard.html"` as a plain string.
+[[rules]]
+type = "Text"
+globs = ["**/*.html", "**/*.py", "**/*.sh"]
+fallthrough = true
+
+# The database is Supabase Postgres (see supabaseDB() in src/index.js). The old D1 database stays
+# bound only so its votes can still be read once its daily limit resets; nothing writes to it.
+[[d1_databases]]
+binding = "D1_OLD"
+database_name = "refinery"
+database_id = "00695518-5c8c-4ba7-95e5-623aa56b5641"
+
+[vars]
+SUPABASE_URL = "https://eqaucajerezzkojjwnga.supabase.co"
+# Public key: every table has row-level security with no policies, so it can't read anything.
+# The real gate is the secret SUPABASE_RQ_KEY (wrangler secret put), checked inside rq().
+SUPABASE_ANON = "sb_publishable_yYTq3hR4IyCgaukHpEkDSA_OC1XZC45"
+LEASE_SECONDS = "300"         # a job not returned in 5 min goes back in the pool
+VOTES_PER_ITEM = "3"
+QUARANTINE_BELOW = "0.3"      # honeypot accuracy below this (after 5 tries) = quarantined
+ONLINE_SECONDS = "120"        # a node seen in the last 2 min counts as online
+# Judges, tried in order. First Meta Llama on Cloudflare Workers AI (free daily allowance, ~90 rulings);
+# when that's spent, free-tier models on Groq, then OpenRouter (keys are secrets GROQ_API_KEY, OPENROUTER_API_KEY).
+JUDGE_MODELS = "@cf/meta/llama-3.3-70b-instruct-fp8-fast,@cf/meta/llama-4-scout-17b-16e-instruct,groq:openai/gpt-oss-120b,groq:qwen/qwen3.8-27b,groq:openai/gpt-oss-20b,openrouter:google/gemma-4-31b-it:free"
+
+[ai]
+binding = "AI"
+
+# Every minute: rule on up to 4 problems still waiting for a judge.
+[triggers]
+crons = ["* * * * *"]

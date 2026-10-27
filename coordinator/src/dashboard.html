@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Data Refinery</title>
+<style>
+  :root {
+    color-scheme: light;
+    --page: #f9f9f7;
+    --surface: #fcfcfb;
+    --ink: #0b0b0b;
+    --ink-2: #52514e;
+    --muted: #898781;
+    --grid: #e1e0d9;
+    --axis: #c3c2b7;
+    --ring: rgba(11, 11, 11, 0.10);
+    --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100; --s5: #e87ba4;
+    --track: #ecebe6;
+    --good: #0ca30c; --warn: #fab219; --critical: #d03b3b;
+    --seq-0: #cde2fb; --seq-1: #9ec5f4; --seq-2: #6da7ec; --seq-3: #3987e5; --seq-4: #256abf; --seq-5: #184f95;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --page: #0d0d0d;
+      --surface: #1a1a19;
+      --ink: #f0efec;
+      --ink-2: #c3c2b7;
+      --muted: #898781;
+      --grid: #2c2c2a;
+      --axis: #383835;
+      --ring: rgba(255, 255, 255, 0.10);
+      --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181;
+      --track: #2a2a28;
+      --seq-0: #184f95; --seq-1: #1c5cab; --seq-2: #256abf; --seq-3: #2a78d6; --seq-4: #5598e7; --seq-5: #86b6ef;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--page);
+    color: var(--ink);
+    font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  main { max-width: 1120px; margin: 0 auto; padding: 28px 16px 48px; }
+  header { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; justify-content: space-between; margin-bottom: 22px; }
+  h1 { font-size: 22px; font-weight: 650; margin: 0; letter-spacing: -0.01em; }
+  .sub { color: var(--ink-2); margin: 2px 0 0; }
+  .live { display: inline-flex; align-items: center; gap: 8px; color: var(--ink-2); font-size: 13px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--good); box-shadow: 0 0 0 3px color-mix(in srgb, var(--good) 25%, transparent); }
+  .dot.stale { background: var(--muted); box-shadow: none; }
+
+  .card { background: var(--surface); border: 1px solid var(--ring); border-radius: 12px; padding: 18px 20px; }
+  .card h2 { font-size: 15px; font-weight: 600; margin: 0; }
+  .card .why { color: var(--muted); font-size: 13px; margin: 2px 0 14px; }
+  .grid { display: grid; gap: 14px; }
+  .kpis { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin-bottom: 14px; }
+  .two { grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); margin-top: 14px; }
+  .kpi .label { color: var(--ink-2); font-size: 13px; }
+  .kpi .value { font-size: 28px; font-weight: 650; margin: 2px 0; letter-spacing: -0.01em; }
+  .kpi .value small { font-size: 15px; color: var(--muted); font-weight: 500; }
+  .kpi .note { color: var(--muted); font-size: 12px; }
+  .meter { height: 6px; border-radius: 3px; background: var(--track); margin-top: 8px; overflow: hidden; }
+  .meter > i { display: block; height: 100%; background: var(--s1); border-radius: 3px; }
+
+  /* pipeline */
+  .bar { display: flex; gap: 2px; height: 28px; border-radius: 6px; overflow: hidden; background: var(--track); }
+  .bar > i { display: block; height: 100%; min-width: 0; transition: flex-grow .4s ease; }
+  .legend { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px 18px; margin-top: 14px; }
+  .legend div { display: grid; grid-template-columns: 12px 1fr auto; gap: 4px 8px; align-items: baseline; }
+  .sw { width: 12px; height: 12px; border-radius: 3px; align-self: center; }
+  .legend b { font-weight: 600; }
+  .legend .n { font-variant-numeric: tabular-nums; color: var(--ink); font-weight: 600; }
+  .legend p { grid-column: 2 / 4; margin: 0; color: var(--muted); font-size: 12px; }
+
+  /* tables */
+  .scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th { text-align: left; font-weight: 500; color: var(--muted); font-size: 12px; padding: 0 10px 8px 0; white-space: nowrap; border-bottom: 1px solid var(--grid); }
+  td { padding: 9px 10px 9px 0; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+  tr:last-child td { border-bottom: 0; }
+  td.num, th.num { text-align: right; }
+  .id { color: var(--muted); font-size: 12px; margin-left: 6px; }
+  .sub { display: block; color: var(--muted); font-size: 12px; font-weight: 400; margin-top: 2px; }
+  .status { display: inline-flex; align-items: center; gap: 6px; }
+  .status::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+  .status.online::before { background: var(--good); }
+  .status.quarantined::before { background: var(--critical); border-radius: 2px; }
+  .empty { color: var(--muted); padding: 18px 0 4px; }
+
+  /* model x harness */
+  .heat { display: grid; grid-template-columns: 110px repeat(5, minmax(72px, 1fr)); gap: 2px; min-width: 480px; }
+  .heat .h { color: var(--ink-2); font-size: 12px; font-weight: 600; padding: 0 4px 6px; text-align: center; align-self: end; }
+  .heat .h small { display: block; color: var(--muted); font-size: 11px; font-weight: 400; line-height: 1.3; margin-top: 2px; }
+  .heat .r { color: var(--ink-2); font-size: 13px; display: flex; align-items: center; }
+  .cell { border-radius: 4px; padding: 8px 4px; text-align: center; font-variant-numeric: tabular-nums; min-height: 48px; cursor: default; }
+  .cell b { display: block; font-weight: 600; }
+  .cell span { font-size: 11px; opacity: .8; }
+  .cell.none { background: var(--track); color: var(--muted); }
+  .scale { display: flex; align-items: center; gap: 8px; margin-top: 12px; color: var(--muted); font-size: 12px; }
+  .scale i { display: inline-block; width: 22px; height: 10px; border-radius: 2px; }
+
+  /* activity */
+  .feed { list-style: none; margin: 0; padding: 0; }
+  .feed li { display: grid; grid-template-columns: 64px 1fr auto; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--grid); font-size: 13px; }
+  .feed li:last-child { border-bottom: 0; }
+  .feed .t { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .feed .m { color: var(--ink-2); }
+  .flag { color: var(--critical); font-size: 12px; font-weight: 600; }
+
+  /* parameters */
+  dl.params { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px 22px; margin: 0; }
+  dl.params div { border-top: 1px solid var(--grid); padding-top: 10px; }
+  dt { color: var(--ink-2); font-size: 13px; }
+  dd { margin: 2px 0 0; font-weight: 600; }
+  dd small { display: block; font-weight: 400; color: var(--muted); font-size: 12px; margin-top: 2px; }
+
+  details { margin-top: 14px; color: var(--ink-2); }
+  summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+  details p { margin: 8px 0 0; font-size: 13px; max-width: 760px; }
+  footer { margin-top: 22px; color: var(--muted); font-size: 12px; display: flex; flex-wrap: wrap; gap: 14px; }
+  footer a { color: inherit; }
+
+  #tip {
+    position: fixed; pointer-events: none; z-index: 10; max-width: 260px;
+    background: var(--ink); color: var(--surface); font-size: 12px; line-height: 1.4;
+    padding: 7px 9px; border-radius: 6px; opacity: 0; transition: opacity .1s;
+  }
+  @media (max-width: 520px) {
+    .kpi .value { font-size: 24px; }
+    .card { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div>
+      <h1>GSM8K run · maths word problems</h1>
+      <p class="sub">Finished run: 1,350 problems with known answers, so every number below is checked against the truth. Judge here picked answers for 2-vs-1 splits (the older method).</p>
+    </div>
+    <span class="live"><a href="/" style="color:var(--ink-2);text-decoration:none;margin-right:10px">← Home</a><span class="dot stale" id="dot"></span><span id="updated">Connecting…</span></span>
+  </header>
+
+  <section class="grid kpis">
+    <div class="card kpi">
+      <div class="label">Refined</div>
+      <div class="value" id="k-refined">–</div>
+      <div class="note">problems settled: kept or thrown out</div>
+      <div class="meter"><i id="k-refined-bar" style="width:0"></i></div>
+    </div>
+    <div class="card kpi">
+      <div class="label">Kept for training</div>
+      <div class="value" id="k-kept">–</div>
+      <div class="note" id="k-kept-note">answers the network trusts</div>
+    </div>
+    <div class="card kpi" data-tip="Of the answers the network kept, how many match the official GSM8K answer. The network never sees official answers; this is checked afterwards.">
+      <div class="label">Accuracy of kept answers</div>
+      <div class="value" id="k-acc">–</div>
+      <div class="note">checked against official answers</div>
+    </div>
+    <div class="card kpi">
+      <div class="label">Nodes online</div>
+      <div class="value" id="k-nodes">–</div>
+      <div class="note" id="k-nodes-note">seen in the last 2 minutes</div>
+    </div>
+    <div class="card kpi">
+      <div class="label">Votes per minute</div>
+      <div class="value" id="k-rate">–</div>
+      <div class="note" id="k-rate-note">average over the last 10 minutes</div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Where every problem stands</h2>
+    <p class="why" id="pipe-why">Each problem is answered by 3 different nodes. All agree → kept. Two agree → the judge decides. No agreement → thrown out.</p>
+    <div class="bar" id="bar" role="img" aria-label="Problem status breakdown"></div>
+    <div class="legend" id="legend"></div>
+  </section>
+
+  <section class="card" style="margin-top:14px">
+    <h2>Nodes</h2>
+    <p class="why">Volunteer machines running Llama. Credits come only from verified work: votes that matched a kept answer, plus hidden test problems passed.</p>
+    <div class="scroll">
+      <table>
+        <thead><tr>
+          <th data-tip="Each node runs all its Llamas, picking one at random per job. Counts = votes from each model.">Node · votes per Llama</th><th>Status</th>
+          <th class="num" data-tip="Answers this node has sent back.">Votes</th>
+          <th class="num" data-tip="Hidden test problems with known answers. Nodes can't tell which ones they are. Below 30% after 5 tests means quarantine.">Honeypots passed</th>
+          <th class="num" data-tip="Votes that matched an answer the network kept.">Agreed</th>
+          <th class="num" data-tip="Answers returned faster than the model could possibly run (under 250 ms per billion parameters). These don't count.">Too fast</th>
+          <th class="num" data-tip="Agreed + honeypots passed. Time online earns nothing.">Credits</th>
+          <th class="num">Last seen</th>
+        </tr></thead>
+        <tbody id="nodes"></tbody>
+      </table>
+    </div>
+    <div class="empty" id="nodes-empty" hidden>No nodes yet. Start one on Kaggle or Colab and it appears here within seconds.</div>
+  </section>
+
+  <section class="card" style="margin-top:14px">
+    <h2>Which model and instruction style is right most often</h2>
+    <p class="why">Every vote uses a random model and one of 5 instruction styles. Share matching the official answer, measured afterwards.</p>
+    <div class="scroll"><div class="heat" id="heat"></div></div>
+    <div class="scale" aria-hidden="true">
+      <span>0%</span><i style="background:var(--seq-0)"></i><i style="background:var(--seq-1)"></i><i style="background:var(--seq-2)"></i><i style="background:var(--seq-3)"></i><i style="background:var(--seq-4)"></i><i style="background:var(--seq-5)"></i><span>100%</span>
+      <span style="margin-left:auto">grey = fewer than 3 votes</span>
+    </div>
+  </section>
+
+  <section class="grid two">
+    <div class="card">
+      <h2>Judge</h2>
+      <p class="why">A large Llama on Cloudflare settles 2-to-1 splits. It solves the problem itself; only if it lands on the majority answer is it kept.</p>
+      <table>
+        <tbody id="judge"></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>Recent activity</h2>
+      <p class="why">Who worked on what, and how long it took. Answers are never shown, so nodes can't copy each other.</p>
+      <ul class="feed" id="feed"></ul>
+      <div class="empty" id="feed-empty" hidden>No votes yet.</div>
+    </div>
+  </section>
+
+  <section class="card" style="margin-top:14px">
+    <h2>Rules of the network</h2>
+    <p class="why">The settings the coordinator is running with right now.</p>
+    <dl class="params" id="params"></dl>
+  </section>
+
+  <details>
+    <summary>How this works, in one paragraph</summary>
+    <p>A coordinator on Cloudflare hands math problems to volunteer nodes on free Kaggle and Colab GPUs. For every problem, each node picks a random Llama model (1B, 3B or 8B) and a random instruction style, solves it, and signs the answer. The coordinator collects 3 independent answers, keeps the problem if they agree, and asks a 70B Llama judge when only two agree. Honeypots, timing checks and quarantine stop nodes from faking work. The kept problems, each with a full record of who answered what, become training data for a larger model. If small models agreeing can teach a bigger one, that's weak-to-strong generalisation (Burns et al., 2023).</p>
+  </details>
+
+  <footer>
+    <span>Meta Global AI Developer Hackathon · indie track</span>
+    <a href="/api/stats">stats JSON</a>
+    <a href="/api/export">refined dataset (JSONL)</a>
+  </footer>
+</main>
+<div id="tip" role="tooltip"></div>
+
+<script>
+// [key, label, short line shown under the label, longer tooltip]
+const HARNESSES = [
+  ["direct", "Direct", "Told: just solve it, keep the working short.", "Solve directly, short reasoning."],
+  ["step_by_step", "Step by step", "Told: think step by step and write out every calculation.", "Think step by step, writing each calculation."],
+  ["equations_first", "Equations", "Told: write the equations first, then solve them.", "Write the equations first, then solve."],
+  ["check_backwards", "Check back", "Told: solve, then check by working backwards from the answer; fix it if the check fails.", "Solve, then verify by working backwards from the answer."],
+  ["teacher", "Teacher", "Told: explain it to a student like a teacher, then give the result.", "Explain it like a teacher, then answer."],
+];
+const MODEL_NAMES = { "llama3.2:1b": "Llama 3.2 1B", "llama3.2:3b": "Llama 3.2 3B", "llama3.1:8b": "Llama 3.1 8B" };
+const MODEL_ORDER = ["llama3.2:1b", "llama3.2:3b", "llama3.1:8b"];
+const $ = (id) => document.getElementById(id);
+const fmt = (n) => Number(n).toLocaleString("en-IN");
+const pct = (a, b) => (b ? Math.round((a / b) * 100) + "%" : "–");
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+// Tooltips render HTML from a data-tip attribute, and the browser un-escapes attributes once,
+// so node-supplied text placed inside a tooltip must be escaped twice.
+const escTip = (s) => esc(esc(s));
+const modelName = (m) => MODEL_NAMES[m] || m;
+const shortModel = (m) => (MODEL_NAMES[m] || m).replace(/^Llama /, "");
+const JUDGE_NAMES = {
+  "@cf/meta/llama-3.3-70b-instruct-fp8-fast": "Llama 3.3 70B",
+  "@cf/meta/llama-4-scout-17b-16e-instruct": "Llama 4 Scout",
+  "groq:openai/gpt-oss-120b": "GPT-OSS 120B (Groq)",
+  "groq:qwen/qwen3.8-27b": "Qwen 3.8 27B (Groq)",
+  "groq:openai/gpt-oss-20b": "GPT-OSS 20B (Groq)",
+  "openrouter:google/gemma-4-31b-it:free": "Gemma 4 31B (OpenRouter)",
+};
+const shortJudge = (m) => JUDGE_NAMES[m] || m.replace(/^@cf\/meta\//, "");
+
+function ago(ms) {
+  const s = Math.max(0, Math.round((Date.now() - ms) / 1000));
+  if (s < 60) return s + "s ago";
+  if (s < 3600) return Math.round(s / 60) + "m ago";
+  if (s < 86400) return Math.round(s / 3600) + "h ago";
+  return Math.round(s / 86400) + "d ago";
+}
+
+let last = null;
+let lastFetch = 0;
+
+function render(d) {
+  const it = d.items;
+  const work = it.total - it.honeypots;
+  const kept = it.unanimous + it.judge_accepted;
+  const dropped = it.no_majority + it.judge_rejected;
+  const settled = kept + dropped;
+  const online = d.nodes.filter((n) => n.online && !n.quarantined).length;
+  const quarantined = d.nodes.filter((n) => n.quarantined).length;
+
+  $("k-refined").innerHTML = `${fmt(settled)} <small>/ ${fmt(work)}</small>`;
+  $("k-refined-bar").style.width = (work ? (settled / work) * 100 : 0) + "%";
+  $("k-kept").textContent = fmt(kept);
+  $("k-kept-note").textContent = settled ? `${pct(kept, settled)} of settled problems kept` : "answers the network trusts";
+  $("k-acc").textContent = kept ? pct(it.accepted_correct, kept) : "–";
+  $("k-nodes").innerHTML = `${online} <small>/ ${d.nodes.length}</small>`;
+  $("k-nodes-note").textContent = quarantined ? `${quarantined} quarantined · seen in the last 2 min` : "seen in the last 2 minutes";
+  const perMin = d.activity.votes_10min / 10;
+  $("k-rate").textContent = perMin >= 10 ? Math.round(perMin) : perMin.toFixed(1);
+  $("k-rate-note").textContent = `${fmt(d.activity.votes_total)} votes in total · ${d.activity.leases_open} being solved now`;
+
+  // pipeline: fixed categorical order, unfinished work is the grey track
+  const segs = [
+    ["Kept · all agreed", it.unanimous, "var(--s1)", "All 3 nodes gave the same answer."],
+    ["Kept · judge confirmed", it.judge_accepted, "var(--s2)", "Two agreed and the judge reached the same answer."],
+    ["Waiting for judge", it.disputed, "var(--s3)", "Two agreed; the judge hasn't ruled yet."],
+    ["Thrown out · no agreement", it.no_majority, "var(--s4)", "All 3 nodes gave different answers, so there was nothing to keep."],
+    ["Thrown out · judge disagreed", it.judge_rejected, "var(--s5)", "Two agreed, but the judge got a different answer, so the majority was probably wrong."],
+    ["Still being voted on", it.pending, "var(--track)", "Fewer than 3 votes so far."],
+  ];
+  $("pipe-why").textContent = `Each problem is answered by ${d.config.votes_per_item} different nodes. All agree → kept. Two agree → the judge decides. No agreement → thrown out. ${fmt(it.honeypots)} hidden test problems are left out of this bar.`;
+  $("bar").innerHTML = segs
+    .filter(([, n]) => n > 0)
+    .map(([label, n, color, why]) => `<i style="flex-grow:${n};background:${color}" data-tip="<b>${label}</b>: ${fmt(n)} (${pct(n, work)})<br>${why}"></i>`)
+    .join("");
+  $("legend").innerHTML = segs
+    .map(([label, n, color, why]) => `<div><span class="sw" style="background:${color};${color === "var(--track)" ? "box-shadow:inset 0 0 0 1px var(--axis)" : ""}"></span><b>${label}</b><span class="n">${fmt(n)}</span><p>${why}</p></div>`)
+    .join("");
+
+  // nodes
+  // Old sessions that went away more than 30 minutes ago are hidden, not deleted.
+  const live = d.nodes.filter((n) => n.online || d.now - n.last_seen < 30 * 60_000);
+  $("nodes-empty").hidden = live.length > 0;
+  $("nodes").innerHTML = live
+    .map((n) => {
+      const ran = MODEL_ORDER.filter((m) => n.models[m]).concat(Object.keys(n.models).filter((m) => !MODEL_ORDER.includes(m)));
+      // kaggle.sh starts odd-numbered nodes on GPU 0, even-numbered on GPU 1.
+      const num = (n.name.match(/-(\d+)$/) || [])[1];
+      const title = /^kaggle/.test(n.name) && num ? `Node ${num} · Kaggle GPU ${num % 2 ? 0 : 1}` : n.name;
+      const counts = ran.map((m) => `${shortModel(m)} ×${fmt(n.models[m])}`).join(" · ");
+      const st = n.quarantined ? ["quarantined", "Quarantined"] : n.online ? ["online", "Online"] : ["", "Offline"];
+      const tip = n.quarantined ? "Failed too many honeypots. Gets only test problems until its score recovers; its votes don't count." : n.online ? "Asked for work in the last 2 minutes." : "Not seen for over 2 minutes. Any unfinished job goes back to the pool after 5 minutes.";
+      return `<tr>
+        <td><b>${esc(title)}</b><span class="sub">${counts ? "Llama " + esc(counts) : "no votes yet"}</span></td>
+        <td><span class="status ${st[0]}" data-tip="${tip}">${st[1]}</span></td>
+        <td class="num">${fmt(n.votes)}</td>
+        <td class="num">${n.honeypots ? `${n.honeypots_ok}/${n.honeypots} <span class="id">${pct(n.honeypots_ok, n.honeypots)}</span>` : "–"}</td>
+        <td class="num">${fmt(n.agreed)}</td>
+        <td class="num">${n.too_fast ? `<span class="flag">${fmt(n.too_fast)}</span>` : "0"}</td>
+        <td class="num"><b>${fmt(n.credits)}</b></td>
+        <td class="num">${ago(n.last_seen)}</td>
+      </tr>`;
+    })
+    .join("");
+
+  // model x harness
+  const byPair = {};
+  for (const p of d.pairs) byPair[p.model + "|" + p.harness] = p;
+  const models = [...MODEL_ORDER.filter((m) => d.pairs.some((p) => p.model === m)), ...new Set(d.pairs.map((p) => p.model).filter((m) => !MODEL_ORDER.includes(m)))];
+  const shown = models.length ? models : MODEL_ORDER;
+  let h = `<div></div>` + HARNESSES.map(([, label, sub, why]) => `<div class="h" data-tip="${why}">${label}<small>${sub}</small></div>`).join("");
+  for (const m of shown) {
+    h += `<div class="r">${esc(modelName(m))}</div>`;
+    for (const [key, label] of HARNESSES) {
+      const p = byPair[m + "|" + key];
+      if (!p || p.votes < 3) {
+        h += `<div class="cell none" data-tip="${escTip(modelName(m))} · ${label}: ${p ? p.votes : 0} vote(s), too few to judge">${p ? p.votes : "–"}</div>`;
+        continue;
+      }
+      const r = p.correct / p.votes;
+      const step = Math.min(5, Math.floor(r * 6));
+      const ink = (matchMedia("(prefers-color-scheme: dark)").matches ? step <= 2 : step >= 3) ? "#fff" : "#0b0b0b";
+      h += `<div class="cell" style="background:var(--seq-${step});color:${ink}" data-tip="${escTip(modelName(m))} · ${label}<br>${p.correct} of ${p.votes} votes matched the official answer"><b>${Math.round(r * 100)}%</b><span>${fmt(p.votes)} votes</span></div>`;
+    }
+  }
+  $("heat").innerHTML = h;
+
+  // judge
+  const judgeRows = Object.entries(d.judges).map(([m, n]) => [`Kept by ${shortJudge(m)}`, n, "Two nodes agreed and this judge reached the same answer."]);
+  if (!judgeRows.length) judgeRows.push(["Kept by judge", 0, "Two nodes agreed and the judge reached the same answer."]);
+  const rows = [
+    ...judgeRows,
+    ["Rejected", it.judge_rejected, "The judge got a different answer, so the majority was probably wrong. Thrown out."],
+    ["Waiting", it.disputed, "Waiting for the judge (it pauses if the free daily allowance runs out)."],
+  ];
+  const judged = it.judge_accepted + it.judge_rejected;
+  $("judge").innerHTML =
+    rows.map(([label, n, why]) => `<tr><td data-tip="${why}">${label}</td><td class="num"><b>${fmt(n)}</b></td></tr>`).join("") +
+    `<tr><td style="color:var(--muted)">Judge agrees with the 2-vote majority</td><td class="num">${judged ? pct(it.judge_accepted, judged) : "–"}</td></tr>` +
+    `<tr><td style="color:var(--muted)">Models, in order</td><td class="num" style="white-space:normal">${d.config.judge_models.map(shortJudge).map(esc).join(" → ")}</td></tr>`;
+
+  // feed
+  $("feed-empty").hidden = d.recent.length > 0;
+  $("feed").innerHTML = d.recent
+    .map((v) => `<li><span class="t" data-ts="${v.created_at}">${ago(v.created_at)}</span><span><b>${esc(modelName(v.model))}</b> <span class="m">· ${esc((HARNESSES.find((x) => x[0] === v.harness) || [, v.harness])[1])}</span> <span class="id">on ${esc(v.name)}</span></span><span>${v.too_fast ? `<span class="flag" data-tip="Faster than this model can run. Not counted.">too fast</span>` : `<span class="m">${(v.server_ms / 1000).toFixed(1)}s</span>`}</span></li>`)
+    .join("");
+
+  // parameters
+  const c = d.config;
+  const params = [
+    ["Votes per problem", c.votes_per_item, "Independent answers needed before a decision."],
+    ["Agreement to keep", `${c.votes_per_item} of ${c.votes_per_item}`, "Anything less goes to the judge or is thrown out."],
+    ["Hidden test problems", `${fmt(it.honeypots)} of ${fmt(it.total)} (${pct(it.honeypots, it.total)})`, "Known answers, mixed in unannounced to catch fake work."],
+    ["Quarantine", `below ${Math.round(c.quarantine_below * 100)}% after ${c.quarantine_after} tests`, "Quarantined nodes only get test problems and earn nothing."],
+    ["Speed floor", `${c.ms_per_billion} ms per billion parameters`, "Timed by the coordinator, so a node can't fake it."],
+    ["Job lease", `${c.lease_seconds / 60} min`, "An unfinished job returns to the pool after this."],
+    ["Online means", `seen in the last ${c.online_seconds / 60} min`, "Nodes check in every time they ask for work."],
+    ["Fallback votes", fmt(d.activity.same_node), "When fewer than 3 nodes are online, a node may vote twice on a problem with a different model. Counted here."],
+    ["Judge", c.judge_models.map(shortJudge).join(", then "), "Cloudflare Workers AI, free daily allowance."],
+    ["Joining", c.join_protected ? "join code required" : "open", "Stops strangers adding nodes or spending the judge's allowance."],
+    ["Signed votes", "HMAC-SHA256", "Proves which node sent each vote and that it wasn't altered."],
+    ["Diversity rule", "no repeated model + style", "The 3 votes on a problem never share a model and instruction style."],
+  ];
+  $("params").innerHTML = params.map(([k, v, why]) => `<div><dt>${k}</dt><dd>${esc(v)}<small>${why}</small></dd></div>`).join("");
+}
+
+async function refresh() {
+  if (document.hidden) return;
+  try {
+    const r = await fetch("/api/stats?task=gsm8k", { cache: "no-store" });
+    if (!r.ok) throw new Error(r.status);
+    last = await r.json();
+    lastFetch = Date.now();
+    render(last);
+  } catch (e) {
+    $("updated").textContent = "Can't reach the coordinator, retrying…";
+    $("dot").classList.add("stale");
+  }
+}
+
+// "updated 4s ago" ticker; polling pauses while the tab is hidden to save database reads
+setInterval(() => {
+  if (!lastFetch) return;
+  const stale = Date.now() - lastFetch > 45000;
+  $("dot").classList.toggle("stale", stale || document.hidden);
+  $("updated").textContent = document.hidden ? "Paused while hidden" : `Live · updated ${ago(lastFetch)}`;
+  document.querySelectorAll("[data-ts]").forEach((el) => (el.textContent = ago(Number(el.dataset.ts))));
+}, 1000);
+setInterval(refresh, 5000); // near-live; the server caches for 4 s so many viewers share one query
+document.addEventListener("visibilitychange", () => !document.hidden && refresh());
+refresh();
+
+// one shared tooltip for anything with data-tip
+const tip = $("tip");
+document.addEventListener("mouseover", (e) => {
+  const el = e.target.closest("[data-tip]");
+  if (!el) return (tip.style.opacity = 0);
+  tip.innerHTML = el.dataset.tip;
+  tip.style.opacity = 1;
+});
+document.addEventListener("mousemove", (e) => {
+  const x = Math.min(e.clientX + 14, innerWidth - tip.offsetWidth - 8);
+  const y = e.clientY + 16 + tip.offsetHeight > innerHeight ? e.clientY - tip.offsetHeight - 10 : e.clientY + 16;
+  tip.style.left = x + "px";
+  tip.style.top = y + "px";
+});
+</script>
+</body>
+</html>
