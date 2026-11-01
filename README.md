@@ -1,78 +1,40 @@
 <p align="center">
-  <img src="assets/logo-banner.png" alt="Data Refinery" width="720">
+  <img src="assets/logo-banner.png" alt="Data Refinery" width="640">
 </p>
 
 <p align="center">
-  <b>Reliable training data from small open models that verify each other.</b><br>
-  Five small models answer every item. Only what they agree on is kept.
+  <img src="assets/readme/hero.svg" alt="Dirty data in. Clean data out." width="100%">
 </p>
 
 <p align="center">
-  <a href="https://data-refinery.primemax.workers.dev">Live dashboard</a> ·
+  <a href="https://data-refinery.primemax.workers.dev"><b>Live dashboard</b></a> ·
   <a href="https://data-refinery.primemax.workers.dev/audit">Case study</a> ·
   <a href="https://data-refinery.primemax.workers.dev/future">Decentralisation</a>
 </p>
 
----
+<br>
 
-## Main result
+<p align="center">
+  <img src="assets/readme/result.svg" alt="Wrong labels fell from 20% to 2.4%; 9 of 10 hidden errors fixed" width="100%">
+</p>
 
-<table>
-<tr>
-<td align="center"><h1>20% → 2.4%</h1>wrong labels in the dataset,<br>before and after refining</td>
-<td>
+<p align="center">
+  <img src="assets/readme/compare.svg" alt="One model alone vs the refinery" width="100%">
+</p>
 
-We hid **10 wrong answers among 50** maths problems. The models never saw the given answers, solved each problem themselves, and **fixed 9 of the 10**. One correct label was changed in error; 8 unclear items were sent for review instead of being kept.
+## How it works
 
-**An 8× cleaner dataset, with no human labelling.**
+<p align="center">
+  <img src="assets/readme/architecture.svg" alt="Architecture: nodes, coordinator, vote ledger, judge and refined dataset" width="100%">
+</p>
 
-</td>
-</tr>
-</table>
+| **01 · 5 independent votes** | **02 · 4–5 agree → accepted** | **03 · 3 agree → hint, re-vote** | **04 · ≤2 agree → rejected** |
+|:---|:---|:---|:---|
+| No node sees another's answer | Strong consensus is kept | Meta Muse Glimmer hints, never answers | Unsure items never enter the data |
 
-| Experiment | One model alone | After refining |
-|---|---|---|
-| Error detection (50 labelled problems) | 78% | **97.6%** |
-| Maths, ten model families (500 problems) | 81% | **98.6%** |
-| Maths, Llama only (1,350 problems) | 74% | **98.7%** |
-
-*Share of answers that were correct, checked afterwards against official answers the nodes never saw.*
-
-## How an item is decided
-
-| | | |
-|---|---|---|
-| **01** | **5 independent votes** | No node sees another's answer |
-| **02** | **4–5 agree → accepted** | Strong consensus is kept |
-| **03** | **3 agree → hint, re-vote** | Meta Muse Glimmer hints, never answers |
-| **04** | **≤2 agree → rejected** | Unsure items never enter the data |
-
-**More agreement, more accuracy** (500 maths problems):
-
-| Votes in agreement | 5 of 5 | 4 of 5 | 3 of 5 | 2 of 5 |
-|---|---|---|---|---|
-| Answer correct | 99.6% | 98.7% | 90% | 80% |
-
-## Architecture
-
-```mermaid
-flowchart LR
-    subgraph N[Volunteer nodes]
-      N1[Node 1 · Llama 3.2 3B / Phi-4 mini]
-      N2[Node 2 · Gemma 4 / Granite 3.3]
-      N3[Node 3 … N]
-    end
-    C{{Coordinator<br/>Cloudflare Worker}}
-    L[(Vote ledger<br/>Supabase)]
-    J[Judge<br/>Meta Muse Glimmer 30B]
-    D[[Refined dataset<br/>answer + vote record]]
-    C -- question only --> N1 & N2 & N3
-    N1 & N2 & N3 -- signed answer --> C
-    C <--> L
-    C -- 3 of 5 split --> J
-    J -- hint, never the answer --> C
-    C -- 4–5 agree --> D
-```
+<p align="center">
+  <img src="assets/readme/agreement.svg" alt="More agreement, more accuracy" width="100%">
+</p>
 
 <details>
 <summary><b>What happens to bad votes</b></summary>
@@ -115,7 +77,7 @@ The free tiers keep the demo at zero cost. The code is the same; only the hostin
 
 ## Research foundation
 
-| Paper | How it supports this project |
+| Paper | Why it matters here |
 |---|---|
 | [**Weak-to-Strong Generalization**](https://arxiv.org/abs/2312.09390) · OpenAI, 2023 | A strong model can learn from weaker supervisors; consensus filtering gives it cleaner weak labels |
 | [Self-Consistency](https://arxiv.org/abs/2203.11171) · Google, 2022 | Majority vote beats any single answer; we vote across different models |
@@ -125,24 +87,22 @@ The free tiers keep the demo at zero cost. The code is the same; only the hostin
 | [GSM8K](https://arxiv.org/abs/2110.14168) · OpenAI, 2021 | The maths benchmark used for verification |
 | [GPQA](https://arxiv.org/abs/2311.12022) · NYU, 2023 | Expert questions; where small models stop |
 
-## Future: decentralisation
+## Future: every idle GPU becomes part of the refinery
 
-Every idle GPU becomes part of the refinery. Home PCs run small voter models, larger GPUs act as judges, dataset owners fund a reward pool, and contributors are paid for verified work.
+Home PCs run small voter models, larger GPUs act as judges, dataset owners fund a reward pool, and contributors are paid per idle hour for verified work.
 
-**Roadmap:** public vote ledger → multiple coordinators → one-click idle client → reward payouts → private datasets
-
-Try the [scale and cost calculator](https://data-refinery.primemax.workers.dev/future).
+**Roadmap:** public vote ledger → multiple coordinators → one-click idle client → reward payouts → private datasets  ·  [Try the scale and cost calculator →](https://data-refinery.primemax.workers.dev/future)
 
 ## Repository
 
 ```
 coordinator/   Cloudflare Worker: job assignment, vote counting, hints, dashboard pages
 node/          node.py (volunteer node), judge.py (judge node), Colab and Kaggle launchers
-scripts/       dataset loaders and exports
-assets/        logo
+scripts/       dataset loaders, exports, README graphics (make_readme_svgs.py)
+assets/        logo and README graphics
 ```
 
-**Run a node** (Colab or any machine with Ollama and a GPU):
+Run a node on Colab or any machine with Ollama and a GPU:
 
 ```bash
 curl -s https://data-refinery.primemax.workers.dev/colab.sh | bash -s <name> <join-code> <task>
