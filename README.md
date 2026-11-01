@@ -47,6 +47,7 @@ Llama 3.2 1B was fine-tuned on **1,331 refined headline labels and 592 refined m
 | IMDB (movie reviews) | 53.5% | **81.5%** | +28.0 |
 | Financial PhraseBank (news) | 26.3% | **69.0%** | +42.7 |
 | TweetEval (everyday tweets) | 26.0% | **52.0%** | +26.0 |
+| **Average of the six** | **45.6%** | **77.7%** | **+32.2** |
 
 ### Why refined data beats regular data
 

@@ -217,6 +217,7 @@
 
   <section class="card">
     <div class="leg3"><span><i style="background:var(--muted)"></i>base model (untrained)</span><span><i style="background:var(--vio)"></i>trained on refined data</span></div>
+    <div class="sub2" style="margin-top:4px">Average across 6 unseen sentiment datasets (Yelp, Amazon, SST-2, IMDB, PhraseBank, TweetEval)</div><div class="cols" id="cmp-avg"></div>
     <div class="sub2">Maths · 300 GSM-Symbolic problems</div><div class="cols" id="cmp-m"></div>
     <div class="sub2">News sentiment · 300 human-labelled headlines</div><div class="cols" id="cmp-n"></div>
     <div class="sub2">Negation sentences (hard: "not bad", "never disappointing") · base given 3 examples</div><div class="cols" id="cmp-g"></div>
@@ -286,6 +287,8 @@ function chart(el, s) {
     return `<div class="srow"><span class="snm">${n}</span><div class="sbars"><div class="strk"><i style="width:${100 * b}%;background:var(--muted)"></i></div><div class="strk"><i style="width:${100 * f}%;background:var(--vio)"></i></div></div>`
       + `<span class="sval">${(100 * b).toFixed(1)} → <b>${(100 * f).toFixed(1)}</b><small class="up"> +${(100 * (f - b)).toFixed(1)}</small></span></div>`;
   }).join("");
+  const have = SIX.filter(([, k]) => V[k + "_base"] != null && V[k + "_finetuned"] != null);
+  if (have.length) chart("cmp-avg", { base: have.reduce((a, [, k]) => a + V[k + "_base"], 0) / have.length, sft: have.reduce((a, [, k]) => a + V[k + "_finetuned"], 0) / have.length });
   // SVAMP result kept on the dashboard API, not shown on this page (owner decision 2026-11-01)
 })();
 </script>
