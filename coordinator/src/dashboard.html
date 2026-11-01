@@ -412,6 +412,11 @@ if (TASK === "audit") addEventListener("DOMContentLoaded", async () => {
   document.querySelector("header .sub").textContent = "Wrong labels were hidden in a maths dataset. The network found and fixed them without seeing the labels.";
   const sec = document.createElement("div");
   sec.innerHTML = `
+  <section class="card" id="live-card" hidden style="margin-bottom:14px;border-top-color:var(--good)!important">
+    <h2>Live batch <span class="livedot"></span></h2>
+    <p class="lead" id="live-sum" style="margin:6px 0 10px">–</p>
+    <div class="scroll au-box"><table><thead><tr><th>Problem</th><th class="num">Given label</th><th>Votes so far</th><th>Status</th></tr></thead><tbody id="live-rows"></tbody></table></div>
+  </section>
   <section class="card au-hero">
     <div class="au-punch"><span class="neg" id="au-b">–</span><span class="arr">→</span><span class="pos" id="au-a">–</span></div>
     <p class="au-cap">wrong labels in the dataset, before and after refining</p>
@@ -446,9 +451,31 @@ if (TASK === "audit") addEventListener("DOMContentLoaded", async () => {
   const heatCard = document.getElementById("heat")?.closest("section");
   if (heatCard) { heatCard.style.marginTop = "14px"; sec.querySelector("#au-heat-slot").replaceWith(heatCard); }
   const st = document.createElement("style");
-  st.textContent = `.au-hero{padding:28px 24px}.au-punch{display:flex;align-items:baseline;gap:18px;font:600 clamp(44px,9vw,76px)/1 "IBM Plex Sans",sans-serif;letter-spacing:-.03em}.au-punch .arr{font-size:.5em;color:var(--muted)}.au-cap{color:var(--ink-2);margin:8px 0 22px;font-size:15px}.au-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}.au-kpis b{display:block;font:600 26px "IBM Plex Mono",monospace}.au-kpis span{color:var(--muted);font-size:12px}@media(max-width:600px){.au-kpis{grid-template-columns:repeat(2,1fr)}}.au-box{max-height:420px;overflow:auto}`;
+  st.textContent = `.au-hero{padding:28px 24px}.au-punch{display:flex;align-items:baseline;gap:18px;font:600 clamp(44px,9vw,76px)/1 "IBM Plex Sans",sans-serif;letter-spacing:-.03em}.au-punch .arr{font-size:.5em;color:var(--muted)}.au-cap{color:var(--ink-2);margin:8px 0 22px;font-size:15px}.au-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}.au-kpis b{display:block;font:600 26px "IBM Plex Mono",monospace}.au-kpis span{color:var(--muted);font-size:12px}@media(max-width:600px){.au-kpis{grid-template-columns:repeat(2,1fr)}}.au-box{max-height:420px;overflow:auto}.livedot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--good);margin-left:6px;animation:lp 1.2s infinite}@keyframes lp{50%{opacity:.25}}`;
   document.head.append(st);
   document.querySelector("header").after(sec);
+  async function liveBatch() {
+    try {
+      const L = await (await fetch("/api/audit/live", { cache: "no-store" })).json();
+      if (!L.items.length) { $("live-card").hidden = true; return; }
+      $("live-card").hidden = false;
+      const st = (i) => i.status === "hinting" ? '<span style="color:var(--warn,#d97b1a)">split 3–2 · waiting for hint</span>'
+        : i.status === "pending" ? (i.answers.length ? `voting ${Math.min(i.answers.length, 5)}/5` : '<span style="color:var(--muted)">waiting</span>')
+        : i.status === "dropped" ? '<span style="color:var(--muted)">no agreement · sent to review</span>'
+        : i.final_answer !== i.label ? (i.planted ? '<b class="pos">wrong label caught → ' + esc(i.final_answer) + '</b>' : '<b class="neg">label changed → ' + esc(i.final_answer) + '</b>')
+        : i.planted ? '<span class="neg">missed</span>' : '<span class="pos">label confirmed</span>';
+      const done = L.items.filter((i) => i.status === "accepted" || i.status === "dropped").length;
+      const caught = L.items.filter((i) => i.status === "accepted" && i.planted && i.final_answer !== i.label).length;
+      const planted = L.items.filter((i) => i.planted).length;
+      $("live-sum").innerHTML = `<b>${done} of ${L.items.length}</b> problems decided · <b class="pos">${caught} of ${planted}</b> hidden wrong labels caught so far`;
+      const order = (i) => (i.status === "pending" && i.answers.length ? 0 : i.status === "hinting" ? 1 : i.status === "pending" ? 3 : 2);
+      $("live-rows").innerHTML = L.items.slice().sort((a, b) => order(a) - order(b) || (b.last_vote || 0) - (a.last_vote || 0)).map((i) =>
+        `<tr><td style="white-space:normal;min-width:200px">${esc(i.question.length > 80 ? i.question.slice(0, 78) + "…" : i.question)}</td><td class="num">${esc(i.label)}${i.planted ? ' <small class="neg">(wrong)</small>' : ""}</td>`
+        + `<td class="mono" style="font-size:12px">${i.answers.map(esc).join(" · ") || "–"}</td><td>${st(i)}</td></tr>`).join("");
+    } catch (e) { console.error(e); }
+  }
+  liveBatch(); setInterval(liveBatch, 5000);
+  async function renderAudit() {
   try {
     const d = await (await fetch("/api/audit" + (new URLSearchParams(location.search).get("run") === "1000" ? "?run=1000" : ""), { cache: "no-store" })).json();
     const by = {};
@@ -483,6 +510,8 @@ if (TASK === "audit") addEventListener("DOMContentLoaded", async () => {
       return `<tr><td style="white-space:normal;min-width:220px">${short(i.question)}</td><td class="num">${esc(i.label)}</td><td class="num"><b>${i.status === "accepted" ? esc(i.final_answer) : "–"}</b></td><td class="num">${esc(i.gold)}</td><td>${split(r2.length ? r2 : r1)}</td><td>${word[cls(i)]}</td></tr>`;
     }).join("");
   } catch (e) { console.error(e); }
+  }
+  renderAudit(); setInterval(renderAudit, 15000);     // headline numbers follow the run as problems are decided
 });
 if (TASK === "gpqa") addEventListener("DOMContentLoaded", async () => {
   // Every decided question, right or wrong: the mistakes are part of what the refinery learned.

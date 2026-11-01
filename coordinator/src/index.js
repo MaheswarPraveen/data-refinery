@@ -83,6 +83,7 @@ export default {
       if (req.method === "GET" && pathname === "/api/stats") return await stats(env, new URL(req.url).searchParams.get("task"));
       if (req.method === "GET" && pathname === "/api/news") return await newsBoard(env);
       if (req.method === "GET" && pathname === "/api/trade") return await tradeBoard(env);
+      if (req.method === "GET" && pathname === "/api/audit/live") return await auditLive(env);
       if (req.method === "GET" && pathname === "/api/audit") return await auditBoard(env, new URL(req.url).searchParams.get("run"));
       if (req.method === "POST" && pathname === "/api/agent/step") return await agentStep(req, env);
       if (req.method === "GET" && pathname === "/data") return new Response(dataPage, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-cache" } });
@@ -1066,6 +1067,20 @@ async function gpqaSwitch(env) {
 
 // Scores the network as a label checker: a label is flagged when the agreed answer differs from it;
 // items with no agreement are "sent to review" (not kept, so a bad label can't slip into the data either).
+// The live batch on /audit: planted-error problems still open, or decided in the last 6 hours, with their votes so far.
+async function auditLive(env) {
+  const since = Date.now() - 6 * 3600_000;
+  const { results } = await env.DB.prepare(
+    `SELECT i.id, i.question, i.gold, i.meta->>'label' AS label, (i.meta->>'planted')::bool AS planted, i.status, i.final_answer,
+            (SELECT json_agg(v.answer ORDER BY v.id) FROM votes v WHERE v.item_id = i.id) AS answers,
+            (SELECT MAX(v.created_at) FROM votes v WHERE v.item_id = i.id) AS last_vote
+     FROM items i WHERE i.task = 'audit' AND (i.status IN ('pending', 'hinting')
+           OR (i.status IN ('accepted', 'dropped') AND (SELECT MAX(v.created_at) FROM votes v WHERE v.item_id = i.id) > ?))
+     ORDER BY i.id`
+  ).bind(since).all();
+  return json({ now: Date.now(), items: results.map((r) => ({ ...r, answers: typeof r.answers === "string" ? JSON.parse(r.answers) : r.answers || [] })) });
+}
+
 const auditCache = {};
 async function auditBoard(env, big) {
   const hit = auditCache[big || ""]; if (hit && Date.now() - hit.at < 15_000) return json(hit.body);
