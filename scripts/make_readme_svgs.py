@@ -33,8 +33,8 @@ def hero():
     W, H = 960, 300
     b = []
     b.append('<text x="44" y="70" class="sans cap">DATA REFINERY · META GLOBAL AI HACKATHON</text>')
-    b.append('<text x="44" y="128" class="sans ink" font-size="46" font-weight="700" letter-spacing="-1.2">Dirty data in.</text>')
-    b.append('<text x="44" y="182" class="sans acc" font-size="46" font-weight="700" letter-spacing="-1.2">Clean data out.</text>')
+    b.append('<text x="44" y="128" class="sans ink" font-size="46" font-weight="700" letter-spacing="-1.2">Raw data in.</text>')
+    b.append('<text x="44" y="182" class="sans acc" font-size="46" font-weight="700" letter-spacing="-1.2">Refined data out.</text>')
     b.append('<text x="44" y="222" class="sans ink2" font-size="16">Five small open models check every item, blind.</text>')
     b.append('<text x="44" y="246" class="sans ink2" font-size="16">Only what they agree on survives.</text>')
     # pipeline on the right
@@ -67,7 +67,7 @@ def hero():
             path_out = f"M{cx+14},{y} C{cx+80},{y} {x1-70},150 {x1-30},150"
             b.append(f'<rect width="10" height="10" rx="2" x="-5" y="-5" fill="var(--acc)" opacity="0"><animateMotion dur="1.4s" begin="{i*0.9+1.6:.1f}s;{i*0.9+1.6:.1f}s+8.1s" path="{path_out}" fill="freeze"/>'
                      f'<animate attributeName="opacity" values="0;1;1;0" keyTimes="0;.05;.9;1" dur="1.4s" begin="{i*0.9+1.6:.1f}s;{i*0.9+1.6:.1f}s+8.1s" fill="freeze"/></rect>')
-    return svg(W, H, "\n".join(b), "Dirty data in, clean data out: five small open models check every item and only agreed answers survive.")
+    return svg(W, H, "\n".join(b), "Raw data in, refined data out: five small open models check every item and only agreed answers survive.")
 
 
 # ---------- main result: 20% -> 2.4%, waffle of all 50 labels, before/after bars ----------

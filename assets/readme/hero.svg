@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 300" width="960" height="300" role="img" aria-label="Dirty data in, clean data out: five small open models check every item and only agreed answers survive.">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 300" width="960" height="300" role="img" aria-label="Raw data in, refined data out: five small open models check every item and only agreed answers survive.">
 <style>
   svg { --bg:#fbfaf7; --ink:#141413; --ink2:#4d4c48; --mut:#8a8880; --rule:#e2e0d8; --track:#ebe9e2;
         --acc:#6d4fd8; --acc2:#b3a2f0; --good:#1d7a3e; --bad:#c0392b; --warn:#d97b1a; }
@@ -14,8 +14,8 @@
 </style>
 <rect class="card" x="1" y="1" width="958" height="298" rx="14"/>
 <text x="44" y="70" class="sans cap">DATA REFINERY · META GLOBAL AI HACKATHON</text>
-<text x="44" y="128" class="sans ink" font-size="46" font-weight="700" letter-spacing="-1.2">Dirty data in.</text>
-<text x="44" y="182" class="sans acc" font-size="46" font-weight="700" letter-spacing="-1.2">Clean data out.</text>
+<text x="44" y="128" class="sans ink" font-size="46" font-weight="700" letter-spacing="-1.2">Raw data in.</text>
+<text x="44" y="182" class="sans acc" font-size="46" font-weight="700" letter-spacing="-1.2">Refined data out.</text>
 <text x="44" y="222" class="sans ink2" font-size="16">Five small open models check every item, blind.</text>
 <text x="44" y="246" class="sans ink2" font-size="16">Only what they agree on survives.</text>
 <path d="M520,150 C590,150 620,70 686,70" fill="none" stroke="var(--rule)" stroke-width="1.5"/>

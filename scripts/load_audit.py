@@ -1,4 +1,4 @@
-"""Planted-errors test: can the refinery find the wrong labels in a dirty dataset?
+"""Planted-errors test: can the refinery find the wrong labels in a noisy labelled dataset?
 
 Takes 200 GSM8K *test* problems (never used in earlier runs), keeps the official answer as gold, and gives
 each one a "label" as if it came from a scraped dataset: 160 correct, 40 deliberately wrong (plausible

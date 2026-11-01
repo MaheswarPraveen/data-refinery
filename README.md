@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <img src="assets/readme/hero.svg" alt="Dirty data in. Clean data out." width="100%">
+  <img src="assets/readme/hero.svg" alt="Raw data in. Refined data out." width="100%">
 </p>
 
 <p align="center">

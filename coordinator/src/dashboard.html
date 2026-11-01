@@ -381,7 +381,7 @@
 const TASK = { "/gsm8k-mixed": "gsm8k_mixed", "/gpqa": "gpqa", "/audit": "audit" }[location.pathname] || "gsm8k";
 const MIXED = TASK === "gsm8k_mixed" || TASK === "gpqa" || TASK === "audit";
 if (TASK === "audit") addEventListener("DOMContentLoaded", async () => {
-  // The primary example: a dirty dataset in, a cleaned one out, told in three steps.
+  // The primary example: a noisy labelled dataset in, a refined one out, told in three steps.
   document.querySelector("h1").textContent = "Case study: detecting errors in a labelled dataset";
   document.querySelector("header .sub").textContent = "A labelled dataset with deliberately corrupted labels, representative of scraped or crowd-sourced data, was processed by the network without access to the labels. This page documents the input, the method and the outcome.";
   const sec = document.createElement("div");
