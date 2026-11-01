@@ -37,6 +37,17 @@ Llama 3.2 1B was fine-tuned on **1,331 refined headline labels and 592 refined m
 | Negation sentences ("not bad", base given 3 examples) | 79.0% | **85.5%** | **+6.5** |
 | Maths (GSM-Symbolic) | 33.7% | **35.0%** | **+1.3** |
 
+**Six unseen sentiment datasets** (trained only on refined financial headlines):
+
+| Dataset | Base | Fine-tuned | Gain |
+|---|---|---|---|
+| Yelp (business reviews) | 73.5% | **90.5%** | +17.0 |
+| Amazon (product reviews) | 60.0% | **87.0%** | +27.0 |
+| SST-2 (movie reviews) | 34.0% | **86.5%** | +52.5 |
+| IMDB (movie reviews) | 53.5% | **81.5%** | +28.0 |
+| Financial PhraseBank (news) | 26.3% | **69.0%** | +42.7 |
+| TweetEval (everyday tweets) | 26.0% | **52.0%** | +26.0 |
+
 ### Why refined data beats regular data
 
 | | |

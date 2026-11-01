@@ -202,6 +202,11 @@
   .why3 div { background: var(--page); border-radius: 10px; padding: 12px; }
   .why3 b { display: block; font: 600 24px "IBM Plex Mono", monospace; color: var(--vio); }
   .why3 span { font-size: 12.5px; color: var(--ink-2); }
+  .srow { display: grid; grid-template-columns: 170px 1fr 120px; gap: 10px; align-items: center; margin: 9px 0; font-size: 13px; }
+  .snm { color: var(--ink-2); } .sbars { display: grid; gap: 3px; } .strk { height: 9px; background: var(--track); border-radius: 5px; overflow: hidden; }
+  .strk i { display: block; height: 100%; border-radius: 5px; } .sval { font-family: "IBM Plex Mono", monospace; font-size: 12px; text-align: right; white-space: nowrap; }
+  @media (max-width: 600px) { .srow { grid-template-columns: 1fr; gap: 4px; } .sval { text-align: left; } }
+  .tiny3 b { font-size: 18px !important; }
   .note { font-size: 13px; color: var(--ink-2); margin: 14px 0 0; }
 </style>
 </head>
@@ -219,6 +224,13 @@
     <div class="tiny3"><div><b>592</b><span>refined maths answers</span></div><div><b>260</b><span>right-vs-wrong pairs</span></div><div><b>1 epoch</b><span>~3 min of training</span></div></div>
     <p class="note" style="margin-top:12px">News: trained on 1,331 refined headline labels; much of the jump is the model learning to answer with a clear label.</p>
     <p class="note">That small amount of refined data moved a model Meta trained on trillions of words. Same model, same 300 unseen problems. Our product is the refined dataset; this fine-tune is one example of what it does.</p>
+  </section>
+
+  <section class="card" style="margin-top:14px">
+    <h2>Six unseen sentiment datasets</h2>
+    <p class="lead2">Trained only on refined financial headlines, then tested on other people's text it never saw.</p>
+    <div id="six"></div>
+    <div class="leg3" style="margin-top:10px"><span><i style="background:var(--muted)"></i>base model</span><span><i style="background:var(--vio)"></i>fine-tuned on refined data</span></div>
   </section>
 
   <section class="card" style="margin-top:14px">
@@ -241,7 +253,7 @@ function chart(el, s) {
   if (!keys.length) { $(el).innerHTML = "loading…"; return; }
   const vals = keys.map((k) => s[k]), base = s.base, hi = Math.max(...vals), lo0 = Math.min(...vals);
   // small gaps (maths moves a couple of points) are zoomed: the axis starts just below the lowest bar, and says so
-  const lo = hi - lo0 < 0.15 ? Math.max(0, Math.floor((lo0 - 0.03) * 100) / 100) : 0, mx = hi + (hi - lo) * 0.18;
+  const lo = 0, mx = Math.max(hi * 1.18, 0.1);      // every chart starts at 0%, so gaps are shown at true size
   $(el).dataset.axis = lo > 0 ? `axis starts at ${(100 * lo).toFixed(0)}%` : "";
   $(el).innerHTML = keys.map((k) => {
     const v = s[k], d = k === "base" || base == null ? "" : ` <small>${v >= base ? "+" : ""}${(100 * (v - base)).toFixed(1)}</small>`;
@@ -267,6 +279,13 @@ function chart(el, s) {
   if (V.stress_negation_base != null && V.stress_negation_finetuned != null) chart("cmp-g", { base: V.stress_negation_base, sft: V.stress_negation_finetuned });
   // independent check on a second maths test (quick_test_1b notebook); shown once its scores arrive
   const S = Object.fromEntries(rs.filter((r) => r.variant.startsWith("svamp_")).map((r) => [r.variant.slice(6), r.correct / r.total]));
+  const SIX = [["Yelp (business reviews)", "yelp"], ["Amazon (product reviews)", "amazon"], ["SST-2 (movie reviews)", "sst2"],
+               ["IMDB (movie reviews)", "imdb"], ["Financial PhraseBank (news)", "phrasebank"], ["TweetEval (everyday tweets)", "tweeteval"]];
+  $("six").innerHTML = SIX.filter(([, k]) => V[k + "_base"] != null && V[k + "_finetuned"] != null).map(([n, k]) => {
+    const b = V[k + "_base"], f = V[k + "_finetuned"];
+    return `<div class="srow"><span class="snm">${n}</span><div class="sbars"><div class="strk"><i style="width:${100 * b}%;background:var(--muted)"></i></div><div class="strk"><i style="width:${100 * f}%;background:var(--vio)"></i></div></div>`
+      + `<span class="sval">${(100 * b).toFixed(1)} → <b>${(100 * f).toFixed(1)}</b><small class="up"> +${(100 * (f - b)).toFixed(1)}</small></span></div>`;
+  }).join("");
   // SVAMP result kept on the dashboard API, not shown on this page (owner decision 2026-11-01)
 })();
 </script>
