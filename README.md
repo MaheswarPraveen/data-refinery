@@ -110,6 +110,10 @@ curl -s https://data-refinery.primemax.workers.dev/colab.sh | bash -s <name> <jo
 
 Built for the **Meta Global AI Developer Hackathon** (Indie track). Voters include Meta Llama 3.2; the judge is Meta Muse Glimmer 30B.
 
+<p align="center">
+  <img src="assets/readme/robot.svg" alt="A robot checks each item, keeps the good ones and bins the bad ones" width="100%">
+</p>
+
 ## Contributors
 
 - **N P Maheswar**: idea, design, experiments

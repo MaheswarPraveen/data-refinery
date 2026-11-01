@@ -233,6 +233,74 @@ def compare():
     return svg(W, H, "\n".join(b), "One model alone vs refinery: error detection 78% to 97.6%, maths ten families 81% to 98.6%, maths Llama only 74% to 98.7%.")
 
 
-for name, fn in [("hero", hero), ("result", result), ("architecture", architecture), ("agreement", agreement), ("compare", compare)]:
+# ---------- robot at the desk: picks each paper, scans it, keeps good ones, bins bad ones ----------
+def robot():
+    W, H, T = 960, 300, 8
+    SL, SR = (150, 106), (210, 106)
+    RL, RR, TRAY, MID, PILE, WIND, BIN = (140, 150), (220, 150), (95, 137), (180, 126), (258, 150), (226, 112), (321, 200)
+
+    def arm(S, Hd, side):
+        cx, cy = (S[0] + Hd[0]) / 2 + (-14 if side == "L" else 14), (S[1] + Hd[1]) / 2 + 16
+        return f"M{S[0]},{S[1]} Q{cx},{cy} {Hd[0]},{Hd[1]}"
+
+    def track(frames, side):  # frames: [(time fraction, point)]
+        S = SL if side == "L" else SR
+        kt = ";".join(f"{t:g}" for t, _ in frames)
+        d = ";".join(arm(S, p, side) for _, p in frames)
+        cx = ";".join(str(p[0]) for _, p in frames)
+        cy = ";".join(str(p[1]) for _, p in frames)
+        return (f'<path fill="none" stroke="var(--ink2)" stroke-width="5" stroke-linecap="round"><animate attributeName="d" values="{d}" keyTimes="{kt}" dur="{T}s" repeatCount="indefinite"/></path>'
+                f'<circle r="5.5" fill="var(--bg)" stroke="var(--ink2)" stroke-width="2"><animate attributeName="cx" values="{cx}" keyTimes="{kt}" dur="{T}s" repeatCount="indefinite"/>'
+                f'<animate attributeName="cy" values="{cy}" keyTimes="{kt}" dur="{T}s" repeatCount="indefinite"/></circle>')
+
+    def paper(frames, rot, vis):
+        kt = ";".join(f"{t:g}" for t, _ in frames)
+        tr = ";".join(f"{p[0]},{p[1] - 6}" for _, p in frames)
+        rv = ";".join(str(r) for r in rot)
+        return (f'<g opacity="0"><animate attributeName="opacity" values="{vis[1]}" keyTimes="{vis[0]}" dur="{T}s" repeatCount="indefinite" calcMode="discrete"/>'
+                f'<animateTransform attributeName="transform" type="translate" values="{tr}" keyTimes="{kt}" dur="{T}s" repeatCount="indefinite"/>'
+                f'<g><animateTransform attributeName="transform" type="rotate" values="{rv}" keyTimes="{kt}" dur="{T}s" repeatCount="indefinite"/>'
+                f'<rect x="-15" y="-19" width="30" height="38" rx="2" fill="#fff" stroke="var(--rule)" stroke-width="1.2"/>'
+                + "".join(f'<line x1="-9" y1="{y}" x2="{x2}" y2="{y}" stroke="var(--mut)" stroke-width="1.4" stroke-linecap="round"/>' for y, x2 in ((-10, 9), (-3, 7), (4, 9), (11, 2)))
+                + '</g></g>')
+
+    b = []
+    ox = 300  # centre the scene in the card
+    b.append(f'<g transform="translate({ox},10)">')
+    # robot body
+    b.append('<line x1="180" y1="44" x2="180" y2="30" stroke="var(--ink2)" stroke-width="2"/>')
+    b.append(f'<circle cx="180" cy="27" r="4" fill="var(--acc)"><animate attributeName="fill" values="var(--acc);var(--good);var(--acc);var(--bad);var(--acc)" keyTimes="0;.3;.36;.8;.86" dur="{T}s" repeatCount="indefinite" calcMode="discrete"/></circle>')
+    b.append('<rect x="152" y="44" width="56" height="42" rx="12" fill="var(--bg)" stroke="var(--ink2)" stroke-width="2"/>')
+    b.append('<rect x="160" y="55" width="40" height="18" rx="9" fill="var(--bg)" stroke="var(--ink2)" stroke-width="1.5"/>')
+    for ex in (172, 188):
+        b.append(f'<circle cx="{ex}" cy="64" r="3.6" fill="var(--acc)"><animate attributeName="cx" values="{ex};{ex};{ex-2};{ex+2};{ex};{ex};{ex-2};{ex+2};{ex}" keyTimes="0;.17;.21;.25;.29;.67;.71;.75;.79" dur="{T}s" repeatCount="indefinite"/></circle>')
+    b.append('<rect x="146" y="92" width="68" height="62" rx="14" fill="var(--bg)" stroke="var(--ink2)" stroke-width="2"/>')
+    b.append('<circle cx="180" cy="122" r="7" fill="none" stroke="var(--acc)" stroke-width="2"/>')
+    # desk, tray, pile, bin
+    b.append('<rect x="40" y="162" width="250" height="5" rx="2.5" fill="var(--ink2)" opacity=".85"/>')
+    b.append('<path d="M72,162 L76,152 L114,152 L118,162" fill="none" stroke="var(--mut)" stroke-width="1.5"/>')
+    b.append(f'<rect x="242" y="154" width="32" height="8" rx="1.5" fill="#fff" stroke="var(--good)" stroke-width="1.2"/>')
+    b.append(f'<rect x="243" y="146" width="32" height="8" rx="1.5" fill="#fff" stroke="var(--good)" stroke-width="1.2" opacity="0"><animate attributeName="opacity" values="0;1;1" keyTimes="0;.47;1" dur="{T}s" repeatCount="indefinite" calcMode="discrete"/></rect>')
+    b.append('<rect x="300" y="196" width="42" height="50" rx="4" fill="var(--bg)" stroke="var(--bad)" stroke-width="2"/>')
+    b.append(f'<rect x="296" y="190" width="50" height="6" rx="2" fill="var(--bad)"><animate attributeName="y" values="190;184;190" keyTimes="0;.955;.98" dur="{T}s" repeatCount="indefinite"/></rect>')
+    for lx in (313, 321, 329):
+        b.append(f'<line x1="{lx}" y1="206" x2="{lx}" y2="238" stroke="var(--bad)" stroke-opacity=".4"/>')
+    # papers: one good (first half), one bad (second half)
+    b.append(paper([(0, TRAY), (.06, TRAY), (.16, MID), (.36, MID), (.46, PILE), (1, PILE)], [0] * 6, ("0;.46", "1;0")))
+    b.append(paper([(0, TRAY), (.56, TRAY), (.66, MID), (.86, MID), (.89, WIND), (.95, BIN), (1, BIN)], [0, 0, 0, 0, 0, 260, 260], ("0;.5;.95", "0;1;0")))
+    # arms on top so the hands hold the paper
+    b.append(track([(0, RL), (.06, TRAY), (.16, MID), (.30, MID), (.36, RL), (.50, RL), (.56, TRAY), (.66, MID), (.80, MID), (.86, RL), (1, RL)], "L"))
+    b.append(track([(0, RR), (.30, RR), (.36, MID), (.46, PILE), (.52, RR), (.80, RR), (.86, MID), (.89, WIND), (.95, RR), (1, RR)], "R"))
+    # scan line and verdict marks
+    b.append(f'<line x1="164" x2="196" y1="103" y2="103" stroke="var(--acc)" stroke-width="2" opacity="0"><animate attributeName="opacity" values="0;.9;0;.9;0" keyTimes="0;.17;.29;.67;.79" dur="{T}s" repeatCount="indefinite" calcMode="discrete"/>'
+             f'<animate attributeName="y1" values="103;103;139;103;139;103;103;139;103;139;103" keyTimes="0;.17;.2;.23;.26;.29;.67;.7;.73;.76;1" dur="{T}s" repeatCount="indefinite"/>'
+             f'<animate attributeName="y2" values="103;103;139;103;139;103;103;139;103;139;103" keyTimes="0;.17;.2;.23;.26;.29;.67;.7;.73;.76;1" dur="{T}s" repeatCount="indefinite"/></line>')
+    b.append(f'<text x="180" y="100" text-anchor="middle" class="sans good" font-size="22" font-weight="700" opacity="0">✓<animate attributeName="opacity" values="0;1;0" keyTimes="0;.3;.36" dur="{T}s" repeatCount="indefinite" calcMode="discrete"/></text>')
+    b.append(f'<text x="180" y="100" text-anchor="middle" class="sans bad" font-size="22" font-weight="700" opacity="0">✗<animate attributeName="opacity" values="0;1;0" keyTimes="0;.8;.86" dur="{T}s" repeatCount="indefinite" calcMode="discrete"/></text>')
+    b.append('</g>')
+    return svg(W, H, "\n".join(b), "A robot picks up each item, checks it, keeps the good ones and throws the bad ones in the bin.")
+
+
+for name, fn in [("hero", hero), ("result", result), ("architecture", architecture), ("agreement", agreement), ("compare", compare), ("robot", robot)]:
     (OUT / f"{name}.svg").write_text(fn(), encoding="utf-8")
     print("wrote", name)
