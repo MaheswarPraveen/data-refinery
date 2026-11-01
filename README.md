@@ -150,6 +150,11 @@ curl -s https://data-refinery.primemax.workers.dev/colab.sh | bash -s <name> <jo
 
 Built for the **Meta Global AI Developer Hackathon** (Indie track). Voters include Meta Llama 3.2; the judge is Meta Muse Glimmer 30B.
 
+## Contributors
+
+- **N P Maheswar**: idea, design, experiments
+- Built with the help of **Claude** (Anthropic), an AI coding assistant
+
 ## License
 
-Copyright © 2026 Maheswar Praveen. All rights reserved. See [LICENSE](LICENSE). The source is published for viewing and evaluation only; no permission is granted to use, copy, modify or distribute it.
+Copyright © 2026 N P Maheswar. All rights reserved. See [LICENSE](LICENSE). The source is published for viewing and evaluation only; no permission is granted to use, copy, modify or distribute it.
