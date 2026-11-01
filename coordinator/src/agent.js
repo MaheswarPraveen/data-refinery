@@ -167,5 +167,12 @@ export async function agentStep(req, env) {
   const est = [...messages].reverse().find((m) => m.role === "user" && String(m.content).startsWith("Tool result for estimate: "));
   try { if (est) report.estimate = JSON.parse(String(est.content).slice("Tool result for estimate: ".length)); } catch {}
   if (!report.estimate?.price_inr) report.estimate = await runTool(env, "estimate", { items: report.recommended_size || 1000, tier: report.tier || "standard" });
+  // if the report left the sample out, show real rows from the last dataset the agent inspected (never invented)
+  if (!Array.isArray(report.sample) || !report.sample.length) {
+    for (const m of [...messages].reverse()) {
+      if (m.role !== "user" || !String(m.content).startsWith("Tool result for dataset_info: ")) continue;
+      try { const info = JSON.parse(String(m.content).slice("Tool result for dataset_info: ".length)); if (info.sample?.length) { report.sample = info.sample.slice(0, 3); break; } } catch {}
+    }
+  }
   return Response.json({ messages, done: true, report, text: null });
 }
