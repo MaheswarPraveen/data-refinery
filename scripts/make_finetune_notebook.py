@@ -143,15 +143,18 @@ code("""print("\\nGSM8K test accuracy, Llama 3.1 8B Instruct")
 for k in ["base", "raw", "refined", "official"]:
     if k in RESULTS: print(f"  {k:9s} {RESULTS[k]:.1%}")
 print("\\nRefined vs raw:", f"{(RESULTS['refined'] - RESULTS['raw']) * 100:+.1f} points")
-print("Scores are on the dashboard. Shutting the runtime down to save compute units...")
-time.sleep(20)
-from google.colab import runtime
-runtime.unassign()   # disconnects and deletes the runtime, so nothing keeps billing overnight""")
+print("Scores are on the dashboard. Shutting the runtime down to save compute units...")""")
 
 # Everything in one cell: install, config, data, base test, three trainings, summary.
+# The run sits inside try/finally, so the runtime is deleted whether it finishes, errors or is
+# interrupted: a failure overnight can't keep spending compute units.
 codes = [c["source"] for c in cells if c["cell_type"] == "code"]
-codes[0] = "!pip install -q unsloth > /dev/null 2>&1"
-cells = [cells[0], {"cell_type": "code", "metadata": {}, "execution_count": None, "outputs": [], "source": "\n\n".join(codes)}]
+body = "\n\n".join(codes[1:])
+guarded = ("!pip install -q unsloth > /dev/null 2>&1\n\nimport time, traceback\ntry:\n"
+           + "\n".join(("    " + l) if l.strip() else l for l in body.splitlines())
+           + "\nexcept BaseException:\n    traceback.print_exc()\n    print('Run failed; shutting the runtime down anyway to save compute units.')"
+           + "\nfinally:\n    time.sleep(20)\n    from google.colab import runtime\n    runtime.unassign()   # deletes the runtime: nothing keeps billing")
+cells = [cells[0], {"cell_type": "code", "metadata": {}, "execution_count": None, "outputs": [], "source": guarded}]
 nb = {"cells": cells, "metadata": {"accelerator": "GPU", "colab": {"gpuType": "A100", "provenance": []},
       "kernelspec": {"display_name": "Python 3", "name": "python3"}, "language_info": {"name": "python"}},
       "nbformat": 4, "nbformat_minor": 0}
