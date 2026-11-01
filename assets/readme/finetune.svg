@@ -14,7 +14,7 @@
 </style>
 <rect class="card" x="1" y="1" width="958" height="358" rx="14"/>
 <text x="44" y="40" class="sans cap">LLAMA 3.2 1B · BASE vs FINE-TUNED ON REFINED DATA · UNSEEN TESTS</text>
-<text x="44" y="64" class="sans ink2" font-size="13">Trained on 1,331 refined headline labels + 592 refined maths answers · about 3 minutes, 1 epoch</text>
+<text x="44" y="64" class="sans ink2" font-size="13">Trained on 1,331 refined headline labels + 592 refined maths answers · about 4 minutes, 1 epoch</text>
 <rect x="70" y="280" width="50" height="0" rx="5" fill="var(--mut)"><animate attributeName="height" from="0" to="11.8" dur="1s" begin="0.20s" fill="freeze" calcMode="spline" keySplines=".2 .7 .2 1"/><animate attributeName="y" from="280" to="268.2" dur="1s" begin="0.20s" fill="freeze" calcMode="spline" keySplines=".2 .7 .2 1"/></rect>
 <text x="95" y="261.2" text-anchor="middle" class="mono ink2" font-size="13" font-weight="600">3.7</text>
 <rect x="132" y="280" width="50" height="0" rx="5" fill="var(--acc)"><animate attributeName="height" from="0" to="160.7" dur="1s" begin="0.20s" fill="freeze" calcMode="spline" keySplines=".2 .7 .2 1"/><animate attributeName="y" from="280" to="119.3" dur="1s" begin="0.20s" fill="freeze" calcMode="spline" keySplines=".2 .7 .2 1"/></rect>

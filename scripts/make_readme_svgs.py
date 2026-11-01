@@ -301,7 +301,7 @@ def finetune():
     W, H = 960, 360
     rows = [("News sentiment", 3.7, 50.3), ("Financial news (new set)", 26.3, 69.0), ("Negation (hard)", 79.0, 85.5), ("Maths", 33.7, 35.0)]
     b = ['<text x="44" y="40" class="sans cap">LLAMA 3.2 1B · BASE vs FINE-TUNED ON REFINED DATA · UNSEEN TESTS</text>',
-         '<text x="44" y="64" class="sans ink2" font-size="13">Trained on 1,331 refined headline labels + 592 refined maths answers · about 3 minutes, 1 epoch</text>']
+         '<text x="44" y="64" class="sans ink2" font-size="13">Trained on 1,331 refined headline labels + 592 refined maths answers · about 4 minutes, 1 epoch</text>']
     base_y, top, colw = 280, 100, 210
     for i, (name, a, f) in enumerate(rows):
         x0 = 70 + i * colw

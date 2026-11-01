@@ -207,13 +207,16 @@
   .strk i { display: block; height: 100%; border-radius: 5px; } .sval { font-family: "IBM Plex Mono", monospace; font-size: 12px; text-align: right; white-space: nowrap; }
   @media (max-width: 600px) { .srow { grid-template-columns: 1fr; gap: 4px; } .sval { text-align: left; } }
   .tiny3 b { font-size: 18px !important; }
+  .hl { font-size: 19px; margin: 6px 0 2px; color: var(--ink); } .hl b { color: var(--vio); font-family: "IBM Plex Mono", monospace; }
   .note { font-size: 13px; color: var(--ink-2); margin: 14px 0 0; }
 </style>
 </head>
 <body id="top">
 <main>
 <nav class="tabsbar"><a href="/" style="padding:0 0 11px;border:0;margin:0"><b><svg class="logo" viewBox="0 0 96 40" aria-hidden="true"><g class="px"><rect x="2" y="9" width="4" height="4"/><rect x="8" y="4" width="4" height="4"/><rect x="5" y="17" width="4" height="4" opacity=".6"/><rect x="11" y="13" width="4" height="4"/><rect x="2" y="26" width="4" height="4" opacity=".5"/><rect x="9" y="24" width="4" height="4"/><rect x="6" y="32" width="4" height="4" opacity=".7"/></g><g class="ln"><path d="M15,15 C22,15 22,20 30,20"/><path d="M13,26 C22,26 22,20 30,20"/><path d="M30,20 L40,9 L50,20 L40,31 Z"/><path d="M40,9 L40,31"/><path d="M50,20 C56,20 56,14 62,14"/><path d="M50,20 C56,20 56,24 62,24"/></g><g class="nd"><circle cx="30" cy="20" r="3"/><circle cx="40" cy="9" r="3"/><circle cx="40" cy="31" r="3"/><circle cx="50" cy="20" r="3"/><circle cx="40" cy="20" r="1.6"/></g><g class="ly"><path d="M62,26 L77,19 L92,26 L77,33 Z" opacity=".55"/><path d="M62,20 L77,13 L92,20 L77,27 Z" opacity=".75"/><path d="M62,14 L77,7 L92,14 L77,21 Z"/></g></svg><span>Data Refinery</span></b></a><div class="tablist"><a href="/">Overview</a><a href="/audit">Error detection</a><a href="/gsm8k-mixed">Maths</a><a href="/gpqa">Science</a><a href="/trade">Trading</a><a href="/data">Data search</a><a href="/training" class="on">Fine-tune</a><a href="/future">Decentralisation</a></div></nav>
-  <header><div><h1>Fine-tuned example</h1><p class="sub">Llama 3.2 1B trained only on refinery data (no human labels), tested on questions it never saw.</p></div></header>
+  <header><div><h1>Fine-tuned example</h1>
+    <p class="hl">Trained on <b>2,183</b> refined examples in about <b>4 minutes</b></p>
+    <p class="sub">1,331 headline labels + 592 maths answers + 260 right-vs-wrong pairs, 1 epoch on one L4 GPU. Llama 3.2 1B, no human labels, tested on questions it never saw.</p></div></header>
 
   <section class="card">
     <div class="leg3"><span><i style="background:var(--muted)"></i>base model (untrained)</span><span><i style="background:var(--vio)"></i>trained on refined data</span></div>
@@ -222,7 +225,7 @@
     <div class="sub2">News sentiment · 300 human-labelled headlines</div><div class="cols" id="cmp-n"></div>
     <div class="sub2">Negation sentences (hard: "not bad", "never disappointing") · base given 3 examples</div><div class="cols" id="cmp-g"></div>
     <div id="svamp-wrap" hidden><div class="sub2">Extra check · SVAMP, 300 maths problems from a different test set</div><div class="cols" id="cmp-s"></div></div>
-    <div class="tiny3"><div><b>592</b><span>refined maths answers</span></div><div><b>260</b><span>right-vs-wrong pairs</span></div><div><b>1 epoch</b><span>~3 min of training</span></div></div>
+    <div class="tiny3"><div><b>592</b><span>refined maths answers</span></div><div><b>260</b><span>right-vs-wrong pairs</span></div><div><b>1 epoch</b><span>~4 min of training</span></div></div>
     <p class="note" style="margin-top:12px">News: trained on 1,331 refined headline labels; much of the jump is the model learning to answer with a clear label.</p>
     <p class="note">That small amount of refined data moved a model Meta trained on trillions of words. Same model, same 300 unseen problems. Our product is the refined dataset; this fine-tune is one example of what it does.</p>
   </section>

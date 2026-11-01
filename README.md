@@ -28,7 +28,7 @@
   <img src="assets/readme/finetune.svg" alt="Llama 3.2 1B base vs fine-tuned on refined data: news 3.7 to 50.3, financial news 26.3 to 69.0, negation 79.0 to 85.5, maths 33.7 to 35.0" width="100%">
 </p>
 
-Llama 3.2 1B was fine-tuned on **1,331 refined headline labels and 592 refined maths answers**, about 3 minutes of training, then tested on questions it never saw:
+Llama 3.2 1B was fine-tuned on **1,331 refined headline labels and 592 refined maths answers** (plus 260 right-vs-wrong pairs), about 4 minutes of training, then tested on questions it never saw:
 
 | Test (unseen) | Base | Fine-tuned | Gain |
 |---|---|---|---|
