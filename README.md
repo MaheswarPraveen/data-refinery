@@ -15,12 +15,37 @@
 <br>
 
 <p align="center">
-  <img src="assets/readme/result.svg" alt="Wrong labels fell from 20% to 2.4%; 9 of 10 hidden errors fixed" width="100%">
+  <img src="assets/readme/result.svg" alt="Wrong labels fell from 35.5% to 1.3%; 78 of 93 hidden errors fixed" width="100%">
 </p>
 
 <p align="center">
   <img src="assets/readme/compare.svg" alt="One model alone vs the refinery" width="100%">
 </p>
+
+## A little refined data, a better model
+
+<p align="center">
+  <img src="assets/readme/finetune.svg" alt="Llama 3.2 1B base vs fine-tuned on refined data: news 3.7 to 50.3, financial news 26.3 to 69.0, negation 79.0 to 85.5, maths 33.7 to 35.0" width="100%">
+</p>
+
+Llama 3.2 1B was fine-tuned on **1,331 refined headline labels and 592 refined maths answers**, about 3 minutes of training, then tested on questions it never saw:
+
+| Test (unseen) | Base | Fine-tuned | Gain |
+|---|---|---|---|
+| News sentiment (finance tweets) | 3.7% | **50.3%** | **+46.7** |
+| Financial news (Financial PhraseBank) | 26.3% | **69.0%** | **+42.7** |
+| Negation sentences ("not bad", base given 3 examples) | 79.0% | **85.5%** | **+6.5** |
+| Maths (GSM-Symbolic) | 33.7% | **35.0%** | **+1.3** |
+
+### Why refined data beats regular data
+
+| | |
+|---|---|
+| **+3.6 points** | refined vs raw data, same model and problems (Llama 3.1 8B: 71.6% vs 68.0%) |
+| **+4.0 points** | refined vs GSM8K's own human-written answers (71.6% vs 67.6%) |
+| **35.5% → 1.3%** | wrong labels before and after refining (Error Detection Test) |
+
+Regular datasets carry hidden mistakes, and models learn them. The refinery removes them, and every answer's working is now step-checked: each calculation is recomputed before it enters the dataset.
 
 ## How it works
 

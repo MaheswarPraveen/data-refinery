@@ -35,7 +35,7 @@ GPQA_HARNESSES = {
 }
 # Plain text, not forced JSON: grammar-constrained output made 1B/3B models emit junk
 # ("aepb", "}") or ramble until timeout. Same fix that made the judge reliable.
-FORMAT = "Show your working, then end with one final line exactly like this: ANSWER: <number>"
+FORMAT = "Show brief working: a few short lines, one calculation per line, no restating the problem. Then end with one final line exactly like this: ANSWER: <number>"
 ANSWER_RE = re.compile(r"ANSWER:\s*\$?\s*(-?[\d,]*\.?\d+)", re.I)
 NUMBER_RE = re.compile(r"-?\d[\d,]*\.?\d*")
 
@@ -191,7 +191,7 @@ def solve(ollama, model, harness, job):
     body = {
         "model": model,
         "stream": False,
-        "options": {"temperature": 0.3, "num_predict": 1000 if job.get("task") == "gpqa" else 768},  # cap length so a rambling model can't stall the node
+        "options": {"temperature": 0.3, "num_predict": 1000 if job.get("task") == "gpqa" else 512 if job.get("task") in ("gsm8k", "gsm8k_mixed") else 768},  # cap length so a rambling model can't stall the node
         "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
     }
     # Many small models can "think" at length first (Qwen 3.x, Gemma 4, Granite 4.x, Nemotron, Hunyuan,

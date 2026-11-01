@@ -72,46 +72,41 @@ def hero():
 
 # ---------- main result: 20% -> 2.4%, waffle of all 50 labels, before/after bars ----------
 def result():
+    # final numbers of the Error Detection Test (both planted-error runs, decided items only)
+    N, PLANTED, FIXED, OK, REVIEW, CHANGED, KEPT, WRONG_AFTER = 262, 93, 78, 142, 39, 3, 223, 3
+    before, after = round(100 * PLANTED / N, 1), round(100 * WRONG_AFTER / KEPT, 1)
     W, H = 960, 330
     b = ['<text x="44" y="56" class="sans cap">MAIN RESULT · ERROR DETECTION ON A LABELLED DATASET</text>']
-    b.append('<text x="44" y="138" class="mono bad" font-size="64" font-weight="600" letter-spacing="-3">20%</text>')
-    b.append('<line x1="44" y1="117" x2="178" y2="117" stroke="var(--bad)" stroke-width="5" opacity=".5"/>')
-    b.append('<text x="196" y="130" class="sans mut" font-size="40">→</text>')
-    b.append('<text x="246" y="138" class="mono good" font-size="64" font-weight="600" letter-spacing="-3">2.4%</text>')
+    b.append(f'<text x="44" y="138" class="mono bad" font-size="64" font-weight="600" letter-spacing="-3">{before:g}%</text>')
+    b.append('<text x="232" y="130" class="sans mut" font-size="40">→</text>')
+    b.append(f'<text x="282" y="138" class="mono good" font-size="64" font-weight="600" letter-spacing="-3">{after:g}%</text>')
     b.append('<text x="44" y="172" class="sans ink2" font-size="16">wrong labels in the dataset, before and after</text>')
-    b.append('<text x="44" y="214" class="sans ink" font-size="15">10 wrong answers hidden among 50 problems.</text>')
-    b.append('<text x="44" y="238" class="sans ink" font-size="15">The models never saw them, and fixed <tspan font-weight="700" class="acc">9 of 10</tspan>.</text>')
-    b.append('<text x="44" y="278" class="sans mut" font-size="13">An 8× cleaner dataset, with no human labelling.</text>')
-    # waffle: 9 corrected (accent, dot), 32 confirmed (light), 8 review (outline, one dotted), 1 changed in error (red)
-    kinds = ["fx"] * 9 + ["ok"] * 32 + ["rv"] * 7 + ["rvp"] + ["fl"]
-    x0, y0, s, g = 470, 84, 24, 6
-    b.append(f'<text x="{x0}" y="70" class="sans cap">EVERY LABEL, ONE SQUARE</text>')
-    for i, k in enumerate(kinds):
-        x, y = x0 + (i % 10) * (s + g), y0 + (i // 10) * (s + g)
-        fill = {"fx": "var(--acc)", "ok": "var(--acc2)", "rv": "var(--track)", "rvp": "var(--track)", "fl": "var(--bad)"}[k]
-        op = ' opacity=".45"' if k == "ok" else ""
-        stroke = ' stroke="var(--mut)" stroke-width="1.2"' if k in ("rv", "rvp") else ""
-        b.append(f'<rect x="{x}" y="{y}" width="{s}" height="{s}" rx="5" fill="{fill}"{op}{stroke}>'
-                 f'<animate attributeName="opacity" from="0" to="{0.45 if k == "ok" else 1}" dur=".3s" begin="{i*0.025:.3f}s" fill="freeze"/></rect>')
-        if k in ("fx", "rvp"):
-            b.append(f'<circle cx="{x+s/2}" cy="{y+s/2}" r="3.5" fill="var(--bg)"/>')
-    ly = y0 + 5 * (s + g) + 18
-    for j, (fill, lab) in enumerate([("var(--acc)", "corrected 9"), ("var(--acc2)", "confirmed 32"), ("var(--track)", "review 8"), ("var(--bad)", "changed in error 1")]):
-        lx, ly2 = x0 + (j % 2) * 150, ly + (j // 2) * 18
-        b.append(f'<rect x="{lx}" y="{ly2-9}" width="10" height="10" rx="2" fill="{fill}" stroke="var(--mut)" stroke-width="{1 if j == 2 else 0}"/>'
-                 f'<text x="{lx+14}" y="{ly2}" class="sans ink2" font-size="11.5">{lab}</text>')
+    b.append(f'<text x="44" y="214" class="sans ink" font-size="15">{PLANTED} wrong answers hidden among {N} problems.</text>')
+    b.append(f'<text x="44" y="238" class="sans ink" font-size="15">The models never saw them, and fixed <tspan font-weight="700" class="acc">{FIXED} of {PLANTED}</tspan>.</text>')
+    b.append(f'<text x="44" y="278" class="sans mut" font-size="13">A {round(before / after)}× cleaner dataset, with no human labelling.</text>')
+    # outcome bar: every label, split by what happened to it
+    x0, y0, w = 470, 96, 300
+    b.append(f'<text x="{x0}" y="78" class="sans cap">WHAT HAPPENED TO EACH LABEL</text>')
+    parts = [(FIXED, "var(--acc)", f"corrected {FIXED}"), (OK, "var(--acc2)", f"confirmed {OK}"), (REVIEW, "var(--track)", f"sent to review {REVIEW}"), (CHANGED, "var(--bad)", f"changed in error {CHANGED}")]
+    x = x0
+    for k, (n, col, lab) in enumerate(parts):
+        ww = w * n / N
+        b.append(f'<rect x="{x:.1f}" y="{y0}" width="0" height="26" fill="{col}"><animate attributeName="width" from="0" to="{max(ww - 2, 2):.1f}" dur=".8s" begin="{0.2 + k * 0.2:.1f}s" fill="freeze"/></rect>')
+        x += ww
+        b.append(f'<rect x="{x0}" y="{y0 + 48 + k * 22}" width="10" height="10" rx="2" fill="{col}" stroke="var(--mut)" stroke-width="{1 if k == 2 else 0}"/>'
+                 f'<text x="{x0 + 16}" y="{y0 + 57 + k * 22}" class="sans ink2" font-size="12.5">{lab}</text>')
     # before / after bars
-    bx, base, hmax = 820, 260, 170
+    bx, base, hmax = 840, 260, 170
     b.append(f'<text x="{bx+20}" y="70" class="sans cap" text-anchor="middle">ERROR RATE</text>')
-    for j, (v, col, lab) in enumerate([(20, "var(--bad)", "before"), (2.4, "var(--good)", "after")]):
+    for j, (v, col, lab) in enumerate([(before, "var(--bad)", "before"), (after, "var(--good)", "after")]):
         x = bx - 28 + j * 70
-        h = max(4, hmax * v / 20)
+        h = max(4, hmax * v / before)
         b.append(f'<rect x="{x}" y="{base-hmax}" width="44" height="{hmax}" rx="8" fill="var(--track)"/>')
         b.append(f'<rect x="{x}" y="{base}" width="44" height="0" rx="8" fill="{col}"><animate attributeName="height" from="0" to="{h}" dur="1s" begin=".4s" fill="freeze" calcMode="spline" keySplines=".2 .7 .2 1"/>'
                  f'<animate attributeName="y" from="{base}" to="{base-h}" dur="1s" begin=".4s" fill="freeze" calcMode="spline" keySplines=".2 .7 .2 1"/></rect>')
         b.append(f'<text x="{x+22}" y="{base+24}" text-anchor="middle" class="mono ink" font-size="16" font-weight="600">{v:g}%</text>')
         b.append(f'<text x="{x+22}" y="{base+42}" text-anchor="middle" class="sans mut" font-size="11">{lab}</text>')
-    return svg(W, H, "\n".join(b), "Main result: wrong labels fell from 20% to 2.4%; 9 of 10 hidden errors were fixed.")
+    return svg(W, H, "\n".join(b), f"Main result: wrong labels fell from {before:g}% to {after:g}%; {FIXED} of {PLANTED} hidden errors were fixed.")
 
 
 # ---------- architecture: one item cycles assign -> vote -> count -> hint -> accept ----------
@@ -301,6 +296,30 @@ def robot():
     return svg(W, H, "\n".join(b), "A robot picks up each item, checks it, keeps the good ones and throws the bad ones in the bin.")
 
 
-for name, fn in [("hero", hero), ("result", result), ("architecture", architecture), ("agreement", agreement), ("compare", compare), ("robot", robot)]:
+# ---------- fine-tuned example: base vs fine-tuned Llama 3.2 1B, vertical bars growing in ----------
+def finetune():
+    W, H = 960, 360
+    rows = [("News sentiment", 3.7, 50.3), ("Financial news (new set)", 26.3, 69.0), ("Negation (hard)", 79.0, 85.5), ("Maths", 33.7, 35.0)]
+    b = ['<text x="44" y="40" class="sans cap">LLAMA 3.2 1B · BASE vs FINE-TUNED ON REFINED DATA · UNSEEN TESTS</text>',
+         '<text x="44" y="64" class="sans ink2" font-size="13">Trained on 1,331 refined headline labels + 592 refined maths answers · about 3 minutes, 1 epoch</text>']
+    base_y, top, colw = 280, 100, 210
+    for i, (name, a, f) in enumerate(rows):
+        x0 = 70 + i * colw
+        mx = max(a, f) * 1.12
+        for j, (v, col) in enumerate([(a, "var(--mut)"), (f, "var(--acc)")]):
+            h = max(3, (base_y - top) * v / mx); x = x0 + j * 62
+            b.append(f'<rect x="{x}" y="{base_y}" width="50" height="0" rx="5" fill="{col}">'
+                     f'<animate attributeName="height" from="0" to="{h:.1f}" dur="1s" begin="{0.2 + i * 0.2:.2f}s" fill="freeze" calcMode="spline" keySplines=".2 .7 .2 1"/>'
+                     f'<animate attributeName="y" from="{base_y}" to="{base_y - h:.1f}" dur="1s" begin="{0.2 + i * 0.2:.2f}s" fill="freeze" calcMode="spline" keySplines=".2 .7 .2 1"/></rect>')
+            b.append(f'<text x="{x + 25}" y="{base_y - h - 7:.1f}" text-anchor="middle" class="mono {"acc" if j else "ink2"}" font-size="13" font-weight="600">{v:g}</text>')
+        b.append(f'<line x1="{x0 - 8}" x2="{x0 + 120}" y1="{base_y}" y2="{base_y}" stroke="var(--rule)"/>')
+        b.append(f'<text x="{x0 + 56}" y="{base_y + 24}" text-anchor="middle" class="mono good" font-size="14" font-weight="700">+{f - a:.1f}</text>')
+        b.append(f'<text x="{x0 + 56}" y="{base_y + 44}" text-anchor="middle" class="sans ink2" font-size="12.5">{name}</text>')
+    b.append('<rect x="44" y="328" width="10" height="10" rx="2" fill="var(--mut)"/><text x="60" y="337" class="sans mut" font-size="12">base model</text>')
+    b.append('<rect x="150" y="328" width="10" height="10" rx="2" fill="var(--acc)"/><text x="166" y="337" class="sans mut" font-size="12">fine-tuned on refined data</text>')
+    return svg(W, H, "\n".join(b), "Llama 3.2 1B base vs fine-tuned on refined data: news 3.7 to 50.3, financial news 26.3 to 69.0, negation 79.0 to 85.5, maths 33.7 to 35.0.")
+
+
+for name, fn in [("hero", hero), ("result", result), ("architecture", architecture), ("agreement", agreement), ("compare", compare), ("robot", robot), ("finetune", finetune)]:
     (OUT / f"{name}.svg").write_text(fn(), encoding="utf-8")
     print("wrote", name)

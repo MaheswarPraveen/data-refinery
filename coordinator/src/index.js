@@ -6,6 +6,12 @@ import newsPage from "./news.html";
 import homePage from "./home.html";
 import tradePage from "./trade.html";
 import futurePage from "./future.html";
+import hardPage from "./hard.html";
+import dataPage from "./data.html";
+import trainingPage from "./training.html";
+import livePage from "./live.html";
+import { agentStep } from "./agent.js";
+import { pickWorking } from "./steps.js";
 import nodeScript from "../../node/node.py"; // served at /node.py so notebooks can just download it
 import kaggleScript from "../../node/kaggle.sh"; // one-line Kaggle launcher, served at /kaggle.sh
 import colabScript from "../../node/colab.sh"; // Colab A100 launcher: nodes 1-3 of the mixed run, served at /colab.sh
@@ -77,9 +83,19 @@ export default {
       if (req.method === "GET" && pathname === "/api/stats") return await stats(env, new URL(req.url).searchParams.get("task"));
       if (req.method === "GET" && pathname === "/api/news") return await newsBoard(env);
       if (req.method === "GET" && pathname === "/api/trade") return await tradeBoard(env);
-      if (req.method === "GET" && pathname === "/api/audit") return await auditBoard(env);
+      if (req.method === "GET" && pathname === "/api/audit") return await auditBoard(env, new URL(req.url).searchParams.get("run"));
+      if (req.method === "POST" && pathname === "/api/agent/step") return await agentStep(req, env);
+      if (req.method === "GET" && pathname === "/data") return new Response(dataPage, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-cache" } });
+      if (req.method === "GET" && pathname === "/api/hard") return await hardBoard(env);
+      if (req.method === "GET" && pathname === "/hard") return new Response(hardPage, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-cache" } });
       if (req.method === "GET" && pathname === "/api/gpqa") return await gpqaBoard(env);
       if (req.method === "GET" && pathname === "/api/ft/data") return await ftData(env);
+      if (req.method === "GET" && pathname === "/api/ft/news") return await ftNews(env, new URL(req.url).searchParams.get("all") === "1");
+      if (req.method === "POST" && pathname === "/api/ft/telemetry") return await ftTelemetryPost(req, env);
+      if (req.method === "GET" && pathname === "/api/ft/telemetry") return await ftTelemetryGet(env);
+      if (req.method === "GET" && pathname === "/live") return new Response(livePage, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-cache" } });
+      if (req.method === "GET" && pathname === "/training") return new Response(trainingPage, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-cache" } });
+      if (req.method === "GET" && pathname === "/api/ft/pairs") return await ftPairs(env);
       if (req.method === "GET" && pathname === "/api/ft/results") return await ftResults(env);
       if (req.method === "POST" && pathname === "/api/ft/result") return await ftSubmit(req, env);
       if (req.method === "GET" && pathname === "/api/agreement") return await agreementCurve(env, new URL(req.url).searchParams.get("task") || "gsm8k_mixed");
@@ -221,6 +237,7 @@ async function getJob(req, env) {
   // A node lists the tasks its script supports; older scripts send nothing and only get GSM8K jobs.
   const list = (Array.isArray(canDo) && canDo.length ? canDo : ["gsm8k"]).map(String);
   if (list.includes("gpqa") && !list.includes("audit")) list.push("audit"); // GPQA nodes roll over to the audit run
+  if (list.includes("gsm8k_mixed") && !list.includes("audit")) list.push("audit"); // ten-model nodes roll over to the 1,000-problem audit
   const tasks = list.join(",");
   const node = await touchNode(env, node_id);
   if (!node) return json({ error: "unknown node" }, 401);
@@ -913,16 +930,76 @@ async function ftData(env) {
     `WITH it AS (SELECT DISTINCT ON (question) id, question, final_answer FROM items
                  WHERE task IN ('gsm8k', 'gsm8k_mixed') AND status = 'accepted' AND is_honeypot = 0 ORDER BY question, id)
      SELECT it.id, it.question, it.final_answer,
-            (SELECT v.reasoning FROM votes v WHERE v.item_id = it.id AND v.answer = it.final_answer ORDER BY v.id LIMIT 1) AS refined,
+            (SELECT json_agg(v.reasoning ORDER BY v.id) FROM votes v WHERE v.item_id = it.id AND v.answer = it.final_answer) AS agreeing,
             r.reasoning AS raw, r.answer AS raw_answer
      FROM it LEFT JOIN LATERAL (SELECT reasoning, answer FROM votes v WHERE v.item_id = it.id AND v.hinted = 0
                                 ORDER BY md5(v.id::text) LIMIT 1) r ON true
      ORDER BY it.id`
   ).all();
-  const body = results.map((r) => JSON.stringify(r)).join("\n") + "\n";
+  // the working that goes into the dataset is step-checked: of the votes that agreed with the consensus, keep one
+  // whose every calculation recomputes correctly (items with no clean working are left out)
+  const rows = results.map(({ agreeing, ...r }) => ({ ...r, refined: pickWorking(typeof agreeing === "string" ? JSON.parse(agreeing) : agreeing) }))
+    .filter((r) => r.refined);
+  const body = rows.map((r) => JSON.stringify(r)).join("\n") + "\n";
   return new Response(body, { headers: { "content-type": "application/x-ndjson", "cache-control": "no-store" } });
 }
 
+// Preference pairs for DPO (as in Self-Consistency Preference Optimization): for each accepted maths problem,
+// "chosen" = a vote that agreed with the consensus, "rejected" = an outvoted wrong answer (up to 2 per problem).
+// GSM8K test problems (the audit runs) are left out, so the GSM-Symbolic test stays unseen.
+async function ftPairs(env) {
+  const { results } = await env.DB.prepare(
+    `WITH it AS (SELECT DISTINCT ON (question) id, question, final_answer FROM items
+                 WHERE task IN ('gsm8k', 'gsm8k_mixed') AND status = 'accepted' AND is_honeypot = 0 ORDER BY question, id)
+     SELECT it.id, it.question, it.final_answer,
+            (SELECT json_agg(v.reasoning ORDER BY v.hinted, v.id) FROM votes v WHERE v.item_id = it.id AND v.answer = it.final_answer AND v.reasoning <> '') AS agreeing,
+            w.reasoning AS rejected, w.answer AS rejected_answer
+     FROM it JOIN LATERAL (SELECT DISTINCT ON (answer) reasoning, answer FROM votes v
+                           WHERE v.item_id = it.id AND v.answer IS DISTINCT FROM it.final_answer AND v.answer IS NOT NULL AND v.reasoning <> ''
+                           ORDER BY answer, v.id LIMIT 2) w ON true
+     ORDER BY it.id`
+  ).all();
+  // "chosen" must have step-checked working (see ftData); the rejected side is a wrong answer anyway
+  const rows = results.map(({ agreeing, ...r }) => ({ ...r, chosen: pickWorking(typeof agreeing === "string" ? JSON.parse(agreeing) : agreeing) }))
+    .filter((r) => r.chosen);
+  const body = rows.map((r) => JSON.stringify(r)).join("\n") + "\n";
+  return new Response(body, { headers: { "content-type": "application/x-ndjson", "cache-control": "no-store" } });
+}
+
+// Refined headline labels for fine-tuning: the network's accepted sentiment for each headline.
+async function ftNews(env, all = false) {
+  const { results } = await env.DB.prepare(
+    "SELECT id, question AS headline, split_part(final_answer, '|', 1) AS sentiment FROM items WHERE task = 'news' AND status = 'accepted' AND is_honeypot = 0 ORDER BY id"
+  ).all();
+  // Balanced by default: the accepted headlines lean positive (884 / 203 / 244), and a model trained on that learns
+  // to rarely say "negative" or "neutral". Each label is cut to the size of the rarest one, picked by a fixed
+  // shuffle so the export is repeatable. ?all=1 returns everything.
+  let rows = results.filter((r) => ["positive", "negative", "neutral"].includes(r.sentiment));
+  if (!all) {
+    const by = { positive: [], negative: [], neutral: [] };
+    for (const r of rows) by[r.sentiment].push(r);
+    const n = Math.min(...Object.values(by).map((v) => v.length));
+    const mix = (id) => (Math.imul(Number(id) ^ 0x9e3779b9, 2654435761) >>> 0);
+    rows = Object.values(by).flatMap((v) => v.sort((a, b) => mix(a.id) - mix(b.id)).slice(0, n)).sort((a, b) => a.id - b.id);
+  }
+  return new Response(rows.map(({ id, ...r }) => JSON.stringify(r)).join("\n") + "\n", { headers: { "content-type": "application/x-ndjson", "cache-control": "no-store" } });
+}
+
+// Live training telemetry: the notebook posts a snapshot every 30 s (stage, GPU, loss curve, scores so far);
+// the /training page polls the latest one. One row per run, overwritten each time.
+async function ftTelemetryPost(req, env) {
+  const b = await req.json().catch(() => ({}));
+  if (!env.JOIN_CODE || b.join_code !== env.JOIN_CODE) return json({ error: "bad join code" }, 403);
+  const run = String(b.run || "run").slice(0, 40), data = JSON.stringify(b.data || {});
+  if (data.length > 200_000) return json({ error: "too big" }, 413);
+  await env.DB.prepare("INSERT INTO ft_telemetry (run, data, updated) VALUES (?, ?::jsonb, ?) ON CONFLICT (run) DO UPDATE SET data = EXCLUDED.data, updated = EXCLUDED.updated")
+    .bind(run, data, Date.now()).run();
+  return json({ ok: true });
+}
+async function ftTelemetryGet(env) {
+  const { results } = await env.DB.prepare("SELECT run, data, updated FROM ft_telemetry ORDER BY updated DESC LIMIT 1").all();
+  return json({ now: Date.now(), latest: results[0] || null });
+}
 async function ftSubmit(req, env) {
   const b = await req.json().catch(() => ({}));
   if (!env.JOIN_CODE || b.join_code !== env.JOIN_CODE) return json({ error: "bad join code" }, 403);
@@ -989,7 +1066,12 @@ async function gpqaSwitch(env) {
 
 // Scores the network as a label checker: a label is flagged when the agreed answer differs from it;
 // items with no agreement are "sent to review" (not kept, so a bad label can't slip into the data either).
-async function auditBoard(env) {
+const auditCache = {};
+async function auditBoard(env, big) {
+  const hit = auditCache[big || ""]; if (hit && Date.now() - hit.at < 15_000) return json(hit.body);
+  // Both planted-errors runs (50, then 300) count together; only decided items are shown, so the totals grow live.
+  // ?run=1000 shows the second run alone, ?run=50 the first.
+  const run = (big === "1000" ? "id >= 700001" : big === "50" ? "id < 700001" : "id > 0") + " AND status IN ('accepted', 'dropped')";
   const { results } = await env.DB.prepare(
     `SELECT (meta->>'planted')::bool AS planted,
             CASE WHEN status = 'accepted' AND final_answer <> meta->>'label' THEN 'flagged'
@@ -998,16 +1080,38 @@ async function auditBoard(env) {
                  ELSE 'open' END AS outcome,
             SUM(CASE WHEN status = 'accepted' AND final_answer = gold THEN 1 ELSE 0 END) AS fixed_right,
             COUNT(*) AS n
-     FROM items WHERE task = 'audit' AND status <> 'parked' GROUP BY 1, 2`
+     FROM items WHERE task = 'audit' AND status <> 'parked' AND ${run} GROUP BY 1, 2`
   ).all();
   // Per-item detail for the walkthrough (GSM8K test problems are public, so the text can be shown).
   const [items, votes] = await env.DB.batch([
     env.DB.prepare(`SELECT id, question, gold, meta->>'label' AS label, (meta->>'planted')::bool AS planted, status, final_answer
-                    FROM items WHERE task = 'audit' AND status <> 'parked' ORDER BY id`),
+                    FROM items WHERE task = 'audit' AND status <> 'parked' AND ${run} ORDER BY id`),
     env.DB.prepare(`SELECT v.item_id, v.answer, v.hinted FROM votes v JOIN items i ON i.id = v.item_id
-                    WHERE i.task = 'audit' AND i.status <> 'parked' ORDER BY v.id`),
+                    WHERE i.task = 'audit' AND i.status <> 'parked' AND i.${run.replace("status", "i.status")} ORDER BY v.id`),
   ]);
-  return json({ now: Date.now(), rows: results, items: items.results, votes: votes.results });
+  const body = { now: Date.now(), rows: results, items: items.results, votes: votes.results };
+  auditCache[big || ""] = { at: Date.now(), body };
+  return json(body);
+}
+
+// ---------- hard 500 run ----------
+
+// The /hard page: the 100 hardest GSM8K train problems (5+ steps), refined by the 10 model families.
+async function hardBoard(env) {
+  const run = "i.id >= 600001 AND i.task = 'gsm8k_mixed' AND i.status <> 'parked'";
+  const [sum, pairs, recent, heat] = await env.DB.batch([
+    env.DB.prepare(`SELECT i.status, COUNT(*) AS n, SUM(CASE WHEN i.final_answer = i.gold THEN 1 ELSE 0 END) AS right_n
+                    FROM items i WHERE ${run} GROUP BY 1`),
+    env.DB.prepare(`SELECT COUNT(DISTINCT i.id) AS items, COUNT(*) AS wrong_votes FROM items i JOIN votes v ON v.item_id = i.id
+                    WHERE ${run} AND i.status = 'accepted' AND v.answer IS DISTINCT FROM i.final_answer`),
+    env.DB.prepare(`SELECT i.id, i.question, i.gold, i.final_answer, i.status, (i.meta->>'steps')::int AS steps,
+                           (SELECT COUNT(*) FROM votes v WHERE v.item_id = i.id) AS votes,
+                           (SELECT COUNT(*) FROM votes v WHERE v.item_id = i.id AND v.answer = i.final_answer) AS agree
+                    FROM items i WHERE ${run} AND i.status IN ('accepted', 'dropped') ORDER BY (SELECT MAX(v.created_at) FROM votes v WHERE v.item_id = i.id) DESC NULLS LAST LIMIT 25`),
+    env.DB.prepare(`SELECT v.model, v.harness, COUNT(*) AS votes, SUM(CASE WHEN v.answer = i.gold THEN 1 ELSE 0 END) AS correct
+                    FROM votes v JOIN items i ON i.id = v.item_id WHERE ${run} GROUP BY 1, 2`),
+  ]);
+  return json({ now: Date.now(), status: sum.results, pairs: pairs.results[0], recent: recent.results, heat: heat.results });
 }
 
 // ---------- news signal board ----------

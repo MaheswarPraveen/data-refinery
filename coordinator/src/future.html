@@ -135,14 +135,33 @@
   nav.tabsbar > a { display: flex !important; align-items: center; padding: 1px 0 3px !important; }
   nav.tabsbar .tablist { align-items: stretch; }
   nav.tabsbar .tablist a { display: flex; align-items: center; padding-top: 0 !important; padding-bottom: 0 !important; }
+  @media (max-width: 720px) { .net svg { min-width: 0 !important; } }
+
+  /* shared violet accent + fewer words (all pages) */
+  :root { --vio: #6d4fd8; --vio-bg: rgba(109, 79, 216, .10); }
+  @media (prefers-color-scheme: dark) { :root { --vio: #9a82f2; --vio-bg: rgba(154, 130, 242, .14); } }
+  nav.tabsbar .tablist a.on { color: var(--vio) !important; border-bottom-color: var(--vio) !important; }
+  nav.tabsbar .tablist a:hover { color: var(--vio); }
+  .subtabs, .seg { background: var(--vio-bg) !important; }
+  .subtabs a.on, .seg button.on { background: var(--vio) !important; color: #fff !important; opacity: 1 !important; box-shadow: none !important; }
+  .card { border-top: 2px solid var(--vio) !important; }
+  .card h2::before { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 2px; background: var(--vio); margin-right: 8px; vertical-align: 1px; }
+  .why { display: none !important; }
+  header .sub { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  details.more > summary { color: var(--vio); }
+  /* phones: less empty space above the tab bar */
+  @media (max-width: 720px) { nav.tabsbar { padding-top: 2px !important; } }
+  @media (max-width: 720px) { main { padding-top: 6px !important; } body > .wrap, body > div:first-child { padding-top: 6px !important; } }
+  .endnav { text-align: center; } .totop { display: inline-block; font-size: 17px; font-weight: 500; color: var(--vio, #6d4fd8) !important; text-decoration: none; padding: 10px 18px; border: 1px solid var(--vio, #6d4fd8); border-radius: 10px; }
+  /* tight page bottom */ .endnav { margin-top: 18px !important; padding: 10px 0 14px !important; border-top: 0 !important; } main, .wrap { padding-bottom: 10px !important; }
 </style>
 </head>
 <body id="top">
 <div class="wrap">
-  <nav class="tabsbar"><a href="/" style="padding:0 0 11px;border:0;margin:0;text-decoration:none"><b><svg class="logo" viewBox="0 0 96 40" aria-hidden="true"><g class="px"><rect x="2" y="9" width="4" height="4"/><rect x="8" y="4" width="4" height="4"/><rect x="5" y="17" width="4" height="4" opacity=".6"/><rect x="11" y="13" width="4" height="4"/><rect x="2" y="26" width="4" height="4" opacity=".5"/><rect x="9" y="24" width="4" height="4"/><rect x="6" y="32" width="4" height="4" opacity=".7"/></g><g class="ln"><path d="M15,15 C22,15 22,20 30,20"/><path d="M13,26 C22,26 22,20 30,20"/><path d="M30,20 L40,9 L50,20 L40,31 Z"/><path d="M40,9 L40,31"/><path d="M50,20 C56,20 56,14 62,14"/><path d="M50,20 C56,20 56,24 62,24"/></g><g class="nd"><circle cx="30" cy="20" r="3"/><circle cx="40" cy="9" r="3"/><circle cx="40" cy="31" r="3"/><circle cx="50" cy="20" r="3"/><circle cx="40" cy="20" r="1.6"/></g><g class="ly"><path d="M62,26 L77,19 L92,26 L77,33 Z" opacity=".55"/><path d="M62,20 L77,13 L92,20 L77,27 Z" opacity=".75"/><path d="M62,14 L77,7 L92,14 L77,21 Z"/></g></svg><span>Data Refinery</span></b></a><div class="tablist"><a href="/">Overview</a><a href="/audit">Error detection</a><a href="/gsm8k-mixed">Maths</a><a href="/gpqa">Science</a><a href="/gsm8k">Maths v1</a><a href="/news">News</a><a href="/trade">Trading</a><a href="/future" class="on">Decentralisation</a></div></nav>
+  <nav class="tabsbar"><a href="/" style="padding:0 0 11px;border:0;margin:0;text-decoration:none"><b><svg class="logo" viewBox="0 0 96 40" aria-hidden="true"><g class="px"><rect x="2" y="9" width="4" height="4"/><rect x="8" y="4" width="4" height="4"/><rect x="5" y="17" width="4" height="4" opacity=".6"/><rect x="11" y="13" width="4" height="4"/><rect x="2" y="26" width="4" height="4" opacity=".5"/><rect x="9" y="24" width="4" height="4"/><rect x="6" y="32" width="4" height="4" opacity=".7"/></g><g class="ln"><path d="M15,15 C22,15 22,20 30,20"/><path d="M13,26 C22,26 22,20 30,20"/><path d="M30,20 L40,9 L50,20 L40,31 Z"/><path d="M40,9 L40,31"/><path d="M50,20 C56,20 56,14 62,14"/><path d="M50,20 C56,20 56,24 62,24"/></g><g class="nd"><circle cx="30" cy="20" r="3"/><circle cx="40" cy="9" r="3"/><circle cx="40" cy="31" r="3"/><circle cx="50" cy="20" r="3"/><circle cx="40" cy="20" r="1.6"/></g><g class="ly"><path d="M62,26 L77,19 L92,26 L77,33 Z" opacity=".55"/><path d="M62,20 L77,13 L92,20 L77,27 Z" opacity=".75"/><path d="M62,14 L77,7 L92,14 L77,21 Z"/></g></svg><span>Data Refinery</span></b></a><div class="tablist"><a href="/">Overview</a><a href="/audit">Error detection</a><a href="/gsm8k-mixed">Maths</a><a href="/gpqa">Science</a><a href="/trade">Trading</a><a href="/data">Data search</a><a href="/training">Fine-tune</a><a href="/future" class="on">Decentralisation</a></div></nav>
 
   <h1>Every idle GPU becomes part of <em>the refinery</em>.</h1>
-  <p class="lede">The plan: anyone can contribute a home PC as a node, larger GPUs act as judges, dataset owners fund a reward pool, and contributors are paid for verified work.</p>
+  <p class="lede">Home PCs vote, big GPUs judge, dataset owners pay, volunteers earn.</p>
 
   <div class="net">
     <svg viewBox="0 0 980 470" role="img" aria-label="Animated network: dataset owners fund a reward pool; the coordinator sends questions to home nodes, collects answers, asks judge nodes for hints on split items, delivers the refined dataset, and pays rewards to nodes that agreed.">
@@ -241,7 +260,7 @@
       <div class="tiles">
         <div><div class="l">Finished in</div><div class="v num" id="t-days">–</div><div class="n" id="t-days-n"></div></div>
         <div><div class="l">Owner pays</div><div class="v num" id="t-cost">–</div><div class="n" id="t-cost-n"></div></div>
-        <div><div class="l">Each volunteer earns</div><div class="v num" id="t-earn">–</div><div class="n" id="t-earn-n"></div></div>
+        <div><div class="l">Each volunteer keeps</div><div class="v num" id="t-earn">–</div><div class="n" id="t-earn-n"></div></div>
       </div>
       <div class="cmp">
         <div class="ctitle">Cost to label the dataset</div>
@@ -256,7 +275,7 @@
       </div>
     </div>
   </div>
-  <p class="assume">Estimates, not measurements. Assumptions: 5.6 votes per item and 84% accepted (both measured in our runs); 18% of items need a hint; speed, memory and power per model size are typical figures for 4-bit models on consumer GPUs; cloud GPU at ₹30/hour; human labelling at ₹10 per item; owners pay ₹0.50 per accepted item for 3B work, scaled up for larger models in proportion to compute time; judges receive 15% of the pool, regular nodes 85%, shared among votes that agreed with the accepted consensus. 1 USD ≈ ₹84.</p>
+  <p class="assume">Estimates. Based on our runs: 5.6 votes per item, 84% accepted. ₹0.50 per item for 3B models, more for bigger ones. Volunteers get 85%, judges 15%. 1 USD ≈ ₹84.</p>
 
   <h2>Roadmap</h2>
   <div class="road">
@@ -302,19 +321,19 @@ function calc() {
   const hoursPerNode = days * hours;                          // idle hours each volunteer contributes
   const earnTotal = (pool * 0.85) / nodes;                    // regular nodes share 85% of the pool
   const powerTotal = (WATTS / 1000) * kwh * hoursPerNode;
-  const earnHr = earnTotal / Math.max(hoursPerNode, 1e-9), powerHr = (WATTS / 1000) * kwh;
+  const earnHr = earnTotal / Math.max(hoursPerNode, 1e-9), powerHr = (WATTS / 1000) * kwh, net = earnHr - powerHr;
   const cloud = (nodeVotesTotal * sec / 3600) * CLOUD_HR, human = items * HUMAN;
   const dur = (d) => d < 1 ? (d * 24 < 1 ? Math.max(1, Math.round(d * 1440)) + " min" : (d * 24).toFixed(1) + " hours") : d < 365 ? d.toFixed(1) + " days" : (d / 365).toFixed(1) + " years";
   const hrs = (h) => h < 1 ? Math.max(1, Math.round(h * 60)) + " min" : h.toFixed(h < 10 ? 1 : 0) + " h";
 
   $("t-story").innerHTML = `With <b>${fmt(nodes)} volunteers</b> giving ${hours} idle hours a day on ${mName} models, a <b>${fmt(items)}-item</b> dataset is refined in <b>${dur(days)}</b>. ` +
-    `The owner pays <b>${money(pool)}</b> instead of ${money(human)} for human labelling, and each volunteer earns about <b>${money(earnHr)} per idle hour</b>, well above the ${money(powerHr)} of electricity it uses.`;
+    `The owner pays <b>${money(pool)}</b> instead of ${money(human)} for human labelling, and each volunteer earns about ${money(earnHr)} per idle hour. After paying ${money(powerHr)} for electricity, they <b>keep ${money(net)} an hour</b>.`;
   $("t-days").textContent = dur(days);
   $("t-days-n").textContent = `${fmt(itemsPerDay)} items per day`;
   $("t-cost").textContent = money(pool);
   $("t-cost-n").textContent = `${fmt(accepted)} accepted items`;
-  $("t-earn").textContent = money(earnHr) + " / hour";
-  $("t-earn-n").textContent = `${money(earnTotal)} for this job (${hrs(hoursPerNode)}) · power ${money(powerHr)} / hour`;
+  $("t-earn").textContent = money(net) + " / hour";
+  $("t-earn-n").textContent = `earns ${money(earnHr)} − electricity ${money(powerHr)} per hour · ${money(earnTotal - powerTotal)} kept for this job (${hrs(hoursPerNode)})`;
 
   const mx = Math.max(pool, cloud, human);
   [["c-dr", pool], ["c-cloud", cloud], ["c-human", human]].forEach(([id, v]) => { $(id).style.width = Math.max(1, (v / mx) * 100) + "%"; $(id + "-v").textContent = money(v); });
@@ -322,7 +341,7 @@ function calc() {
   $("n-earn").style.width = (earnHr / m2) * 100 + "%"; $("n-earn-v").textContent = money(earnHr);
   $("n-power").style.width = (powerHr / m2) * 100 + "%"; $("n-power-v").textContent = money(powerHr);
 }
-document.querySelectorAll(".ctl input").forEach((el) => el.addEventListener("input", calc));
+document.querySelectorAll(".ctl input").forEach((el) => { el.addEventListener("input", calc); el.addEventListener("change", calc); });
 $("cur").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; CUR = b.dataset.c;
   document.querySelectorAll("#cur button").forEach((x) => x.classList.toggle("on", x === b)); calc(); });
 calc();
@@ -330,7 +349,7 @@ calc();
 // counter in the coordinator box ticks with the accepted-item packets
 let n = 0; setInterval(() => { n += 1; $("ctr").textContent = "items refined: " + n.toLocaleString("en-IN"); }, 2500);
 </script>
-<nav class="endnav"><div class="endin"><div class="endh">Explore the project</div><div class="endgrid"><a href="/"><b>Overview</b><span>The idea, results and architecture</span></a><a href="/audit"><b>Error detection</b><span>Main result: 9 of 10 wrong labels fixed</span></a><a href="/gsm8k-mixed"><b>Maths</b><span>Ten model families, 500 problems</span></a><a href="/gsm8k"><b>Maths v1</b><span>First run, Llama only</span></a><a href="/gpqa"><b>Science</b><span>Expert questions, paused early</span></a><a href="/news"><b>News</b><span>Headline sentiment labels</span></a><a href="/trade"><b>Trading</b><span>Paper-money signal study</span></a><a href="/future"><b>Decentralisation</b><span>Idle home GPUs, rewards, costs</span></a></div><div class="endfoot">Data Refinery · Meta Global AI Hackathon · <a href="#top">Back to top ↑</a></div></div></nav>
+<nav class="endnav"><div class="endin"><a class="totop" href="#top">↑ Back to top</a></div></nav>
 <script>(() => { const a = [...document.querySelectorAll(".endgrid a")].find((x) => x.getAttribute("href") === location.pathname); if (a) a.classList.add("here"); })();</script>
 </body>
 </html>

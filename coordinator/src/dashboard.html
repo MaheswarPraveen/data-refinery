@@ -252,15 +252,34 @@
   nav.tabsbar > a { display: flex !important; align-items: center; padding: 13px 0 3px !important; }
   nav.tabsbar .tablist { align-items: stretch; }
   nav.tabsbar .tablist a { display: flex; align-items: center; padding-top: 0 !important; padding-bottom: 0 !important; }
+  @media (max-width: 720px) { .heat { min-width: 0 !important; grid-template-columns: 76px repeat(5, minmax(0, 1fr)); font-size: 11px; } }
+
+  /* shared violet accent + fewer words (all pages) */
+  :root { --vio: #6d4fd8; --vio-bg: rgba(109, 79, 216, .10); }
+  @media (prefers-color-scheme: dark) { :root { --vio: #9a82f2; --vio-bg: rgba(154, 130, 242, .14); } }
+  nav.tabsbar .tablist a.on { color: var(--vio) !important; border-bottom-color: var(--vio) !important; }
+  nav.tabsbar .tablist a:hover { color: var(--vio); }
+  .subtabs, .seg { background: var(--vio-bg) !important; }
+  .subtabs a.on, .seg button.on { background: var(--vio) !important; color: #fff !important; opacity: 1 !important; box-shadow: none !important; }
+  .card { border-top: 2px solid var(--vio) !important; }
+  .card h2::before { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 2px; background: var(--vio); margin-right: 8px; vertical-align: 1px; }
+  .why { display: none !important; }
+  header .sub { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  details.more > summary { color: var(--vio); }
+  /* phones: less empty space above the tab bar */
+  @media (max-width: 720px) { nav.tabsbar { padding-top: 2px !important; } }
+  @media (max-width: 720px) { main { padding-top: 6px !important; } body > .wrap, body > div:first-child { padding-top: 6px !important; } }
+  .endnav { text-align: center; } .totop { display: inline-block; font-size: 17px; font-weight: 500; color: var(--vio, #6d4fd8) !important; text-decoration: none; padding: 10px 18px; border: 1px solid var(--vio, #6d4fd8); border-radius: 10px; }
+  /* tight page bottom */ .endnav { margin-top: 18px !important; padding: 10px 0 14px !important; border-top: 0 !important; } main, .wrap { padding-bottom: 10px !important; }
 </style>
 </head>
 <body id="top">
 <main>
-  <nav class="tabsbar"><a href="/" style="padding:0 0 11px;border:0;margin:0"><b><svg class="logo" viewBox="0 0 96 40" aria-hidden="true"><g class="px"><rect x="2" y="9" width="4" height="4"/><rect x="8" y="4" width="4" height="4"/><rect x="5" y="17" width="4" height="4" opacity=".6"/><rect x="11" y="13" width="4" height="4"/><rect x="2" y="26" width="4" height="4" opacity=".5"/><rect x="9" y="24" width="4" height="4"/><rect x="6" y="32" width="4" height="4" opacity=".7"/></g><g class="ln"><path d="M15,15 C22,15 22,20 30,20"/><path d="M13,26 C22,26 22,20 30,20"/><path d="M30,20 L40,9 L50,20 L40,31 Z"/><path d="M40,9 L40,31"/><path d="M50,20 C56,20 56,14 62,14"/><path d="M50,20 C56,20 56,24 62,24"/></g><g class="nd"><circle cx="30" cy="20" r="3"/><circle cx="40" cy="9" r="3"/><circle cx="40" cy="31" r="3"/><circle cx="50" cy="20" r="3"/><circle cx="40" cy="20" r="1.6"/></g><g class="ly"><path d="M62,26 L77,19 L92,26 L77,33 Z" opacity=".55"/><path d="M62,20 L77,13 L92,20 L77,27 Z" opacity=".75"/><path d="M62,14 L77,7 L92,14 L77,21 Z"/></g></svg><span>Data Refinery</span></b></a><div class="tablist"><a href="/">Overview</a><a href="/audit">Error detection</a><a href="/gsm8k-mixed">Maths</a><a href="/gpqa">Science</a><a href="/gsm8k">Maths v1</a><a href="/news">News</a><a href="/trade">Trading</a><a href="/future">Decentralisation</a></div></nav>
+  <nav class="tabsbar"><a href="/" style="padding:0 0 11px;border:0;margin:0"><b><svg class="logo" viewBox="0 0 96 40" aria-hidden="true"><g class="px"><rect x="2" y="9" width="4" height="4"/><rect x="8" y="4" width="4" height="4"/><rect x="5" y="17" width="4" height="4" opacity=".6"/><rect x="11" y="13" width="4" height="4"/><rect x="2" y="26" width="4" height="4" opacity=".5"/><rect x="9" y="24" width="4" height="4"/><rect x="6" y="32" width="4" height="4" opacity=".7"/></g><g class="ln"><path d="M15,15 C22,15 22,20 30,20"/><path d="M13,26 C22,26 22,20 30,20"/><path d="M30,20 L40,9 L50,20 L40,31 Z"/><path d="M40,9 L40,31"/><path d="M50,20 C56,20 56,14 62,14"/><path d="M50,20 C56,20 56,24 62,24"/></g><g class="nd"><circle cx="30" cy="20" r="3"/><circle cx="40" cy="9" r="3"/><circle cx="40" cy="31" r="3"/><circle cx="50" cy="20" r="3"/><circle cx="40" cy="20" r="1.6"/></g><g class="ly"><path d="M62,26 L77,19 L92,26 L77,33 Z" opacity=".55"/><path d="M62,20 L77,13 L92,20 L77,27 Z" opacity=".75"/><path d="M62,14 L77,7 L92,14 L77,21 Z"/></g></svg><span>Data Refinery</span></b></a><div class="tablist"><a href="/">Overview</a><a href="/audit">Error detection</a><a href="/gsm8k-mixed">Maths</a><a href="/gpqa">Science</a><a href="/trade">Trading</a><a href="/data">Data search</a><a href="/training">Fine-tune</a><a href="/future">Decentralisation</a></div></nav>
   <header>
     <div>
       <h1>GSM8K run · maths word problems</h1>
-      <p class="sub">Finished run: 1,350 problems with known answers, so every number below is checked against the truth. Judge here picked answers for 2-vs-1 splits (the older method).</p>
+      <p class="sub">First run: 1,350 maths problems, Llama models only, checked against known answers.</p>
     </div>
     <span class="live"><button class="sb-btn" id="sb-open">Model leaderboard</button><span class="dot stale" id="dot"></span><span id="updated">Connecting…</span></span>
   </header>
@@ -383,44 +402,55 @@
 <script>
 // [key, label, short line shown under the label, longer tooltip]
 // /gsm8k = first run (small Llamas); /gsm8k-mixed = Llama + Qwen + Granite run with the hint judge.
+const DEBUG = new URLSearchParams(location.search).has("debug");
+if (DEBUG) addEventListener("DOMContentLoaded", () => { const st = document.createElement("style"); st.textContent = ".why{display:block!important}"; document.head.append(st); document.querySelectorAll("details").forEach((d) => d.open = true); });
 const TASK = { "/gsm8k-mixed": "gsm8k_mixed", "/gpqa": "gpqa", "/audit": "audit" }[location.pathname] || "gsm8k";
 const MIXED = TASK === "gsm8k_mixed" || TASK === "gpqa" || TASK === "audit";
 if (TASK === "audit") addEventListener("DOMContentLoaded", async () => {
   // The primary example: a noisy labelled dataset in, a refined one out, told in three steps.
-  document.querySelector("h1").textContent = "Case study: detecting errors in a labelled dataset";
-  document.querySelector("header .sub").textContent = "A labelled dataset with deliberately corrupted labels, representative of scraped or crowd-sourced data, was processed by the network without access to the labels. This page documents the input, the method and the outcome.";
+  document.querySelector("h1").textContent = "Error Detection Test";
+  document.querySelector("header .sub").textContent = "Wrong labels were hidden in a maths dataset. The network found and fixed them without seeing the labels.";
   const sec = document.createElement("div");
   sec.innerHTML = `
-  <section class="card story"><div class="step">1</div><div>
-    <h2>Input</h2>
-    <p class="lead" id="au-in">–</p>
-    <div class="scroll"><table class="ex"><thead><tr><th>Problem (excerpt)</th><th class="num">Label in the dataset</th><th class="num">Correct answer</th></tr></thead><tbody id="au-ex"></tbody></table></div>
-    <p class="why" style="margin:8px 0 0">Three of the corrupted labels. Each was a plausible error: off by one step, doubled, halved or a near miss.</p>
-  </div></section>
-  <section class="card story"><div class="step">2</div><div>
-    <h2>Method</h2>
-    <div class="flow">
-      <div><b>Independent solving</b><span>Five nodes solve each problem from scratch, without access to the label.</span></div>
-      <div><b>Consensus</b><span>4–5 of 5 in agreement: the answer is accepted. 3: a hint from Muse Glimmer and five new votes. Fewer: referred for review.</span></div>
-      <div><b>Verification</b><span>If the consensus matches the label, it is confirmed. If not, the label is flagged and replaced with the consensus answer.</span></div>
+  <section class="card au-hero">
+    <div class="au-punch"><span class="neg" id="au-b">–</span><span class="arr">→</span><span class="pos" id="au-a">–</span></div>
+    <p class="au-cap">wrong labels in the dataset, before and after refining</p>
+    <div class="au-kpis">
+      <div><b id="au-k1">–</b><span>labels checked</span></div>
+      <div><b id="au-k2">–</b><span>errors hidden</span></div>
+      <div><b class="pos" id="au-k3">–</b><span>errors corrected</span></div>
+      <div><b class="neg" id="au-k4">–</b><span>errors left in</span></div>
     </div>
-  </div></section>
-  <section class="card story"><div class="step">3</div><div>
-    <h2>Outcome</h2>
-    <div id="au-ba"></div>
     <div class="stack" id="au-stack"></div>
     <div class="stack-leg" id="au-leg"></div>
-    <p class="lead" id="au-out" style="margin-top:14px">–</p>
-  </div></section>
-  <section class="card" style="margin-top:14px">
-    <h2>Corrupted labels and incorrect changes</h2>
-    <p class="why">Every corrupted label, plus any correct label the network changed. Votes show the five independent answers (after the hint, where one was given).</p>
-    <div class="scroll"><table><thead><tr><th>Problem (excerpt)</th><th class="num">Label</th><th class="num">Network</th><th class="num">Correct</th><th>Votes</th><th>Outcome</th></tr></thead><tbody id="au-rows"></tbody></table></div>
+    <p class="lead" id="au-out" hidden>–</p>
+    <div id="au-ba" hidden></div>
   </section>
-  <p class="under">Supporting detail: voting pipeline, model × prompt accuracy and model leaderboard for this run.</p>`;
+  <div id="au-heat-slot"></div>
+  <section class="card" style="margin-top:14px">
+    <h2>How it works</h2>
+    <div class="flow" style="margin-top:10px">
+      <div><b>1 · Solve</b><span>5 AI models solve each problem. They never see the dataset's answer.</span></div>
+      <div><b>2 · Agree</b><span>If 4 or 5 give the same answer, we trust it. If not, a human checks.</span></div>
+      <div><b>3 · Compare</b><span>Their answer matches the dataset: fine. It doesn't: the dataset was wrong, so we fix it.</span></div>
+    </div>
+    <p class="lead" id="au-in" hidden>–</p>
+  </section>
+  <details class="more" style="margin-top:14px">
+    <summary>Every hidden error, and what happened to it</summary>
+    <div class="scroll au-box" style="margin-top:10px"><table><thead><tr><th>Problem (excerpt)</th><th class="num">Label</th><th class="num">Network</th><th class="num">Correct</th><th>Votes</th><th>Outcome</th></tr></thead><tbody id="au-rows"></tbody></table></div>
+  </details>
+  <table hidden><tbody id="au-ex"></tbody></table>`;
+  // the generic run panels (summary, pipeline, logs) are noise on this page; keep only the heat map
+  if (!DEBUG) document.querySelectorAll("main > section, main > details.more").forEach((el) => { if (!el.querySelector("#heat")) el.hidden = true; });
+  const heatCard = document.getElementById("heat")?.closest("section");
+  if (heatCard) { heatCard.style.marginTop = "14px"; sec.querySelector("#au-heat-slot").replaceWith(heatCard); }
+  const st = document.createElement("style");
+  st.textContent = `.au-hero{padding:28px 24px}.au-punch{display:flex;align-items:baseline;gap:18px;font:600 clamp(44px,9vw,76px)/1 "IBM Plex Sans",sans-serif;letter-spacing:-.03em}.au-punch .arr{font-size:.5em;color:var(--muted)}.au-cap{color:var(--ink-2);margin:8px 0 22px;font-size:15px}.au-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}.au-kpis b{display:block;font:600 26px "IBM Plex Mono",monospace}.au-kpis span{color:var(--muted);font-size:12px}@media(max-width:600px){.au-kpis{grid-template-columns:repeat(2,1fr)}}.au-box{max-height:420px;overflow:auto}`;
+  document.head.append(st);
   document.querySelector("header").after(sec);
   try {
-    const d = await (await fetch("/api/audit", { cache: "no-store" })).json();
+    const d = await (await fetch("/api/audit" + (new URLSearchParams(location.search).get("run") === "1000" ? "?run=1000" : ""), { cache: "no-store" })).json();
     const by = {};
     for (const v of d.votes) (by[v.item_id] ??= [[], []])[v.hinted ? 1 : 0].push(v.answer);
     const short = (q) => esc(q.length > 90 ? q.slice(0, 88) + "…" : q);
@@ -431,6 +461,8 @@ if (TASK === "audit") addEventListener("DOMContentLoaded", async () => {
     for (const i of items) c[cls(i)]++;
     const wrongBefore = planted.length, wrongAfter = c.missed + c.false;
     const pctOf = (a, b) => (b ? Math.round((a / b) * 1000) / 10 : 0);
+    $("au-k1").textContent = N; $("au-k2").textContent = wrongBefore; $("au-k3").textContent = c.caught; $("au-k4").textContent = wrongAfter;
+    $("au-b").textContent = pctOf(wrongBefore, N) + "%"; $("au-a").textContent = pctOf(wrongAfter, kept.length) + "%";
     $("au-in").innerHTML = `<b>${N} maths word problems</b> from the GSM8K test set, each with a label. <b>${wrongBefore} labels (${pctOf(wrongBefore, N)}%) were deliberately corrupted.</b> None of these problems appeared in earlier runs.`;
     $("au-ex").innerHTML = planted.slice(0, 3).map((i) => `<tr><td>${short(i.question)}</td><td class="num neg">${esc(i.label)}</td><td class="num">${esc(i.gold)}</td></tr>`).join("");
     const eb = pctOf(wrongBefore, N), ea = pctOf(wrongAfter, kept.length), mx = Math.max(eb, ea, 1);
@@ -463,12 +495,12 @@ if (TASK === "gpqa") addEventListener("DOMContentLoaded", async () => {
   ex.className = "card"; ex.style.marginBottom = "14px";
   ex.innerHTML = `<h2>Reading this result</h2>
     <div class="flow" style="margin-top:12px">
-      <div><b>Why it scored low</b><span>GPQA is written so that experts outside the field score about 34%, even with web access. Our voters are 3–5B models; they lack the specialist knowledge, so they often agree on the same plausible wrong option. Consensus removes random mistakes, not shared gaps in knowledge.</span></div>
-      <div><b>Why it was paused</b><span>After 22 questions the pattern was clear: single votes at 37%, and agreement did not improve accuracy. With limited free GPU time, we stopped and moved the compute to the error-detection study, where the method applies.</span></div>
-      <div><b>How to raise the odds</b><span>The node software runs any model. Volunteers with larger GPUs can run 70B-class open models, which score well above small models on GPQA. Mixing several large families keeps errors independent, so agreement becomes meaningful again.</span></div>
+      <div><b>Why it scored low</b><span>Small 3–5B models lack PhD knowledge, so they agree on the same wrong option. Voting fixes random mistakes, not missing knowledge.</span></div>
+      <div><b>Why it was paused</b><span>After 22 questions: 37% per vote, no gain from agreement. We moved the GPU time to error detection.</span></div>
+      <div><b>The fix</b><span>Bigger models. Nodes can run any model; 70B-class voters score far higher.</span></div>
     </div>
     <div style="margin-top:18px" id="gq-ref"></div>
-    <p class="why" style="margin:6px 0 0">Reference points are approximate, from the GPQA paper and public model reports; the 3–5B figure is measured in this run.</p>`;
+    `;
   document.querySelector("header").after(ex);
   $("gq-ref").innerHTML = [["Random guessing", 25, "var(--muted)"], ["PhDs outside their field", 34, "var(--muted)"], ["Our 3–5B voters (single vote)", 37, "var(--s1)"], ["Open 70B-class models", 55, "var(--s1)"], ["Domain experts", 65, "var(--muted)"], ["Frontier models", 85, "var(--muted)"]]
     .map(([l, v, c]) => `<div class="barrow"><span class="bl" style="white-space:nowrap">${l}</span><div class="bt"><i style="width:${v}%;background:${c}"></i></div><span class="bv">~${v}%</span><span class="bn"></span></div>`).join("");
@@ -490,13 +522,13 @@ if (TASK === "gpqa") addEventListener("DOMContentLoaded", async () => {
   } catch {}
 
   document.querySelector("h1").textContent = "GPQA-Diamond · PhD-level science";
-  document.querySelector("header .sub").textContent = "100 graduate physics, chemistry and biology questions (A-D), a random mix from GPQA-Diamond, built so experts outside the field score ~34%. Same 5 nodes and rules: 4-5 agree = kept; 3 = one hint (never the answer), then 4-5 of 5 fresh votes; 2 or fewer = thrown out. Random guessing = 25%.";
+  document.querySelector("header .sub").textContent = "PhD-level science questions (A–D). Paused early: too hard for small models.";
 });
 if (TASK === "gsm8k_mixed") addEventListener("DOMContentLoaded", () => {
   const jw = [...document.querySelectorAll("h2")].find((h) => h.textContent === "Judge");
   if (jw) jw.nextElementSibling.textContent = "Steps in only when 3 of 5 agree. It writes one hint, never the answer; 5 fresh votes then need 4+ in agreement.";
   document.querySelector("h1").textContent = "GSM8K run 2 · mixed families";
-  document.querySelector("header .sub").textContent = "Same 1,350 problems. 5 nodes, each like one person's computer with 2 small models (10 families, none shared); every problem gets one vote per node from a random model. 4-5 agree = kept; 3 = one hint from the judge (never the answer), then 4-5 of 5 fresh votes; 2 or fewer = thrown out.";
+  document.querySelector("header .sub").textContent = "Maths problems voted on by 10 model families. 4–5 of 5 agree: kept.";
 });
 const HARNESSES = TASK === "gpqa" ? [
   ["direct", "Direct", "Told: answer it, keep the reasoning short.", "Answer directly, short reasoning."],
@@ -795,7 +827,23 @@ addEventListener("DOMContentLoaded", () => {
 (() => { const a = [...document.querySelectorAll("nav.tabsbar .tablist a")].find((x) => x.getAttribute("href") === location.pathname);
   if (a) { a.classList.add("on"); a.scrollIntoView({ inline: "center", block: "nearest" }); } })();
 </script>
-<nav class="endnav"><div class="endin"><div class="endh">Explore the project</div><div class="endgrid"><a href="/"><b>Overview</b><span>The idea, results and architecture</span></a><a href="/audit"><b>Error detection</b><span>Main result: 9 of 10 wrong labels fixed</span></a><a href="/gsm8k-mixed"><b>Maths</b><span>Ten model families, 500 problems</span></a><a href="/gsm8k"><b>Maths v1</b><span>First run, Llama only</span></a><a href="/gpqa"><b>Science</b><span>Expert questions, paused early</span></a><a href="/news"><b>News</b><span>Headline sentiment labels</span></a><a href="/trade"><b>Trading</b><span>Paper-money signal study</span></a><a href="/future"><b>Decentralisation</b><span>Idle home GPUs, rewards, costs</span></a></div><div class="endfoot">Data Refinery · Meta Global AI Hackathon · <a href="#top">Back to top ↑</a></div></div></nav>
+<nav class="endnav"><div class="endin"><a class="totop" href="#top">↑ Back to top</a></div></nav>
 <script>(() => { const a = [...document.querySelectorAll(".endgrid a")].find((x) => x.getAttribute("href") === location.pathname); if (a) a.classList.add("here"); })();</script>
+<script>
+// Tabs that hold two tests share one top tab; a small switch picks the test.
+(() => {
+  const G = { "/gsm8k-mixed": "/gsm8k-mixed", "/gsm8k": "/gsm8k-mixed", "/hard": "/gsm8k-mixed", "/trade": "/trade", "/news": "/trade" };
+  const top = G[location.pathname] || location.pathname;
+  document.querySelectorAll("nav.tabsbar .tablist a").forEach((a) => a.classList.toggle("on", a.getAttribute("href") === top));
+  const SETS = { "/gsm8k-mixed": [["/gsm8k-mixed", "Math Mixed LLMs"], ["/gsm8k", "Llama Only"], ["/hard", "Hard 100"]], "/trade": [["/trade", "Trade calls"], ["/news", "Headline labels"]] };
+  const set = SETS[top]; if (!set) return;
+  const bar = document.createElement("div"); bar.className = "subtabs";
+  bar.innerHTML = set.map(([h, l]) => `<a href="${h}"${h === location.pathname ? ' class="on"' : ""}>${l}</a>`).join("");
+  document.querySelector("nav.tabsbar").after(bar);
+  const st = document.createElement("style");
+  st.textContent = ".subtabs{display:inline-flex;gap:2px;padding:3px;border-radius:10px;background:color-mix(in srgb,currentColor 8%,transparent);margin:14px 0 4px}.subtabs a{font-size:13px;text-decoration:none;color:inherit;opacity:.7;padding:6px 12px;border-radius:8px}.subtabs a.on{opacity:1;font-weight:500;background:color-mix(in srgb,currentColor 10%,transparent)}";
+  document.head.append(st);
+})();
+</script>
 </body>
 </html>

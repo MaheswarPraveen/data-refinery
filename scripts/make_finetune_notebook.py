@@ -35,6 +35,15 @@ N_TEST = 500
 SEED = 3407
 assert JOIN_CODE, "paste the join code first" """)
 
+code("""# mount Google Drive first, so trained models are saved there and survive the runtime shutdown
+import os
+from google.colab import drive
+drive.mount("/content/drive")
+SAVE_ROOT = "/content/drive/MyDrive/data-refinery/models"
+os.makedirs(SAVE_ROOT, exist_ok=True)
+assert os.path.isdir(SAVE_ROOT), "Google Drive not mounted"
+print("models will be saved to", SAVE_ROOT)""")
+
 code("""import json, re, random, time, requests, torch
 from datasets import load_dataset, Dataset
 
@@ -135,6 +144,10 @@ for name in ["raw", "refined", "official"]:
     try: trainer = SFTTrainer(model=model, tokenizer=tok, train_dataset=ds, args=cfg)
     except TypeError: trainer = SFTTrainer(model=model, processing_class=tok, train_dataset=ds, args=cfg)
     t0 = time.time(); trainer.train(); print(f"trained {name} in {time.time() - t0:.0f}s")
+    save_dir = f"{SAVE_ROOT}/{name}"        # keep the trained adapter: the runtime is deleted at the end
+    model.save_pretrained(save_dir); tok.save_pretrained(save_dir)
+    assert os.path.exists(f"{save_dir}/adapter_config.json"), f"save failed for {name}"
+    print(f"saved {name} adapter to {save_dir}")
     tok.padding_side = "left"
     RESULTS[name] = evaluate(model, tok, name)
     del model, trainer; torch.cuda.empty_cache()""")

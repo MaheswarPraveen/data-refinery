@@ -158,6 +158,9 @@
   .anim .ks { fill: var(--ink-2); font: 12px "IBM Plex Sans", sans-serif; text-anchor: middle; }
   @keyframes glow { 0%, 60% { stroke-width: 1.5; } 80% { stroke-width: 3.5; } 100% { stroke-width: 1.5; } }
 
+  .seg { display: inline-flex; gap: 2px; padding: 3px; border-radius: 10px; background: var(--track, rgba(127,127,127,.12)); margin-bottom: 18px; flex-wrap: wrap; }
+  .seg button { font: inherit; font-size: 13px; border: 0; background: none; color: var(--ink-2); padding: 6px 12px; border-radius: 8px; cursor: pointer; }
+  .seg button.on { background: var(--page); color: var(--ink); font-weight: 500; box-shadow: 0 1px 2px rgba(0,0,0,.12); }
   /* waffle + before/after columns */
   .waffle-wrap { display: grid; grid-template-columns: 1fr 200px; gap: 36px; margin: 26px 0 6px; align-items: start; }
   .wtitle { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
@@ -181,7 +184,7 @@
 
   /* svg charts */
   .chart2 { overflow-x: auto; }
-  @media (max-width: 720px) { .svgc { min-width: 540px; } }
+  
   .svgc { width: 100%; height: auto; display: block; overflow: visible; font-family: "IBM Plex Sans", sans-serif; }
   .svgc .gl { stroke: var(--rule); stroke-width: 1; }
   .svgc .chance { stroke: var(--muted); stroke-dasharray: 4 4; stroke-width: 1; }
@@ -338,7 +341,7 @@
   .robo { width: 100%; max-width: 340px; justify-self: end; }
   .robo svg { width: 100%; height: auto; display: block; }
   .hero { grid-template-columns: 1fr 340px !important; }
-  @media (max-width: 720px) { .hero { grid-template-columns: 1fr !important; } .robo { order: -1; justify-self: center; max-width: 280px; } }
+  @media (max-width: 720px) { .hero { grid-template-columns: 1fr !important; } .robo { order: -1; justify-self: center; max-width: 170px; } }
   .hero h1 { font-size: 52px; line-height: 1.05; }
   @media (max-width: 720px) { .hero h1 { font-size: 36px; } }
   /* header: logo and tabs share one centre line; the active underline still sits on the bottom rule */
@@ -361,19 +364,56 @@
   .kb b { font-size: 12px; color: var(--ink-2); }
   @media (max-width: 720px) { .iohead, .iorow, .iototal { grid-template-columns: 1.4fr .7fr .7fr .7fr; font-size: 12px; } .iohead span:last-child, .kb, .iototal span:last-child { display: none; } }
   .robo .lab, .robo .cnt { display: none; }   /* robot stays wordless: no labels or counters */
+  /* phones: charts shrink to the screen instead of scrolling sideways */
+  @media (max-width: 720px) { .arch svg, .arch2 svg, .steps2, .acap, .svgc { min-width: 0 !important; } .steps2 { font-size: 12px; } }
+
+  /* shared violet accent + fewer words (all pages) */
+  :root { --vio: #6d4fd8; --vio-bg: rgba(109, 79, 216, .10); }
+  @media (prefers-color-scheme: dark) { :root { --vio: #9a82f2; --vio-bg: rgba(154, 130, 242, .14); } }
+  nav.tabsbar .tablist a.on { color: var(--vio) !important; border-bottom-color: var(--vio) !important; }
+  nav.tabsbar .tablist a:hover { color: var(--vio); }
+  .subtabs, .seg { background: var(--vio-bg) !important; }
+  .subtabs a.on, .seg button.on { background: var(--vio) !important; color: #fff !important; opacity: 1 !important; box-shadow: none !important; }
+  .card { border-top: 2px solid var(--vio) !important; }
+  .card h2::before { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 2px; background: var(--vio); margin-right: 8px; vertical-align: 1px; }
+  .why { display: none !important; }
+  header .sub { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  details.more > summary { color: var(--vio); }
+  .waffle-wrap { grid-template-columns: 1fr !important; } .waffle-wrap .ba { max-width: 260px; }
+  @media (max-width: 720px) { .hero { padding: 4px 0 6px !important; gap: 6px !important; } .robo { max-width: 150px !important; } }
+  /* phones: less empty space above the tab bar */
+  @media (max-width: 720px) { nav.tabsbar { padding-top: 2px !important; } }
+  @media (max-width: 720px) { main { padding-top: 6px !important; } body > .wrap, body > div:first-child { padding-top: 6px !important; } }
+  .endnav { text-align: center; } .totop { display: inline-block; font-size: 17px; font-weight: 500; color: var(--vio, #6d4fd8) !important; text-decoration: none; padding: 10px 18px; border: 1px solid var(--vio, #6d4fd8); border-radius: 10px; }
+  .datacta { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 18px 0 8px; padding: 18px 20px; border-radius: 12px; text-decoration: none; color: inherit; border: 1px solid var(--vio); background: var(--vio-bg); transition: transform .15s; }
+  .datacta:hover { transform: translateY(-2px); } .datacta b { display: block; font-size: 17px; } .datacta span { color: var(--ink-2); font-size: 14px; } .datacta .go { color: #fff; background: var(--vio); padding: 8px 14px; border-radius: 8px; font-weight: 500; white-space: nowrap; }
+  .ftdata { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .ftdata div { background: var(--page); border-radius: 10px; padding: 12px; text-align: center; }
+  .ftdata b { display: block; font: 600 24px "IBM Plex Mono", monospace; color: var(--accent); } .ftdata span { font-size: 12px; color: var(--muted); }
+  .ftbars { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 10px; }
+  .ftb { display: flex; flex-direction: column; align-items: center; }
+  .ftb .pair { display: flex; align-items: flex-end; gap: 6px; height: 150px; width: 100%; justify-content: center; border-bottom: 1px solid var(--rule, var(--grid)); }
+  .ftb .pair div { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; width: 40%; max-width: 42px; }
+  .ftb .pair i { display: block; width: 100%; border-radius: 5px 5px 0 0; }
+  .ftb .pair em { font: 600 11px "IBM Plex Mono", monospace; font-style: normal; margin-bottom: 3px; white-space: nowrap; }
+  .ftb .gain { font: 600 13px "IBM Plex Mono", monospace; color: var(--good); margin-top: 6px; }
+  .ftb .nm { font-size: 11.5px; color: var(--ink-2); text-align: center; line-height: 1.25; margin-top: 2px; }
+  .ftleg { display: flex; gap: 14px; font-size: 12px; color: var(--muted); margin-top: 10px; } .ftleg i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+  @media (max-width: 600px) { .ftbars { grid-template-columns: repeat(2, 1fr); } }
+  /* tight page bottom */ .endnav { margin-top: 18px !important; padding: 10px 0 14px !important; border-top: 0 !important; } main, .wrap { padding-bottom: 10px !important; }
 </style>
 </head>
 <body id="top">
 <div class="wrap">
-  <nav class="tabsbar"><a href="/" style="padding:0 0 11px;border:0;margin:0"><b><svg class="logo" viewBox="0 0 96 40" aria-hidden="true"><g class="px"><rect x="2" y="9" width="4" height="4"/><rect x="8" y="4" width="4" height="4"/><rect x="5" y="17" width="4" height="4" opacity=".6"/><rect x="11" y="13" width="4" height="4"/><rect x="2" y="26" width="4" height="4" opacity=".5"/><rect x="9" y="24" width="4" height="4"/><rect x="6" y="32" width="4" height="4" opacity=".7"/></g><g class="ln"><path d="M15,15 C22,15 22,20 30,20"/><path d="M13,26 C22,26 22,20 30,20"/><path d="M30,20 L40,9 L50,20 L40,31 Z"/><path d="M40,9 L40,31"/><path d="M50,20 C56,20 56,14 62,14"/><path d="M50,20 C56,20 56,24 62,24"/></g><g class="nd"><circle cx="30" cy="20" r="3"/><circle cx="40" cy="9" r="3"/><circle cx="40" cy="31" r="3"/><circle cx="50" cy="20" r="3"/><circle cx="40" cy="20" r="1.6"/></g><g class="ly"><path d="M62,26 L77,19 L92,26 L77,33 Z" opacity=".55"/><path d="M62,20 L77,13 L92,20 L77,27 Z" opacity=".75"/><path d="M62,14 L77,7 L92,14 L77,21 Z"/></g></svg><span>Data Refinery</span></b></a><div class="tablist"><a href="/">Overview</a><a href="/audit">Error detection</a><a href="/gsm8k-mixed">Maths</a><a href="/gpqa">Science</a><a href="/gsm8k">Maths v1</a><a href="/news">News</a><a href="/trade">Trading</a><a href="/future">Decentralisation</a></div></nav>
+  <nav class="tabsbar"><a href="/" style="padding:0 0 11px;border:0;margin:0"><b><svg class="logo" viewBox="0 0 96 40" aria-hidden="true"><g class="px"><rect x="2" y="9" width="4" height="4"/><rect x="8" y="4" width="4" height="4"/><rect x="5" y="17" width="4" height="4" opacity=".6"/><rect x="11" y="13" width="4" height="4"/><rect x="2" y="26" width="4" height="4" opacity=".5"/><rect x="9" y="24" width="4" height="4"/><rect x="6" y="32" width="4" height="4" opacity=".7"/></g><g class="ln"><path d="M15,15 C22,15 22,20 30,20"/><path d="M13,26 C22,26 22,20 30,20"/><path d="M30,20 L40,9 L50,20 L40,31 Z"/><path d="M40,9 L40,31"/><path d="M50,20 C56,20 56,14 62,14"/><path d="M50,20 C56,20 56,24 62,24"/></g><g class="nd"><circle cx="30" cy="20" r="3"/><circle cx="40" cy="9" r="3"/><circle cx="40" cy="31" r="3"/><circle cx="50" cy="20" r="3"/><circle cx="40" cy="20" r="1.6"/></g><g class="ly"><path d="M62,26 L77,19 L92,26 L77,33 Z" opacity=".55"/><path d="M62,20 L77,13 L92,20 L77,27 Z" opacity=".75"/><path d="M62,14 L77,7 L92,14 L77,21 Z"/></g></svg><span>Data Refinery</span></b></a><div class="tablist"><a href="/">Overview</a><a href="/audit">Error detection</a><a href="/gsm8k-mixed">Maths</a><a href="/gpqa">Science</a><a href="/trade">Trading</a><a href="/data">Data search</a><a href="/training">Fine-tune</a><a href="/future">Decentralisation</a></div></nav>
 
   <header class="hero">
     <div>
       <p class="eyebrow">Meta Global AI Hackathon · Indie track</p>
       <h1>Raw data in.<br><em>Refined data out.</em></h1>
-      <p class="lede">Five small open models check every item, blind. Only what they agree on survives, and the result is training data you can trust.</p>
+      <p class="lede">Five small models check every item. Only what they agree on is kept.</p>
     </div>
-    <aside class="robo"><svg viewBox="0 0 360 270" aria-hidden="true" data-label="A robot picks up each paper, checks it, puts correct ones on the accepted pile and throws wrong ones in the bin.">
+    <aside class="robo"><svg viewBox="0 18 360 234" aria-hidden="true" data-label="A robot picks up each paper, checks it, puts correct ones on the accepted pile and throws wrong ones in the bin.">
     <!-- robot body (behind the table) -->
     <g class="robot">
       <line class="ant" x1="180" y1="44" x2="180" y2="30"/><circle id="r-bulb" cx="180" cy="27" r="4" fill="var(--accent)"/>
@@ -409,16 +449,18 @@
   <section>
     <h2>Main result</h2>
     <div class="feature">
-      <div class="punch"><span class="pn bad">20%</span><span class="parr">→</span><span class="pn good">2.4%</span></div>
+      <div class="seg" role="tablist"><button class="on" data-p="audit">Error Detection Test</button><button data-p="hard">Hard 100</button><button data-p="all">All maths</button></div>
+      <div class="pane" id="p-audit">
+      <div class="punch"><span class="pn bad" id="p-before">–</span><span class="parr">→</span><span class="pn good" id="p-after">–</span></div>
       <h3>wrong labels in the dataset, before and after refining</h3>
-      <p class="d" id="f-d">We hid 10 wrong answers among 50 maths problems. The models never saw the given answers, solved each problem themselves, and fixed 9 of the 10. That is an 8× cleaner dataset.</p>
+      <p class="d" id="f-d">We hid wrong answers among labelled maths problems. The models never saw the given answers and solved each problem themselves. Live: updates as the test runs.</p>
       <div class="trio">
         <div><div class="lab">Input</div><div class="big num" id="f-in">–</div><p id="f-in2">labels, some secretly wrong</p></div>
         <div><div class="lab">Errors corrected</div><div class="big num" id="f-caught">–</div><p id="f-caught2">corrupted labels identified and fixed</p></div>
         <div><div class="lab">Errors remaining</div><div class="big num" id="f-missed">–</div><p id="f-missed2">wrong labels left in the kept data</p></div>
       </div>
       <div class="waffle-wrap">
-        <div><div class="wtitle">Outcome for each of the 50 labels</div><div class="waffle" id="waffle"></div><div class="wleg" id="wleg"></div></div>
+        <div hidden><div class="wtitle"><span id="w-title">Outcome for each label</span></div><div class="waffle" id="waffle"></div><div class="wleg" id="wleg"></div></div>
         <div class="ba">
           <div class="wtitle">Label error rate</div>
           <div class="bacol"><div class="babar"><i id="b-before" style="height:0;background:var(--bad)"></i></div><b class="num" id="v-before">–</b><span>before</span></div>
@@ -427,6 +469,44 @@
       </div>
       <p class="note" id="b-note"></p>
       <a class="cta" href="/audit">View the full case study: input, method and every corrected label →</a>
+      </div>
+      <div class="pane" id="p-hard" hidden>
+        <div class="punch"><span class="pn good" id="h-pct">–</span></div>
+        <h3>of accepted answers match the official answer, on the 100 hardest problems</h3>
+        <p class="d">100 hard maths problems (5–9 steps), voted on by 10 model families. Live.</p>
+        <div class="trio">
+          <div><div class="lab">Input</div><div class="big num">100</div><p>hard problems</p></div>
+          <div><div class="lab">Accepted</div><div class="big num" id="h-acc">–</div><p>kept as training data</p></div>
+          <div><div class="lab">Rejected</div><div class="big num" id="h-rej">–</div><p id="h-rej2">no agreement, left out</p></div>
+        </div>
+        <a class="cta" href="/hard">Watch the run live: every decision →</a>
+      </div>
+      <div class="pane" id="p-all" hidden>
+        <div class="punch"><span class="pn good" id="m-pct">–</span></div>
+        <h3>of accepted answers are correct, across every maths run</h3>
+        <p class="d">Every maths problem decided so far.</p>
+        <div class="trio">
+          <div><div class="lab">Decided</div><div class="big num" id="m-in">–</div><p>maths problems</p></div>
+          <div><div class="lab">Accepted</div><div class="big num" id="m-acc">–</div><p>kept as training data</p></div>
+          <div><div class="lab">Rejected</div><div class="big num" id="m-rej">–</div><p>too uncertain to keep</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <a class="datacta" href="/data">
+    <div><b>Search and refine the data you need</b><span>Describe it. An AI agent finds sources, collects a sample, sizes the job and quotes it.</span></div>
+    <span class="go">Try it →</span>
+  </a>
+
+  <section>
+    <h2>A little refined data, a better model</h2>
+    <div class="feature">
+      <div class="ftdata"><div><b>1,331</b><span>refined headline labels</span></div><div><b>592</b><span>refined maths answers</span></div><div><b>~3 min</b><span>of training, 1 epoch</span></div></div>
+      <p class="d" style="margin:14px 0 4px">Llama 3.2 1B, trained only on refinery data, then tested on questions it never saw:</p>
+      <div class="ftbars" id="ftbars"></div>
+      <div class="ftleg"><span><i style="background:var(--muted)"></i>base model</span><span><i style="background:var(--accent)"></i>fine-tuned on refined data</span></div>
+      <a class="cta" href="/training">See the fine-tuned example →</a>
     </div>
   </section>
 
@@ -506,8 +586,8 @@
       <div class="badv" style="margin-top:14px">
       <div><b>Never become data</b><span>A disagreeing answer is outvoted; only the consensus answer is written to the dataset.</span></div>
       <div><b>Kept as evidence</b><span>Every vote stays in the ledger and in each item's exported record, marked as disagreeing.</span></div>
-      <div><b>Count against the node</b><span>Nodes earn nothing for outvoted answers; repeated failures on test items trigger quarantine.</span></div>
-      <div><b>Useful later</b><span>Wrong answers next to the accepted one form "rejected vs chosen" pairs, the format used for preference training.</span></div>
+      <div><b>Count against the node</b><span>Outvoted answers earn nothing. Repeat failures get a node blocked.</span></div>
+      <div><b>Useful later</b><span>Wrong answers become "rejected" examples for preference training.</span></div>
       </div>
     </details>
   </section>
@@ -529,14 +609,14 @@
     <a class="paper lead" href="https://arxiv.org/abs/2312.09390" target="_blank" rel="noopener">
       <div class="pmeta">OpenAI · Burns et al., 2023 · arXiv:2312.09390</div>
       <b>Weak-to-Strong Generalization</b>
-      <div class="pgrid"><div><span>Shows</span>A strong model trained on labels from weaker models can outperform those weaker supervisors.</div>
-      <div><span>For us</span>Our small models are the weak supervisors. Consensus filtering gives the stronger model cleaner weak labels to learn from.</div></div>
+      <div class="pgrid"><div><span>Shows</span>A strong model can learn from weaker models and beat them.</div>
+      <div><span>For us</span>Our small models are the weak teachers; voting cleans their labels.</div></div>
     </a>
     <div class="papers">
-      <a class="paper" href="https://arxiv.org/abs/2203.11171" target="_blank" rel="noopener"><div class="pmeta">Google · Wang et al., 2022</div><b>Self-Consistency</b><p>Majority vote over several reasoning paths beats any single answer. We vote across different models instead of one.</p></a>
-      <a class="paper" href="https://arxiv.org/abs/2210.11610" target="_blank" rel="noopener"><div class="pmeta">Google · Huang et al., 2022</div><b>LLMs Can Self-Improve</b><p>Training on high-agreement answers improves the model. Our accepted items are exactly that kind of data.</p></a>
-      <a class="paper" href="https://arxiv.org/abs/2402.05120" target="_blank" rel="noopener"><div class="pmeta">Tencent · Li et al., 2024</div><b>More Agents Is All You Need</b><p>Accuracy grows with the number of voting agents. The basis for scaling to many volunteer nodes.</p></a>
-      <a class="paper" href="https://arxiv.org/abs/2103.14749" target="_blank" rel="noopener"><div class="pmeta">MIT · Northcutt et al., 2021</div><b>Pervasive Label Errors</b><p>Even benchmark test sets contain wrong labels. The problem our error-detection study targets.</p></a>
+      <a class="paper" href="https://arxiv.org/abs/2203.11171" target="_blank" rel="noopener"><div class="pmeta">Google · Wang et al., 2022</div><b>Self-Consistency</b><p>Majority vote beats any single answer.</p></a>
+      <a class="paper" href="https://arxiv.org/abs/2210.11610" target="_blank" rel="noopener"><div class="pmeta">Google · Huang et al., 2022</div><b>LLMs Can Self-Improve</b><p>Training on high-agreement answers improves a model.</p></a>
+      <a class="paper" href="https://arxiv.org/abs/2402.05120" target="_blank" rel="noopener"><div class="pmeta">Tencent · Li et al., 2024</div><b>More Agents Is All You Need</b><p>More voters, higher accuracy.</p></a>
+      <a class="paper" href="https://arxiv.org/abs/2103.14749" target="_blank" rel="noopener"><div class="pmeta">MIT · Northcutt et al., 2021</div><b>Pervasive Label Errors</b><p>Even benchmarks contain wrong labels.</p></a>
       <a class="paper" href="https://arxiv.org/abs/2110.14168" target="_blank" rel="noopener"><div class="pmeta">OpenAI · Cobbe et al., 2021</div><b>GSM8K</b><p>The maths benchmark with official answers we use to verify every result.</p></a>
       <a class="paper" href="https://arxiv.org/abs/2311.12022" target="_blank" rel="noopener"><div class="pmeta">NYU · Rein et al., 2023</div><b>GPQA</b><p>Graduate-level questions written to resist search; our test of where small models stop.</p></a>
     </div>
@@ -545,9 +625,9 @@
   <section>
     <details class="drop">
       <summary><span>Anti-cheating and integrity</span><small>9 safeguards · honeypots, HMAC-SHA256 signatures, timing checks · click to expand</small></summary>
-      <p class="sec-lede" style="margin:14px 0">Nodes are strangers' machines, so every vote is treated as untrusted until it is verified.</p>
+      <p class="sec-lede" style="margin:14px 0">Every vote is untrusted until verified.</p>
       <div class="chips">
-      <div><b>Honeypot questions</b><span>a few test items with known answers, hidden among real data; a node below 30% is quarantined</span></div>
+      <div><b>Honeypot questions</b><span>hidden test items; nodes scoring below 30% are blocked</span></div>
       <div><b>HMAC-SHA256 signatures</b><span>every answer is signed with the node's secret key; forged or altered votes are rejected</span></div>
       <div><b>Blind voting</b><span>nodes only receive the question, never other answers, so they can't copy</span></div>
       <div><b>Timing checks</b><span>answers faster than the model could compute are discarded as fake work</span></div>
@@ -568,7 +648,7 @@
       <div><span>Judge</span><p>Muse Glimmer 30B on Kaggle</p><p>Dedicated judge pool, 30–70B models</p></div>
       <div><span>Scale</span><p>~20,000 votes so far</p><p>Millions of votes per day across thousands of nodes</p></div>
     </div>
-      <p class="sec-lede" style="margin-top:10px">The free tiers were chosen to keep the demo at zero cost. The code is the same; only the hosting plan changes.</p>
+      <p class="sec-lede" style="margin-top:10px">Free tiers keep the demo at zero cost. Same code scales up.</p>
     </details>
   </section>
 
@@ -581,7 +661,7 @@
     <h2>All experiments</h2>
     <a class="run" href="/audit">
       <span class="i">01</span>
-      <div><div class="t">Error detection <span class="tag ok">main result</span></div><div class="d">50 labelled maths problems, 10 labels deliberately wrong.</div></div>
+      <div><div class="t">Error detection <span class="tag ok">main result</span></div><div class="d">Labelled maths problems with deliberately wrong labels hidden among them.</div></div>
       <div class="k"><span class="num" id="a-k">–</span><span>wrong labels found and fixed</span></div><span class="arr">→</span>
     </a>
     <a class="run" href="/gsm8k-mixed">
@@ -611,6 +691,22 @@
     </a>
   </section>
 
+  <section>
+    <h2>Overall score</h2>
+    <div class="feature">
+      <div class="punch"><span class="pn bad" id="o-single">–</span><span class="parr">→</span><span class="pn good" id="o-kept">–</span></div>
+      <h3>answers correct: one model alone → after the refinery</h3>
+      <div class="trio" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr))">
+        <div><div class="lab">Items in</div><div class="big num" id="o-in">–</div><p>all tests</p></div>
+        <div><div class="lab">Kept</div><div class="big num" id="o-acc">–</div><p>refined data out</p></div>
+        <div><div class="lab">Improvement</div><div class="big num" id="o-gain">–</div><p>accuracy points gained</p></div>
+        <div><div class="lab">Votes</div><div class="big num" id="o-votes">–</div><p>from all nodes, so far</p></div>
+      </div>
+      <p class="note">Accuracy is checked on every test with known answers (maths and error detection). Science is excluded.</p>
+    </div>
+  </section>
+
+
   <footer>
     <span>Voters include Meta Llama 3.2 · judge: Meta Muse Glimmer 30B · nodes on free Colab and Kaggle GPUs</span>
     <span class="num" id="votes">–</span>
@@ -622,6 +718,50 @@ const fmt = (n) => Number(n || 0).toLocaleString("en-IN");
 const pc = (a, b, d = 1) => (b ? Math.round((a / b) * 100 * 10 ** d) / 10 ** d : 0);
 const get = async (u) => (await fetch(u, { cache: "no-store" })).json();
 
+// Overall score across every test (GPQA excluded: paused early)
+Promise.all([get("/api/stats"), ...["gsm8k", "gsm8k_mixed", "audit"].map((t) => get("/api/scoreboard?task=" + t))]).then(([st, ...sb]) => {
+  let v = 0, c = 0, k = 0, kc = 0, items = 0, kept = 0;
+  for (const s of sb) { const T = s.totals || {}; v += +T.votes || 0; c += +T.correct || 0; k += +T.kept || 0; kc += +T.kept_correct || 0; }
+  for (const [t, x] of Object.entries(st.by_task)) { if (t === "gpqa") continue; items += x.total - x.honeypots; kept += x.unanimous + x.judge_accepted; }
+  $("o-single").textContent = pct(c, v); $("o-kept").textContent = pct(kc, k);
+  $("o-gain").textContent = v && k ? "+" + (100 * (kc / k - c / v)).toFixed(1) : "–";
+  $("o-in").textContent = items.toLocaleString(); $("o-acc").textContent = kept.toLocaleString();
+  $("o-votes").textContent = (+st.activity.votes_total).toLocaleString();
+}).catch(() => {});
+// "A little refined data": base vs fine-tuned 1B on unseen tests (scores from the dashboard)
+get("/api/ft/results").then((d) => {
+  const V = Object.fromEntries(d.results.map((r) => [r.variant, r.correct / r.total]));
+  const best = (p) => Math.max(...["sft", "sft_dpo", "self_train"].map((k) => V[`1b_${k}${p}`] ?? 0));
+  const rows = [["News sentiment", V["1b_base_news"], best("_news")], ["Financial news (new set)", V.phrasebank_base, V.phrasebank_finetuned],
+                ["Negation (hard)", V.stress_negation_base, V.stress_negation_finetuned], ["Maths", V["1b_base"], best("")]].filter((r) => r[1] != null && r[2]);
+  $("ftbars").innerHTML = rows.map(([n, b, f]) => {
+    const mx = Math.max(b, f) * 1.12, h = (v) => Math.max(3, (v / mx) * 100);
+    return `<div class="ftb"><div class="pair"><div><em>${(100 * b).toFixed(1)}</em><i style="height:${h(b)}%;background:var(--muted)"></i></div>`
+      + `<div><em>${(100 * f).toFixed(1)}</em><i style="height:${h(f)}%;background:var(--accent)"></i></div></div>`
+      + `<span class="gain">+${(100 * (f - b)).toFixed(1)}</span><span class="nm">${n}</span></div>`;
+  }).join("");
+}).catch(() => {});
+// main result filter: error detection / hard 500 / all maths (GPQA is deliberately not included)
+document.querySelectorAll(".seg button").forEach((b) => b.onclick = () => {
+  document.querySelectorAll(".seg button").forEach((x) => x.classList.toggle("on", x === b));
+  document.querySelectorAll(".pane").forEach((p) => p.hidden = p.id !== "p-" + b.dataset.p);
+});
+const pct = (a, b) => b ? Math.round(1000 * a / b) / 10 + "%" : "–";
+get("/api/hard").then((d) => {
+  const by = Object.fromEntries(d.status.map((r) => [r.status, r]));
+  const acc = +(by.accepted?.n || 0), rej = +(by.dropped?.n || 0);
+  $("h-acc").textContent = acc; $("h-rej").textContent = rej; $("h-pct").textContent = pct(+(by.accepted?.right_n || 0), acc);
+  $("h-rej2").textContent = `no agreement, left out · ${Math.max(0, 100 - acc - rej)} still deciding`;
+}).catch(() => {});
+get("/api/stats").then((d) => {
+  let acc = 0, ok = 0, rej = 0;
+  for (const t of ["gsm8k", "gsm8k_mixed"]) {
+    const s = d.by_task[t]; if (!s) continue;
+    acc += s.unanimous + s.judge_accepted; ok += +s.accepted_correct || 0; rej += s.no_majority + s.judge_rejected;
+  }
+  $("m-in").textContent = (acc + rej).toLocaleString(); $("m-acc").textContent = acc.toLocaleString();
+  $("m-rej").textContent = rej.toLocaleString(); $("m-pct").textContent = pct(ok, acc);
+}).catch(() => {});
 get("/api/audit").then((d) => {
   const items = d.items || [], N = items.length, planted = items.filter((i) => i.planted);
   const kept = items.filter((i) => i.status === "accepted");
@@ -635,6 +775,9 @@ get("/api/audit").then((d) => {
   $("f-missed2").textContent = `incorrect labels among ${kept.length} accepted; ${review} referred for review`;
   const eb = pc(planted.length, N), ea = pc(wrongAfter, kept.length), mx = Math.max(eb, ea, 1);
   $("v-before").textContent = eb + "%"; $("v-after").textContent = ea + "%";
+  $("p-before").textContent = eb + "%"; $("p-after").textContent = ea + "%";
+  $("w-title").textContent = `Outcome for each of the ${N} labels`;
+  $("f-d").textContent = `We hid ${planted.length} wrong answers among ${N} maths problems. The models never saw the given answers, solved each problem themselves, and fixed ${caught} of the ${planted.length}.${ea ? ` That is a ${Math.round(eb / ea)}× cleaner dataset.` : ""}`;
   requestAnimationFrame(() => { $("b-before").style.height = (eb / mx) * 100 + "%"; $("b-after").style.height = Math.max((ea / mx) * 100, 2) + "%"; });
   // waffle: one square per label, coloured by what happened to it (planted ones get a dot)
   const kind = (i) => i.status !== "accepted" ? "rv" : i.final_answer === i.label ? (i.planted ? "ms" : "ok") : (i.planted ? "fx" : "fl");
@@ -792,6 +935,7 @@ get("/api/stats").then((d) => {
 (() => { const a = [...document.querySelectorAll("nav.tabsbar .tablist a")].find((x) => x.getAttribute("href") === location.pathname);
   if (a) { a.classList.add("on"); a.scrollIntoView({ inline: "center", block: "nearest" }); } })();
 </script>
+<nav class="endnav"><div class="endin"><a class="totop" href="#top">↑ Back to top</a></div></nav>
 <script>
 (() => {
 
