@@ -130,6 +130,10 @@ The free tiers keep the demo at zero cost. The code is the same; only the hostin
 | [Self-Consistency Preference Optimization](https://arxiv.org/abs/2411.04109) · Meta, 2024 | Majority answers as "chosen", minority as "rejected": our wrong-answer training |
 | [Let's Verify Step by Step](https://arxiv.org/abs/2305.20050) · OpenAI, 2023 | Checking every step beats checking only the answer: our step check |
 
+## Data search agent
+
+Describe the dataset you need ("10,000 financial headlines labelled positive / negative / neutral"). An agent running on **Meta Llama 3.3 70B** (Cloudflare Workers AI) decides its own steps: it searches the refinery's data, open Hugging Face datasets and the web, reads pages, collects a real sample, and quotes the refining job (price, time, payout to node runners, expected accuracy). [Try it →](https://data-refinery.primemax.workers.dev/data)
+
 ## Future: every idle GPU becomes part of the refinery
 
 Home PCs run small voter models, larger GPUs act as judges, dataset owners fund a reward pool, and contributors are paid per idle hour for verified work.
