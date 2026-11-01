@@ -121,4 +121,4 @@ Built for the **Meta Global AI Developer Hackathon** (Indie track). Voters inclu
 
 ## License
 
-Copyright © 2026 N P Maheswar. All rights reserved. See [LICENSE](LICENSE). The source is published for viewing and evaluation only; no permission is granted to use, copy, modify or distribute it.
+See [LICENSE](LICENSE).
