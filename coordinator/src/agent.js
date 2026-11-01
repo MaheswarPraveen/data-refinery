@@ -73,7 +73,11 @@ async function runTool(env, name, a) {
       const [meta, size, rows] = await Promise.allSettled([
         getJSON(`https://huggingface.co/api/datasets/${id}`),
         getJSON(`https://datasets-server.huggingface.co/size?dataset=${encodeURIComponent(id)}`),
-        getJSON(`https://datasets-server.huggingface.co/first-rows?dataset=${encodeURIComponent(id)}&config=default&split=train`),
+        // preview rows from the dataset's own first config/split (not every dataset has "default"/"train")
+        getJSON(`https://datasets-server.huggingface.co/splits?dataset=${encodeURIComponent(id)}`).then((sp) => {
+          const f = sp.splits?.[0]; if (!f) throw new Error("no splits");
+          return getJSON(`https://datasets-server.huggingface.co/first-rows?dataset=${encodeURIComponent(id)}&config=${encodeURIComponent(f.config)}&split=${encodeURIComponent(f.split)}`);
+        }),
       ]);
       const tags = meta.value?.tags || [];
       return {
