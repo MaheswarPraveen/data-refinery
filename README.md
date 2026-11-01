@@ -123,6 +123,12 @@ The free tiers keep the demo at zero cost. The code is the same; only the hostin
 | [Pervasive Label Errors](https://arxiv.org/abs/2103.14749) · MIT, 2021 | Even benchmark test sets contain wrong labels |
 | [GSM8K](https://arxiv.org/abs/2110.14168) · OpenAI, 2021 | The maths benchmark used for verification |
 | [GPQA](https://arxiv.org/abs/2311.12022) · NYU, 2023 | Expert questions; where small models stop |
+| [**LIMA: Less Is More for Alignment**](https://arxiv.org/abs/2305.11206) · Meta, 2023 | 1,000 carefully chosen examples rival far larger datasets: quality over quantity |
+| [AlpaGasus](https://arxiv.org/abs/2307.08701) · 2023 | Filtering 52k examples down to ~9k high-quality ones trains a better model |
+| [Textbooks Are All You Need](https://arxiv.org/abs/2306.11644) · Microsoft, 2023 | Small models on clean, textbook-quality data beat larger models on messy data |
+| [The FineWeb Datasets](https://arxiv.org/abs/2406.17557) · Hugging Face, 2024 | Quality filtering improves models more than adding more raw text |
+| [Self-Consistency Preference Optimization](https://arxiv.org/abs/2411.04109) · Meta, 2024 | Majority answers as "chosen", minority as "rejected": our wrong-answer training |
+| [Let's Verify Step by Step](https://arxiv.org/abs/2305.20050) · OpenAI, 2023 | Checking every step beats checking only the answer: our step check |
 
 ## Future: every idle GPU becomes part of the refinery
 
