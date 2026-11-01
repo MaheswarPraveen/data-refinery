@@ -21,7 +21,7 @@ Does refined data train a better model? Four versions of Llama 3.1 8B Instruct, 
 | refined | the network's accepted answers |
 | official | GSM8K's human-written solutions |
 
-**Runtime → Change runtime type → A100 GPU**, paste the join code below, then **Runtime → Run all**. About 45–60 minutes. Scores are posted to the live dashboard automatically.""")
+**Runtime → Change runtime type → A100 GPU**, paste the join code on the line marked JOIN_CODE, then run the cell. About 45–60 minutes. Scores are posted to the live dashboard automatically.""")
 
 code("""%%capture
 !pip install -q unsloth""")
@@ -145,6 +145,10 @@ for k in ["base", "raw", "refined", "official"]:
 print("\\nRefined vs raw:", f"{(RESULTS['refined'] - RESULTS['raw']) * 100:+.1f} points")
 print("Scores are on the dashboard. Stop the runtime now to save units: Runtime → Disconnect and delete runtime.")""")
 
+# Everything in one cell: install, config, data, base test, three trainings, summary.
+codes = [c["source"] for c in cells if c["cell_type"] == "code"]
+codes[0] = "!pip install -q unsloth > /dev/null 2>&1"
+cells = [cells[0], {"cell_type": "code", "metadata": {}, "execution_count": None, "outputs": [], "source": "\n\n".join(codes)}]
 nb = {"cells": cells, "metadata": {"accelerator": "GPU", "colab": {"gpuType": "A100", "provenance": []},
       "kernelspec": {"display_name": "Python 3", "name": "python3"}, "language_info": {"name": "python"}},
       "nbformat": 4, "nbformat_minor": 0}
