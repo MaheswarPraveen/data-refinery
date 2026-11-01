@@ -34,7 +34,7 @@ Llama 3.2 1B was fine-tuned on **1,331 refined headline labels and 592 refined m
 |---|---|---|---|
 | News sentiment (finance tweets) | 3.7% | **50.3%** | **+46.7** |
 | Financial news (Financial PhraseBank) | 26.3% | **69.0%** | **+42.7** |
-| Negation sentences ("not bad", base given 3 examples) | 79.0% | **85.5%** | **+6.5** |
+| Negation (trick sentences like "not bad at all") | 79.0% | **85.5%** | **+6.5** |
 | Maths (GSM-Symbolic) | 33.7% | **35.0%** | **+1.3** |
 
 **Six unseen sentiment datasets** (trained only on refined financial headlines):
