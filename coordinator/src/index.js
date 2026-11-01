@@ -4,8 +4,14 @@
 import dashboard from "./dashboard.html";
 import newsPage from "./news.html";
 import homePage from "./home.html";
+import tradePage from "./trade.html";
+import futurePage from "./future.html";
 import nodeScript from "../../node/node.py"; // served at /node.py so notebooks can just download it
 import kaggleScript from "../../node/kaggle.sh"; // one-line Kaggle launcher, served at /kaggle.sh
+import colabScript from "../../node/colab.sh"; // Colab A100 launcher: nodes 1-3 of the mixed run, served at /colab.sh
+import kaggleMixedScript from "../../node/kaggle_mixed.sh"; // Kaggle T4x2 launcher: nodes 4-5 of the mixed run
+import kaggleJudgeScript from "../../node/kaggle_judge.sh"; // Kaggle T4x2: Muse Glimmer judge node
+import judgeScript from "../../node/judge.py"; // the judge node itself, served at /judge.py
 
 // ---------- database: Supabase Postgres behind a D1-shaped adapter ----------
 // The rest of this file was written for D1 (prepare/bind/first/all/run/batch). The adapter keeps that
@@ -52,6 +58,7 @@ export default {
     env = { ...env, DB: supabaseDB(env) };
     // Hints for 2-vs-1 splits first (current method), then any old GSM8K items still 'disputed'.
     ctx.waitUntil((async () => {
+      await gpqaSwitch(env).catch(() => {});
       // Hints cost ~3-5 subrequests each (of 50 per run), so 8 a minute fits.
       const n = await hintBacklog(env, 8).catch(() => 0);
       if (n < 8) await rejudge(env, 1).catch(() => {});
@@ -65,8 +72,17 @@ export default {
       if (req.method === "POST" && pathname === "/api/register") return await register(req, env);
       if (req.method === "POST" && pathname === "/api/job") return await getJob(req, env);
       if (req.method === "POST" && pathname === "/api/submit") return await submit(req, env, ctx);
+      if (req.method === "POST" && pathname === "/api/hint/job") return await hintJob(req, env);
+      if (req.method === "POST" && pathname === "/api/hint/submit") return await hintSubmit(req, env);
       if (req.method === "GET" && pathname === "/api/stats") return await stats(env, new URL(req.url).searchParams.get("task"));
       if (req.method === "GET" && pathname === "/api/news") return await newsBoard(env);
+      if (req.method === "GET" && pathname === "/api/trade") return await tradeBoard(env);
+      if (req.method === "GET" && pathname === "/api/audit") return await auditBoard(env);
+      if (req.method === "GET" && pathname === "/api/gpqa") return await gpqaBoard(env);
+      if (req.method === "GET" && pathname === "/api/agreement") return await agreementCurve(env, new URL(req.url).searchParams.get("task") || "gsm8k_mixed");
+      if (req.method === "GET" && pathname === "/future") return new Response(futurePage, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-cache" } });
+      if (req.method === "GET" && pathname === "/trade") return new Response(tradePage, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-cache" } });
+      if (req.method === "GET" && pathname === "/api/scoreboard") return await scoreboard(env, new URL(req.url).searchParams.get("task") || "gsm8k");
       if (req.method === "GET" && pathname === "/news") return new Response(newsPage, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-cache" } });
       if (req.method === "GET" && pathname === "/api/export") return await exportAccepted(env);
       // Rejudging spends the free Workers AI allowance, so only someone with the join code may trigger it.
@@ -74,10 +90,14 @@ export default {
         if (env.JOIN_CODE && req.headers.get("x-join-code") !== env.JOIN_CODE) return json({ error: "wrong join code" }, 403);
         return await rejudge(env);
       }
+      if (req.method === "GET" && pathname === "/kaggle_judge.sh") return new Response(kaggleJudgeScript, { headers: { "content-type": "text/x-shellscript; charset=utf-8", "cache-control": "no-cache" } });
+      if (req.method === "GET" && pathname === "/judge.py") return new Response(judgeScript, { headers: { "content-type": "text/x-python; charset=utf-8", "cache-control": "no-cache" } });
+      if (req.method === "GET" && pathname === "/kaggle_mixed.sh") return new Response(kaggleMixedScript, { headers: { "content-type": "text/x-shellscript; charset=utf-8", "cache-control": "no-cache" } });
+      if (req.method === "GET" && pathname === "/colab.sh") return new Response(colabScript, { headers: { "content-type": "text/x-shellscript; charset=utf-8", "cache-control": "no-cache" } });
       if (req.method === "GET" && pathname === "/kaggle.sh") return new Response(kaggleScript, { headers: { "content-type": "text/x-shellscript; charset=utf-8", "cache-control": "no-cache" } });
       if (req.method === "GET" && pathname === "/node.py") return new Response(nodeScript, { headers: { "content-type": "text/x-python; charset=utf-8", "cache-control": "no-cache" } });
       if (req.method === "GET" && pathname === "/") return new Response(homePage, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-cache" } });
-      if (req.method === "GET" && pathname === "/gsm8k") return new Response(dashboard, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-cache" } });
+      if (req.method === "GET" && (pathname === "/gsm8k" || pathname === "/gsm8k-mixed" || pathname === "/gpqa" || pathname === "/audit")) return new Response(dashboard, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-cache" } });
       return json({ error: "not found" }, 404);
     } catch (err) {
       const msg = String(err?.message || err);
@@ -113,6 +133,12 @@ const NEWS_FIELDS = [
   ["positive", "negative", "neutral"],
   ["earnings", "analyst", "price_move", "deal_order", "corporate_action", "regulatory_legal", "management", "listicle_promo", "other"],
 ];
+// Trade answers: one decision per overnight headline.
+export function normalizeTrade(raw) {
+  const s = String(raw ?? "").trim().toUpperCase();
+  return ["BUY", "SELL", "SKIP"].includes(s) ? s : null;
+}
+
 export function normalizeNews(raw) {
   const parts = String(raw ?? "").toLowerCase().split("|").map((s) => s.trim().replace(/[\s-]+/g, "_"));
   if (parts.length !== NEWS_FIELDS.length || parts.some((p, i) => !NEWS_FIELDS[i].includes(p))) return null;
@@ -190,7 +216,9 @@ function pickItem(env, nodeId, cutoff, need, allowSame, window, tasks = "gsm8k")
 async function getJob(req, env) {
   const { node_id, tasks: canDo } = await req.json();
   // A node lists the tasks its script supports; older scripts send nothing and only get GSM8K jobs.
-  const tasks = (Array.isArray(canDo) && canDo.length ? canDo : ["gsm8k"]).map(String).join(",");
+  const list = (Array.isArray(canDo) && canDo.length ? canDo : ["gsm8k"]).map(String);
+  if (list.includes("gpqa") && !list.includes("audit")) list.push("audit"); // GPQA nodes roll over to the audit run
+  const tasks = list.join(",");
   const node = await touchNode(env, node_id);
   if (!node) return json({ error: "unknown node" }, 401);
 
@@ -229,7 +257,7 @@ async function getJob(req, env) {
     task: item.task || "gsm8k",
     question: item.question,
     // News: who the headline is about. Prices and returns are never sent to nodes.
-    context: item.task === "news" ? { company: meta.company, industry: meta.industry } : undefined,
+    context: item.task === "news" || item.task === "trade" ? { company: meta.company, industry: meta.industry } : undefined,
     hint: item.hint || undefined,
     used_pairs: used.results.map((r) => [r.model, r.harness]),
   });
@@ -250,9 +278,11 @@ async function submit(req, env, ctx) {
 
   const item = await env.DB.prepare("SELECT id, question, gold, is_honeypot, task, need, hint, hint_model, split_fields, final_answer FROM items WHERE id = ?").bind(a.item_id).first();
   // A vote must be a well-formed answer for its task; anything else is a broken node, not an opinion.
-  const norm = item.task === "news" ? normalizeNews(answer) : normalize(answer);
-  if (norm === null || (item.task !== "news" && !/^-?\d+(\.\d+)?$/.test(norm)))
-    return json({ error: item.task === "news" ? "answer must be sentiment|category" : "answer must be a number" }, 422);
+  const kind = item.task === "news" ? "news" : item.task === "trade" ? "trade" : item.task === "gpqa" ? "letter" : "number";
+  const norm = kind === "news" ? normalizeNews(answer) : kind === "trade" ? normalizeTrade(answer)
+    : kind === "letter" ? (/^[A-D]$/i.test(String(answer).trim()) ? String(answer).trim().toUpperCase() : null) : normalize(answer);
+  if (norm === null || (kind === "number" && !/^-?\d+(\.\d+)?$/.test(norm)))
+    return json({ error: { news: "answer must be sentiment|category", trade: "answer must be BUY, SELL or SKIP", letter: "answer must be A, B, C or D", number: "answer must be a number" }[kind] }, 422);
   const t = Date.now();
   const serverMs = t - a.assigned_at; // measured here, so a node can't lie about how long it took
   const tooFast = serverMs < minMs(b.model) ? 1 : 0;
@@ -329,33 +359,54 @@ async function maybeResolve(env, ctx, item) {
   const nFields = isNews ? NEWS_FIELDS.length : 1;
   const split = (a) => (isNews ? a.split("|") : [a]);
 
+  // Votes per round: 3 (news, first maths run) or 5 (mixed run: one vote per node, 3 models per node).
+  // 3 votes (news, first maths run): all 3 = keep, otherwise hint; round 2 needs all 3.
+  // 5+ votes (one per node): about 80% agree = keep (5 of 5: 4+, 6: 5+, 10: 8+), about 65% = one hint
+  // (5: 3, 6: 4, 10: 7), less = thrown out. Round 2 keeps only on the 80% bar.
+  const R = item.hint ? need / 2 : need;
+  const decide = (vals, round) => {
+    const tally = {};
+    for (const x of vals) tally[x] = (tally[x] || 0) + 1;
+    const [top, count] = Object.entries(tally).sort((a, b) => b[1] - a[1])[0];
+    if (R >= 5) {
+      if (count >= Math.ceil(0.8 * R)) return ["keep", top];
+      return round === 1 && count >= Math.round(0.65 * R) ? ["hint", top] : ["drop"];
+    }
+    return count === R ? ["keep", top] : round === 1 ? ["hint", top] : ["drop"];
+  };
+
   if (!item.hint) {
     // ---- round 1 ----
-    const first = votes.filter((v) => !v.hinted).slice(0, 3).map((v) => split(v.answer));
+    const first = votes.filter((v) => !v.hinted).slice(0, R).map((v) => split(v.answer));
     const final = [], disagreed = [];
+    let dropped = false;
     for (let f = 0; f < nFields; f++) {
-      const vals = new Set(first.map((v) => v[f]));
-      if (vals.size === 1) final.push(first[0][f]);
-      else { final.push("?"); disagreed.push(f); }
+      const [kind, top] = decide(first.map((v) => v[f]), 1);
+      if (kind === "keep") final.push(top);
+      else if (kind === "hint") { final.push("?"); disagreed.push(f); }
+      else { final.push("unclear"); if (!isNews) dropped = true; }
     }
     const answer = final.join("|");
-    if (disagreed.length) {
+    if (dropped || final.every((x) => x === "unclear")) {
+      await claim(env, item.id, "pending", "dropped", null, null, "no-majority");
+    } else if (disagreed.length) {
       // The per-minute cron writes the hint (judging here would share this request's subrequest budget).
-      await env.DB.prepare("UPDATE items SET status = 'hinting', final_answer = ?, split_fields = ? WHERE id = ? AND status = 'pending'")
-        .bind(answer, disagreed.join(","), item.id).run();
+      await env.DB.prepare("UPDATE items SET status = 'hinting', final_answer = ?, split_fields = ?, hint_wait_since = ? WHERE id = ? AND status = 'pending'")
+        .bind(answer, disagreed.join(","), Date.now(), item.id).run();
     } else {
       if (await claim(env, item.id, "pending", "accepted", answer, 1.0, "unanimous")) await creditAgreement(env, item.id, answer);
     }
     return;
   }
 
-  // ---- round 2: three fresh votes made with the hint; a field survives only if all three agree ----
-  const rechecks = votes.filter((v) => v.hinted).slice(0, 3).map((v) => split(v.answer));
-  if (rechecks.length < 3) return;
+  // ---- round 2: fresh votes made with the hint (3 must all agree; of 6, 5+ must agree) ----
+  const rechecks = votes.filter((v) => v.hinted).slice(0, R).map((v) => split(v.answer));
+  if (rechecks.length < R) return;
   const final = split(item.final_answer);
   let anyKept = false, anyLost = false;
   for (const f of String(item.split_fields || "").split(",").filter(Boolean).map(Number)) {
-    if (new Set(rechecks.map((r) => r[f])).size === 1) { final[f] = rechecks[0][f]; anyKept = true; }
+    const [kind, top] = decide(rechecks.map((r) => r[f]), 2);
+    if (kind === "keep") { final[f] = top; anyKept = true; }
     else { final[f] = "unclear"; anyLost = true; }
   }
   const answer = final.join("|");
@@ -466,16 +517,70 @@ async function judge(env, itemId, majority) {
 
 // ---------- hint judge ----------
 
+// Judge node API: a registered node running Muse Glimmer leases an item waiting for a hint, gets the
+// prompt (built here, so leak rules stay server-side), and sends back a signed hint.
+async function hintJob(req, env) {
+  const { node_id } = await req.json();
+  const node = await touchNode(env, node_id);
+  if (!node) return json({ error: "unknown node" }, 401);
+  const t = Date.now();
+  const item = await env.DB.prepare(
+    `UPDATE items SET hint_lease = ? WHERE id = (SELECT id FROM items WHERE status = 'hinting' AND COALESCE(hint_lease, 0) < ? ORDER BY id LIMIT 1)
+     AND status = 'hinting' RETURNING id, question, task, meta, split_fields`
+  ).bind(t + 300_000, t).first();
+  if (!item) return json({ wait: true, retry_after: 15 });
+  const { prompt } = await hintPrompt(env, item);
+  return json({ item_id: item.id, prompt });
+}
+
+async function hintSubmit(req, env) {
+  const b = await req.json();
+  const node = await touchNode(env, b.node_id);
+  if (!node) return json({ error: "unknown node" }, 401);
+  const hint = String(b.hint ?? "");
+  if (b.sig !== (await hmacHex(node.secret, `${b.item_id}|${hint}`))) return json({ error: "bad signature" }, 401);
+  if (hint.trim().length < 10) return json({ error: "empty hint" }, 422);
+  const item = await env.DB.prepare("SELECT id, question, task, meta, split_fields FROM items WHERE id = ? AND status = 'hinting'").bind(b.item_id).first();
+  if (!item) return json({ error: "item no longer waiting for a hint" }, 409);
+  const { leaks } = await hintPrompt(env, item);
+  const ok = await saveHint(env, item, hint, String(b.model || "judge-node").slice(0, 80), leaks);
+  return json({ ok });
+}
+
 // For a 2-vs-1 split the judge writes a HINT, never the answer: what to double-check. Anything
 // that could leak the answer (a candidate number, a candidate label) is blanked out before nodes see it.
-async function writeHint(env, item) {
+// The hint prompt and the words it must never contain (the candidate answers / labels).
+async function hintPrompt(env, item) {
   const { results: votes } = await env.DB.prepare(
-    "SELECT answer FROM votes WHERE item_id = ? AND hinted = 0 AND too_fast = 0 ORDER BY id LIMIT 3"
+    "SELECT answer FROM votes WHERE item_id = ? AND hinted = 0 AND too_fast = 0 ORDER BY id LIMIT 6"
   ).bind(item.id).all();
   const isNews = item.task === "news";
   const fields = String(item.split_fields || "0").split(",").map(Number);
   let prompt, leaks;
-  if (isNews) {
+  if (item.task === "gpqa") {
+    // Multiple choice: the hint must not name or point at an option letter.
+    prompt =
+      `A graduate-level science question with options A-D:
+${item.question}
+
+` +
+      `Expert solvers did not agree on the answer. Do NOT say which option is correct, do NOT mention option ` +
+      `letters, and do not restate any option. In 2-4 sentences, name the key principle, formula or common trap ` +
+      `that decides this question.`;
+    leaks = ["LETTER"];
+  } else if (item.task === "trade") {
+    const meta = item.meta || {};
+    prompt =
+      `An overnight headline about the NSE-listed company ${meta.company || ""}:
+"${item.question}"
+
+` +
+      `Five independent traders did not agree on what to do at the next market open. Do NOT recommend an action ` +
+      `and do not use the words buy, sell, skip, long, short, bullish or bearish. In 1-3 sentences, only point out ` +
+      `what a careful trader should weigh: is this genuinely new, is it material to this company, is it confirmed ` +
+      `or speculative, and could it already be known to the market.`;
+    leaks = ["buy", "sell", "skip", "long", "short", "bullish", "bearish", "upside", "downside"];
+  } else if (isNews) {
     const names = ["sentiment", "category"];
     const meta = item.meta || {};
     const which = fields.map((f) => `${names[f]} (options: ${NEWS_FIELDS[f].join(", ")})`).join(" and ");
@@ -489,11 +594,27 @@ async function writeHint(env, item) {
   } else {
     const cands = [...new Set(votes.map((v) => v.answer))];
     prompt =
-      `Math word problem:\n${item.question}\n\nThree solvers did not agree; their answers were ${cands.join(" and ")}. ` +
+      `Math word problem:\n${item.question}\n\nThe solvers did not agree; their answers were ${cands.join(" and ")}. ` +
       `Do NOT give the final answer and do not repeat those numbers. In 2-4 sentences, point out the one step ` +
       `or detail a solver should double-check (a quantity that is easy to misread, a unit, which operation applies).`;
     leaks = cands;
   }
+  return { prompt, leaks };
+}
+
+// Store a hint: strip thinking and answer lines, blank out leaks, and open the re-check round.
+async function saveHint(env, item, raw, model, leaks) {
+  let hint = String(raw).replace(/<think>[\s\S]*?<\/think>/g, "").replace(/ANSWER:[^\n]*/gi, "").trim();
+  hint = scrubLeaks(hint, leaks).slice(0, 700);
+  // The hint round doubles the votes needed: 3 -> 6, 5 -> 10.
+  const r = await env.DB.prepare("UPDATE items SET hint = ?, hint_model = ?, need = need * 2, status = 'pending', hint_lease = NULL WHERE id = ? AND status = 'hinting'")
+    .bind(hint, model, item.id).run();
+  return r.meta.changes > 0;
+}
+
+// Fallback judge (cron): API models, used when no judge node has picked the item up.
+async function writeHint(env, item) {
+  const { prompt, leaks } = await hintPrompt(env, item);
   for (const model of judgeOrder(env)) {
     let hint;
     try {
@@ -506,11 +627,7 @@ async function writeHint(env, item) {
       judgeErrors.length = Math.min(judgeErrors.length, 20);
       continue;
     }
-    hint = hint.replace(/<think>[\s\S]*?<\/think>/g, "").replace(/ANSWER:[^\n]*/gi, "").trim();
-    hint = scrubLeaks(hint, leaks);
-    hint = hint.slice(0, 700);
-    await env.DB.prepare("UPDATE items SET hint = ?, hint_model = ?, need = 6, status = 'pending' WHERE id = ? AND status = 'hinting'")
-      .bind(hint, model, item.id).run();
+    await saveHint(env, item, hint, model, leaks);
     return;
   }
 }
@@ -522,6 +639,12 @@ export function scrubLeaks(text, leaks) {
   let out = text.replace(/[‐-―−]/g, "-");
   for (const w of leaks) {
     const s = String(w);
+    if (s === "LETTER") {
+      // Multiple choice: blank any reference to an option letter ("option B", "(C)", "answer is D", "B)").
+      out = out.replace(/\b(option|choice|answer(?: is)?|letter|pick|select)\s*[:(]?\s*\(?[A-D]\)?(?![a-z])/gi, "…")
+        .replace(/\(([A-D])\)/g, "(…)").replace(/(^|\s)([A-D])[).:](?=\s)/g, "$1…");
+      continue;
+    }
     if (/^-?\d+(\.\d+)?$/.test(s)) {
       // Normalise numbers in the text, then compare, so "1,500" and "1500.0" are caught too.
       out = out.replace(/-?\d[\d,]*(\.\d+)?/g, (m) => (normalize(m) === normalize(s) ? "…" : m));
@@ -541,9 +664,16 @@ const NEWS_SYNONYMS = [
 ];
 
 async function hintBacklog(env, n = 4) {
+  // Muse Glimmer (the judge node) is the primary judge. While it's online, the API judges only rescue
+  // hints that have waited 10+ minutes; when it's offline they take anything that waited 4+ minutes.
+  const judge = await env.DB.prepare("SELECT MAX(last_seen) AS seen FROM nodes WHERE name LIKE 'judge%'").first();
+  const judgeOnline = judge?.seen && Date.now() - judge.seen < 120_000;
+  const waitMs = judgeOnline ? 600_000 : 240_000;
   const { results } = await env.DB.prepare(
-    "SELECT id, question, task, meta, split_fields FROM items WHERE status = 'hinting' ORDER BY id LIMIT ?"
-  ).bind(n).all();
+    // A judge node (Muse Glimmer on Kaggle) gets first claim; the API fallback only takes items that
+    // have waited 4+ minutes and aren't held by a judge node.
+    "SELECT id, question, task, meta, split_fields FROM items WHERE status = 'hinting' AND COALESCE(hint_wait_since, 0) < ? AND (COALESCE(hint_lease, 0) < ? OR COALESCE(hint_wait_since, 0) < ?) ORDER BY id LIMIT ?"
+  ).bind(Date.now() - waitMs, Date.now(), Date.now() - 600_000, n).all();  // a judge-node lease can't block an item past 10 min
   for (const r of results) await writeHint(env, r);
   return results.length;
 }
@@ -581,12 +711,15 @@ async function stats(env, wanted) {
   const items = { results: itemsCache.rows };
 
   const online = t - num(env, "ONLINE_SECONDS") * 1000;
-  const [nodes, pairs, recent, activity, nodeModels] = await env.DB.batch([
+  const [nodes, pairs, recent, activity, nodeModels, singles] = await env.DB.batch([
     // Per-node running totals: a handful of rows, not every vote.
     env.DB.prepare(
       "SELECT id, name, created_at, last_seen, quarantined, votes_n, hp_n, hp_ok, too_fast_n, agreed_n FROM nodes ORDER BY created_at"
     ),
-    env.DB.prepare("SELECT model, harness, votes, correct FROM pair_stats ORDER BY model, harness"),
+    // Per run when ?task= is given (a run must not show another run's models), else the global totals.
+    wanted
+      ? env.DB.prepare("SELECT v.model, v.harness, COUNT(*) AS votes, SUM(CASE WHEN v.answer = i.gold THEN 1 ELSE 0 END) AS correct FROM votes v JOIN items i ON i.id = v.item_id WHERE i.task = ? GROUP BY 1, 2 ORDER BY 1, 2").bind(wanted)
+      : env.DB.prepare("SELECT model, harness, votes, correct FROM pair_stats ORDER BY model, harness"),
     // Recent activity shows WHO worked, never WHAT they answered: nodes must not see each other's answers.
     env.DB.prepare(
       "SELECT v.created_at, n.name, v.model, v.harness, v.server_ms, v.too_fast FROM votes v JOIN nodes n ON n.id = v.node_id ORDER BY v.id DESC LIMIT 12"
@@ -597,10 +730,22 @@ async function stats(env, wanted) {
          (SELECT COUNT(*) FROM assignments WHERE status = 'open' AND assigned_at > ?2) AS leases_open,
          (SELECT COUNT(*) FROM assignments WHERE same_node = 1) AS same_node`
     ).bind(t - 600_000, t - num(env, "LEASE_SECONDS") * 1000),
-    env.DB.prepare("SELECT node_id, model, votes FROM node_models"),
+    wanted
+      ? env.DB.prepare(`SELECT v.node_id, v.model, COUNT(*) AS votes, SUM(CASE WHEN i.status = 'accepted' AND v.answer = i.final_answer THEN 1 ELSE 0 END) AS agreed,
+                SUM(i.is_honeypot) AS hp, SUM(CASE WHEN i.is_honeypot = 1 AND v.answer = i.gold THEN 1 ELSE 0 END) AS hp_ok,
+                SUM(v.too_fast) AS too_fast
+         FROM votes v JOIN items i ON i.id = v.item_id WHERE i.task = ? GROUP BY 1, 2`).bind(wanted)
+      : env.DB.prepare("SELECT node_id, model, votes FROM node_models"),
+    // How often a single vote alone is right, per run (the baseline consensus is compared against).
+    env.DB.prepare("SELECT i.task, COUNT(*) AS n, SUM(CASE WHEN v.answer = i.gold THEN 1 ELSE 0 END) AS ok FROM votes v JOIN items i ON i.id = v.item_id WHERE i.is_honeypot = 0 AND i.gold <> '' GROUP BY i.task"),
   ]);
   const modelsByNode = {};
-  for (const r of nodeModels.results) (modelsByNode[r.node_id] ??= {})[r.model] = r.votes;
+  const runByNode = {}; // with ?task=: this run's per-node totals (the nodes table is lifetime)
+  for (const r of nodeModels.results) {
+    (modelsByNode[r.node_id] ??= {})[r.model] = r.votes;
+    const n = (runByNode[r.node_id] ??= { votes: 0, agreed: 0, hp: 0, hp_ok: 0, too_fast: 0 });
+    for (const k in n) n[k] += Number(r[k] || 0);
+  }
 
   // One tally per task. "Waiting for judge" includes items waiting for a hint or for their re-checks;
   // "kept by judge" covers both the old judge-picks-the-answer rulings and hint-confirmed ones.
@@ -611,6 +756,7 @@ async function stats(env, wanted) {
       total: 0, honeypots: 0, honeypots_done: 0, pending: 0, unanimous: 0, judge_accepted: 0, accepted_correct: 0,
       disputed: 0, rechecking: 0, no_majority: 0, judge_rejected: 0, judges: {},
     });
+    if (r.status === "parked") continue; // set aside (e.g. a run cut short): not part of this run
     it.total += r.c;
     if (r.is_honeypot) {
       it.honeypots += r.c;
@@ -631,6 +777,7 @@ async function stats(env, wanted) {
     else it.no_majority += r.c;
   }
   // News has no answer key: its labels are scored against real prices afterwards, not here.
+  for (const r of singles.results) if (byTask[r.task]) Object.assign(byTask[r.task], { single_votes: r.n, single_ok: r.ok });
   if (byTask.news) byTask.news.accepted_correct = null;
   // Show the task that is running now (has pending work), else GSM8K.
   // ?task= picks a run; otherwise the one with pending work (the live one), else GSM8K.
@@ -655,27 +802,173 @@ async function stats(env, wanted) {
     by_task: byTask,
     items: it,
     judges,
-    activity: { ...activity.results[0], votes_total: nodes.results.reduce((s, n) => s + n.votes_n, 0) },
-    nodes: nodes.results.map((n) => ({
+    // With ?task=, vote counts are this run's only (nodes table holds lifetime totals across all runs).
+    activity: { ...activity.results[0], votes_total: wanted ? Object.values(modelsByNode).reduce((s, m) => s + Object.values(m).reduce((a, b) => a + b, 0), 0) : nodes.results.reduce((s, n) => s + n.votes_n, 0) },
+    // With ?task=, only nodes that voted in that run (or are online now); old sessions drop out.
+    // Judge nodes write hints, they never vote, so they are left out of the voter table.
+    nodes: nodes.results.filter((n) => !/^judge/.test(n.name) && (!wanted || modelsByNode[n.id] || n.last_seen > online)).map((n) => {
+      const R = wanted ? runByNode[n.id] || { votes: 0, agreed: 0, hp: 0, hp_ok: 0, too_fast: 0 } : null;
+      return {
       id: n.id.slice(0, 8),
       name: n.name,
       joined: n.created_at,
       last_seen: n.last_seen,
       online: n.last_seen > online,
       quarantined: Boolean(n.quarantined),
-      votes: n.votes_n,
-      honeypots: n.hp_n,
-      honeypots_ok: n.hp_ok,
-      too_fast: n.too_fast_n,
-      agreed: n.agreed_n,
-      credits: n.agreed_n + n.hp_ok,
+      votes: R ? R.votes : n.votes_n,
+      honeypots: R ? R.hp : n.hp_n,
+      honeypots_ok: R ? R.hp_ok : n.hp_ok,
+      too_fast: R ? R.too_fast : n.too_fast_n,
+      agreed: R ? R.agreed : n.agreed_n,
+      credits: R ? R.agreed + R.hp_ok : n.agreed_n + n.hp_ok,
       models: modelsByNode[n.id] || {},
-    })),
+    }; }),
     pairs: pairs.results,
     recent: recent.results,
   };
   statsCache[wanted || ""] = { at: t, body };
   return json(body);
+}
+
+// ---------- model scoreboard ----------
+
+// Per model: accuracy against the answer key, speed, how often it sided with the kept answer, how many
+// of its wrong votes the network overruled, and how often it was right but outvoted. Plus a dataset
+// summary: how many wrong votes were cast and how many of them still reached the kept data.
+let scoreCache = {};
+async function scoreboard(env, task) {
+  const t = Date.now();
+  const c = scoreCache[task];
+  if (c && t - c.at < 15_000) return json(c.body);
+  const base = "FROM votes v JOIN items i ON i.id = v.item_id WHERE i.task = ? AND i.is_honeypot = 0";
+  const [models, totals] = await env.DB.batch([
+    env.DB.prepare(
+      `SELECT v.model, COUNT(*) AS votes,
+              SUM(CASE WHEN v.answer = i.gold THEN 1 ELSE 0 END) AS correct,
+              ROUND(AVG(v.server_ms)) AS avg_ms,
+              SUM(CASE WHEN i.status = 'accepted' THEN 1 ELSE 0 END) AS on_settled,
+              SUM(CASE WHEN i.status = 'accepted' AND v.answer = i.final_answer THEN 1 ELSE 0 END) AS sided_with_kept,
+              SUM(CASE WHEN v.answer <> i.gold AND i.status = 'accepted' AND i.final_answer = i.gold THEN 1 ELSE 0 END) AS wrong_overruled,
+              SUM(CASE WHEN v.answer <> i.gold AND i.status = 'dropped' THEN 1 ELSE 0 END) AS wrong_dropped,
+              SUM(CASE WHEN v.answer = i.gold AND i.status = 'accepted' AND i.final_answer <> i.gold THEN 1 ELSE 0 END) AS right_outvoted,
+              SUM(CASE WHEN v.hinted = 1 THEN 1 ELSE 0 END) AS hinted_votes,
+              SUM(CASE WHEN v.hinted = 1 AND v.answer = i.gold THEN 1 ELSE 0 END) AS hinted_correct
+       ${base} GROUP BY v.model ORDER BY 3 DESC`
+    ).bind(task),
+    env.DB.prepare(
+      `SELECT COUNT(*) AS votes, SUM(CASE WHEN v.answer = i.gold THEN 1 ELSE 0 END) AS correct,
+              SUM(CASE WHEN v.answer <> i.gold THEN 1 ELSE 0 END) AS wrong,
+              SUM(CASE WHEN v.answer <> i.gold AND i.status = 'accepted' AND v.answer = i.final_answer THEN 1 ELSE 0 END) AS wrong_kept,
+              (SELECT COUNT(*) FROM items WHERE task = ? AND is_honeypot = 0 AND status = 'accepted') AS kept,
+              (SELECT COUNT(*) FROM items WHERE task = ? AND is_honeypot = 0 AND status = 'accepted' AND final_answer = gold) AS kept_correct
+       ${base}`
+    ).bind(task, task, task),
+  ]);
+  const body = { task, now: t, models: models.results, totals: totals.results[0] };
+  scoreCache[task] = { at: t, body };
+  return json(body);
+}
+
+// ---------- trading board ----------
+
+// Every settled trade decision with its later price moves (server-side meta, revealed only after the
+// decision is final), plus each model's own votes so single models can be compared with the consensus.
+let tradeCache = { at: 0, body: null };
+async function tradeBoard(env) {
+  const t = Date.now();
+  if (tradeCache.body && t - tradeCache.at < 5_000) return json(tradeCache.body);
+  const [items, votes, counts, vt] = await env.DB.batch([
+    env.DB.prepare(
+      `SELECT id, question, status, final_answer, resolved_by, meta->>'company' AS company, meta->>'symbol' AS symbol,
+              meta->>'date' AS date, (meta->>'r20')::float AS r20, (meta->>'ex1')::float AS ex1,
+              (meta->>'ex3')::float AS ex3, (meta->>'ex7')::float AS ex7
+       FROM items WHERE task = 'trade' AND status IN ('accepted', 'dropped') ORDER BY meta->>'date', id`
+    ),
+    env.DB.prepare(
+      `SELECT v.item_id, v.model, v.harness, v.answer FROM votes v JOIN items i ON i.id = v.item_id
+       WHERE i.task = 'trade' AND i.status IN ('accepted', 'dropped') AND v.hinted = 0`
+    ),
+    env.DB.prepare(`SELECT status, COUNT(*) AS n FROM items WHERE task = 'trade' GROUP BY 1`),
+    env.DB.prepare(
+      `SELECT COUNT(*) AS votes, SUM(v.hinted) AS hinted_votes, COUNT(DISTINCT CASE WHEN v.hinted = 1 THEN v.item_id END) AS hinted_items,
+              COUNT(DISTINCT CASE WHEN v.hinted = 1 AND i.status = 'accepted' THEN v.item_id END) AS hint_saved
+       FROM votes v JOIN items i ON i.id = v.item_id WHERE i.task = 'trade' AND i.status IN ('accepted', 'dropped')`
+    ),
+  ]);
+  const c = {};
+  for (const r of counts.results) c[r.status] = r.n;
+  tradeCache = { at: t, body: { now: t, counts: c, totals: vt.results[0], items: items.results, votes: votes.results } };
+  return json(tradeCache.body);
+}
+
+// ---------- agreement vs accuracy ----------
+
+// For items with exactly 5 first-round votes: how often the most common answer is right, by how many
+// of the 5 gave it. This is the whole idea in one curve: more agreement, more often right.
+const agreeCache = {};
+async function agreementCurve(env, task) {
+  const t = Date.now();
+  if (agreeCache[task] && t - agreeCache[task].at < 60_000) return json(agreeCache[task].body);
+  const { results } = await env.DB.prepare(
+    `WITH c AS (SELECT v.item_id, v.answer, COUNT(*) AS n FROM votes v JOIN items i ON i.id = v.item_id
+                WHERE i.task = ? AND v.hinted = 0 AND v.too_fast = 0 AND i.is_honeypot = 0 GROUP BY 1, 2),
+          t AS (SELECT item_id, SUM(n) AS tot, MAX(n) AS top FROM c GROUP BY 1),
+          w AS (SELECT DISTINCT ON (c.item_id) c.item_id, c.answer, t.top, t.tot FROM c JOIN t USING (item_id)
+                WHERE c.n = t.top ORDER BY c.item_id, c.answer)
+     SELECT w.top AS agree, COUNT(*) AS items, SUM(CASE WHEN w.answer = i.gold THEN 1 ELSE 0 END) AS correct
+     FROM w JOIN items i ON i.id = w.item_id WHERE w.tot = 5 GROUP BY 1 ORDER BY 1 DESC`
+  ).bind(task).all();
+  const body = { task, now: t, buckets: results };
+  agreeCache[task] = { at: t, body };
+  return json(body);
+}
+
+// ---------- GPQA per-question breakdown ----------
+
+// Every decided GPQA question with its vote split, the agreed answer and the official one.
+// Question text is never returned: GPQA asks that its questions stay out of public pages.
+async function gpqaBoard(env) {
+  const [items, votes] = await env.DB.batch([
+    env.DB.prepare("SELECT id, status, final_answer, gold, hint IS NOT NULL AS hinted FROM items WHERE task = 'gpqa' AND status IN ('accepted', 'dropped') ORDER BY id"),
+    env.DB.prepare("SELECT v.item_id, v.model, v.answer, v.hinted FROM votes v JOIN items i ON i.id = v.item_id WHERE i.task = 'gpqa' AND i.status IN ('accepted', 'dropped') ORDER BY v.id"),
+  ]);
+  return json({ now: Date.now(), items: items.results, votes: votes.results });
+}
+
+// ---------- planted-errors audit ----------
+
+// GPQA stops at 50 decided questions: untouched ones are parked (ones already voted on finish),
+// and the planted-errors problems open up. Nodes started with "gpqa" are also served "audit" (see job).
+async function gpqaSwitch(env) {
+  const r = await env.DB.prepare("SELECT COUNT(*) AS n FROM items WHERE task = 'gpqa' AND status IN ('accepted', 'dropped')").first();
+  if (Number(r?.n || 0) < 50) return;
+  await env.DB.batch([
+    env.DB.prepare("UPDATE items SET status = 'parked' WHERE task = 'gpqa' AND status = 'pending' AND id NOT IN (SELECT item_id FROM votes)"),
+    env.DB.prepare("UPDATE items SET status = 'pending' WHERE task = 'audit' AND status = 'parked'"),
+  ]);
+}
+
+// Scores the network as a label checker: a label is flagged when the agreed answer differs from it;
+// items with no agreement are "sent to review" (not kept, so a bad label can't slip into the data either).
+async function auditBoard(env) {
+  const { results } = await env.DB.prepare(
+    `SELECT (meta->>'planted')::bool AS planted,
+            CASE WHEN status = 'accepted' AND final_answer <> meta->>'label' THEN 'flagged'
+                 WHEN status = 'accepted' THEN 'confirmed'
+                 WHEN status = 'dropped' THEN 'review'
+                 ELSE 'open' END AS outcome,
+            SUM(CASE WHEN status = 'accepted' AND final_answer = gold THEN 1 ELSE 0 END) AS fixed_right,
+            COUNT(*) AS n
+     FROM items WHERE task = 'audit' AND status <> 'parked' GROUP BY 1, 2`
+  ).all();
+  // Per-item detail for the walkthrough (GSM8K test problems are public, so the text can be shown).
+  const [items, votes] = await env.DB.batch([
+    env.DB.prepare(`SELECT id, question, gold, meta->>'label' AS label, (meta->>'planted')::bool AS planted, status, final_answer
+                    FROM items WHERE task = 'audit' AND status <> 'parked' ORDER BY id`),
+    env.DB.prepare(`SELECT v.item_id, v.answer, v.hinted FROM votes v JOIN items i ON i.id = v.item_id
+                    WHERE i.task = 'audit' AND i.status <> 'parked' ORDER BY v.id`),
+  ]);
+  return json({ now: Date.now(), rows: results, items: items.results, votes: votes.results });
 }
 
 // ---------- news signal board ----------

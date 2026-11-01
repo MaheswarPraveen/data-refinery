@@ -4,3 +4,4 @@ data/
 node_modules/
 __pycache__/
 *.node.json
+preview_robot.html

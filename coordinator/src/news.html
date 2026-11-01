@@ -3,14 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Market Signals</title>
+<title>News · Data Refinery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
     color-scheme: light;
-    --page: #f9f9f7; --surface: #fcfcfb; --ink: #0b0b0b; --ink-2: #52514e; --muted: #898781;
+    --page: #f6f5f1; --surface: #fbfaf7; --ink: #0b0b0b; --ink-2: #52514e; --muted: #898781;
     --grid: #e1e0d9; --ring: rgba(11, 11, 11, 0.10); --track: #ecebe6; --good: #0ca30c;
     /* diverging pair: blue = beat Nifty, red = lagged, grey = no real move */
-    --up: #2a78d6; --down: #e34948; --mid: #a3a29b;
+    --up: #6d4fd8; --down: #e34948; --mid: #a3a29b;
     --up-bg: color-mix(in srgb, var(--up) 12%, transparent); --down-bg: color-mix(in srgb, var(--down) 12%, transparent);
   }
   @media (prefers-color-scheme: dark) {
@@ -18,7 +20,7 @@
       color-scheme: dark;
       --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
       --grid: #2c2c2a; --ring: rgba(255, 255, 255, 0.10); --track: #2a2a28;
-      --up: #3987e5; --down: #e66767; --mid: #6d6c66;
+      --up: #9a82f2; --down: #e66767; --mid: #6d6c66;
     }
   }
   * { box-sizing: border-box; }
@@ -72,18 +74,78 @@
   .catrow span:not(:first-child) { text-align: right; font-variant-numeric: tabular-nums; }
   .note { color: var(--muted); font-size: 12px; margin-top: 10px; }
   .empty { color: var(--muted); padding: 12px 0; }
+
+  /* phones: tighter spacing, smaller figures, nothing wider than the screen */
+  .two { grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr)); }
+  @media (max-width: 600px) {
+    main { padding: 18px 12px 32px; }
+    header { margin-bottom: 14px; }
+    h1 { font-size: 19px; }
+    .card { padding: 14px; }
+    .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .kpi .value { font-size: 22px; }
+    td { white-space: normal; }
+    .legend { grid-template-columns: 1fr; }
+  }
+
+  /* calmer, flatter look shared with the home page */
+  body { font: 14px/1.55 "IBM Plex Sans", system-ui, sans-serif; }
+  .card { border-radius: 6px; border-color: var(--grid); box-shadow: none; }
+  .card h2 { font-size: 13px; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+  .card .why { color: var(--ink-2); }
+  .kpi .value, td.num, .num { font-family: "IBM Plex Mono", ui-monospace, monospace; font-weight: 500; font-variant-numeric: tabular-nums; }
+  header h1 { font-size: 28px; font-weight: 600; letter-spacing: -.02em; }
+  header .sub { font-size: 15px; max-width: 720px; margin-top: 8px; color: var(--ink-2); }
+  .tabs button { border-radius: 4px; }
+  nav.top { display: flex; justify-content: space-between; align-items: center; padding: 0 0 16px; margin-bottom: 26px; border-bottom: 1px solid var(--grid); font-size: 13px; }
+  nav.top b { font-weight: 600; } nav.top a { color: var(--ink-2); text-decoration: none; margin-left: 16px; } nav.top a:hover { color: var(--ink); }
+  @media (max-width: 600px) { header h1 { font-size: 22px; } nav.top a { margin-left: 10px; } }
+
+  /* shared tab bar: one tab per case */
+  nav.tabsbar { display: flex; align-items: flex-end; gap: 22px; border-bottom: 1px solid var(--rule, var(--grid)); margin: 0 0 26px; padding-top: 14px; }
+  nav.tabsbar b { font-weight: 600; font-size: 14px; padding-bottom: 11px; white-space: nowrap; }
+  nav.tabsbar .tablist { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; }
+  nav.tabsbar .tablist::-webkit-scrollbar { display: none; }
+  nav.tabsbar a { text-decoration: none; color: var(--ink-2); font-size: 13px; padding: 8px 12px 10px; border-bottom: 2px solid transparent; white-space: nowrap; margin-bottom: -1px; }
+  nav.tabsbar a:hover { color: var(--ink); }
+  nav.tabsbar a.on { color: var(--ink); border-bottom-color: var(--ink); font-weight: 500; }
+  @media (max-width: 600px) { nav.tabsbar { gap: 10px; } nav.tabsbar b { display: none; } nav.tabsbar a { padding: 8px 9px 10px; } }
+
+  nav.tabsbar b { display: inline-flex; align-items: center; gap: 8px; }
+  .logo { width: 48px; height: 20px; flex: none; }
+  .logo .px rect, .logo .nd circle, .logo .ly path { fill: var(--accent, var(--s1)); }
+  .logo .ln path { fill: none; stroke: var(--accent, var(--s1)); stroke-width: 1.4; opacity: .7; }
+  @media (max-width: 600px) { nav.tabsbar b { display: inline-flex; } nav.tabsbar b span { display: none; } }
+
+  html { scroll-behavior: smooth; }
+  nav.tabsbar { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--page) 92%, transparent); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+  .endnav { border-top: 1px solid var(--rule, var(--grid)); margin-top: 56px; padding: 32px 0 40px; }
+  .endin { max-width: 1000px; margin: 0 auto; padding: 0 20px; }
+  .endh { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; }
+  .endgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .endgrid a { text-decoration: none; border: 1px solid var(--rule, var(--grid)); border-radius: 8px; padding: 12px 14px; transition: border-color .15s, transform .15s; }
+  .endgrid a:hover { border-color: var(--accent, var(--s1)); transform: translateY(-2px); }
+  .endgrid a.here { border-color: var(--accent, var(--s1)); background: color-mix(in srgb, var(--accent, var(--s1)) 7%, transparent); }
+  .endgrid b { display: block; font-size: 14px; color: var(--ink); } .endgrid span { color: var(--muted); font-size: 12px; }
+  .endfoot { margin-top: 18px; color: var(--muted); font-size: 12px; } .endfoot a { color: inherit; }
+  @media (max-width: 720px) { .endgrid { grid-template-columns: 1fr 1fr; } }
+  /* bigger brand mark */
+  nav.tabsbar .logo { width: 72px; height: 30px; }
+  nav.tabsbar b { font-size: 18px !important; letter-spacing: -.01em; gap: 10px !important; }
+  nav.tabsbar > a { padding-bottom: 8px !important; }
+  @media (max-width: 600px) { nav.tabsbar .logo { width: 56px; height: 24px; } }
 </style>
 </head>
-<body>
+<body id="top">
 <main>
+  <nav class="tabsbar"><a href="/" style="padding:0 0 11px;border:0;margin:0"><b><svg class="logo" viewBox="0 0 96 40" aria-hidden="true"><g class="px"><rect x="2" y="9" width="4" height="4"/><rect x="8" y="4" width="4" height="4"/><rect x="5" y="17" width="4" height="4" opacity=".6"/><rect x="11" y="13" width="4" height="4"/><rect x="2" y="26" width="4" height="4" opacity=".5"/><rect x="9" y="24" width="4" height="4"/><rect x="6" y="32" width="4" height="4" opacity=".7"/></g><g class="ln"><path d="M15,15 C22,15 22,20 30,20"/><path d="M13,26 C22,26 22,20 30,20"/><path d="M30,20 L40,9 L50,20 L40,31 Z"/><path d="M40,9 L40,31"/><path d="M50,20 C56,20 56,14 62,14"/><path d="M50,20 C56,20 56,24 62,24"/></g><g class="nd"><circle cx="30" cy="20" r="3"/><circle cx="40" cy="9" r="3"/><circle cx="40" cy="31" r="3"/><circle cx="50" cy="20" r="3"/><circle cx="40" cy="20" r="1.6"/></g><g class="ly"><path d="M62,26 L77,19 L92,26 L77,33 Z" opacity=".55"/><path d="M62,20 L77,13 L92,20 L77,27 Z" opacity=".75"/><path d="M62,14 L77,7 L92,14 L77,21 Z"/></g></svg><span>Data Refinery</span></b></a><div class="tablist"><a href="/">Overview</a><a href="/audit">Error detection</a><a href="/gsm8k-mixed">Maths</a><a href="/gpqa">Science</a><a href="/gsm8k">Maths v1</a><a href="/news">News</a><a href="/trade">Trading</a><a href="/future">Decentralisation</a></div></nav>
   <header>
     <div>
       <h1>Market Signals</h1>
       <p class="sub">Small Llamas label Indian small-cap headlines (Apr–Oct 2026) as positive, negative or neutral. Here's what each stock actually did over the next 3 trading days, compared with the Nifty index.</p>
     </div>
     <div style="text-align:right">
-      <div class="live"><span class="dot"></span><span id="updated">connecting…</span></div>
-      <nav><a href="/">← Home</a></nav>
+      <div class="live"><span id="updated">connecting…</span></div>
     </div>
   </header>
 
@@ -239,7 +301,7 @@ function render(d) {
       <td class="cat">${esc(CAT[k] || k)}</td><td class="how">${how}</td>
       <td class="num ret ${cls}">${pct(r.d3, 1)}</td><td class="num">${matchMark(s, r.d3)}</td></tr>`;
   }).join("");
-  $("updated").textContent = "Live · updated " + new Date(d.now).toLocaleTimeString();
+  $("updated").textContent = "Finished run";
 }
 
 async function refresh() {
@@ -251,5 +313,12 @@ refresh();
 setInterval(refresh, 5000);
 document.addEventListener("visibilitychange", refresh);
 </script>
+<script>
+// highlight the current case's tab and keep it in view on narrow screens
+(() => { const a = [...document.querySelectorAll("nav.tabsbar a")].find((x) => x.getAttribute("href") === location.pathname);
+  if (a) { a.classList.add("on"); a.scrollIntoView({ inline: "center", block: "nearest" }); } })();
+</script>
+<nav class="endnav"><div class="endin"><div class="endh">Explore the project</div><div class="endgrid"><a href="/"><b>Overview</b><span>The idea, results and architecture</span></a><a href="/audit"><b>Error detection</b><span>Main result: 9 of 10 wrong labels fixed</span></a><a href="/gsm8k-mixed"><b>Maths</b><span>Ten model families, 500 problems</span></a><a href="/gsm8k"><b>Maths v1</b><span>First run, Llama only</span></a><a href="/gpqa"><b>Science</b><span>Expert questions, paused early</span></a><a href="/news"><b>News</b><span>Headline sentiment labels</span></a><a href="/trade"><b>Trading</b><span>Paper-money signal study</span></a><a href="/future"><b>Decentralisation</b><span>Idle home GPUs, rewards, costs</span></a></div><div class="endfoot">Data Refinery · Meta Global AI Hackathon · <a href="#top">Back to top ↑</a></div></div></nav>
+<script>(() => { const a = [...document.querySelectorAll(".endgrid a")].find((x) => x.getAttribute("href") === location.pathname); if (a) a.classList.add("here"); })();</script>
 </body>
 </html>

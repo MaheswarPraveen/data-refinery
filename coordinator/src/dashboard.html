@@ -4,21 +4,23 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Data Refinery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
     color-scheme: light;
-    --page: #f9f9f7;
-    --surface: #fcfcfb;
+    --page: #f6f5f1;
+    --surface: #fbfaf7;
     --ink: #0b0b0b;
     --ink-2: #52514e;
     --muted: #898781;
     --grid: #e1e0d9;
     --axis: #c3c2b7;
     --ring: rgba(11, 11, 11, 0.10);
-    --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100; --s5: #e87ba4;
+    --s1: #6d4fd8; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100; --s5: #e87ba4;
     --track: #ecebe6;
     --good: #0ca30c; --warn: #fab219; --critical: #d03b3b;
-    --seq-0: #cde2fb; --seq-1: #9ec5f4; --seq-2: #6da7ec; --seq-3: #3987e5; --seq-4: #256abf; --seq-5: #184f95;
+    --seq-0: #e9e4fc; --seq-1: #cfc3f7; --seq-2: #ad9bf0; --seq-3: #8b72e6; --seq-4: #6d4fd8; --seq-5: #4f33ad;
   }
   @media (prefers-color-scheme: dark) {
     :root {
@@ -31,9 +33,9 @@
       --grid: #2c2c2a;
       --axis: #383835;
       --ring: rgba(255, 255, 255, 0.10);
-      --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181;
+      --s1: #9a82f2; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181;
       --track: #2a2a28;
-      --seq-0: #184f95; --seq-1: #1c5cab; --seq-2: #256abf; --seq-3: #2a78d6; --seq-4: #5598e7; --seq-5: #86b6ef;
+      --seq-0: #3b2a80; --seq-1: #4a35a0; --seq-2: #5b43bf; --seq-3: #6d4fd8; --seq-4: #937cf0; --seq-5: #bfb0f7;
     }
   }
   * { box-sizing: border-box; }
@@ -41,7 +43,7 @@
     margin: 0;
     background: var(--page);
     color: var(--ink);
-    font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+    font: 14px/1.55 "IBM Plex Sans", system-ui, sans-serif;
   }
   main { max-width: 1120px; margin: 0 auto; padding: 28px 16px 48px; }
   header { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; justify-content: space-between; margin-bottom: 22px; }
@@ -131,18 +133,165 @@
     .kpi .value { font-size: 24px; }
     .card { padding: 16px; }
   }
+
+  /* phones: tighter spacing, smaller figures, nothing wider than the screen */
+  .two { grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr)); }
+  @media (max-width: 600px) {
+    main { padding: 18px 12px 32px; }
+    header { margin-bottom: 14px; }
+    h1 { font-size: 19px; }
+    .card { padding: 14px; }
+    .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .kpi .value { font-size: 22px; }
+    td { white-space: normal; }
+    .legend { grid-template-columns: 1fr; }
+  }
+
+  /* phones: the whole model x style grid on screen at once */
+  @media (max-width: 600px) {
+    .heat { grid-template-columns: 74px repeat(5, minmax(0, 1fr)); min-width: 0; gap: 2px; }
+    .heat .h { font-size: 10px; padding: 0 1px 4px; }
+    .heat .h small { display: none; }
+    .heat .r { font-size: 10px; line-height: 1.2; }
+    .cell { padding: 6px 1px; min-height: 38px; }
+    .cell b { font-size: 12px; }
+    .cell span { font-size: 9px; }
+  }
+
+  /* model scoreboard popup */
+  .sb-btn { border: 1px solid var(--ring); background: var(--surface); color: var(--ink); border-radius: 999px; padding: 4px 12px; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; margin-right: 10px; }
+  .sb-btn:hover { border-color: var(--s1); }
+  dialog.sb { border: 1px solid var(--ring); border-radius: 14px; background: var(--surface); color: var(--ink); padding: 0; width: min(920px, 96vw); max-height: 88vh; }
+  dialog.sb::backdrop { background: rgba(0,0,0,.45); }
+  .sb-head { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; border-bottom: 1px solid var(--grid); position: sticky; top: 0; background: var(--surface); }
+  .sb-head h2 { font-size: 16px; margin: 0; }
+  .sb-close { border: 0; background: none; color: var(--ink-2); font-size: 22px; cursor: pointer; line-height: 1; }
+  .sb-body { padding: 14px 18px 18px; overflow: auto; }
+  .sb-sum { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 14px; }
+  .sb-sum div { background: var(--track); border-radius: 10px; padding: 10px 12px; }
+  .sb-sum b { display: block; font-size: 20px; font-variant-numeric: tabular-nums; }
+  .sb-sum span { color: var(--muted); font-size: 12px; }
+  .sb-story { color: var(--ink-2); font-size: 13px; margin: 0 0 14px; }
+  .sb table td, .sb table th { white-space: nowrap; }
+  .sb .accbar { display: inline-block; height: 8px; border-radius: 4px; background: var(--s1); vertical-align: middle; margin-right: 6px; }
+  .sb .rank { color: var(--muted); width: 26px; }
+  @media (max-width: 600px) { .sb table td, .sb table th { white-space: normal; font-size: 12px; } .sb .hide-sm { display: none; } }
+  /* calmer, flatter look shared with the home page */
+  .card { border-radius: 6px; border-color: var(--grid); }
+  .card h2 { font-size: 13px; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+  .card .why { color: var(--ink-2); }
+  .kpi .value, .sb-sum b, .legend .n, .cell b, td.num { font-family: "IBM Plex Mono", ui-monospace, monospace; font-weight: 500; }
+  nav.top { display: flex; justify-content: space-between; align-items: center; padding: 0 0 16px; margin-bottom: 26px; border-bottom: 1px solid var(--grid); font-size: 13px; }
+  nav.top b { font-weight: 600; } nav.top a { color: var(--ink-2); text-decoration: none; margin-left: 16px; } nav.top a:hover { color: var(--ink); }
+  header h1 { font-size: 28px; font-weight: 600; letter-spacing: -.02em; }
+  header .sub { font-size: 15px; max-width: 720px; margin-top: 8px; color: var(--ink-2); }
+  .sb-sum div { background: transparent; border-left: 2px solid var(--grid); border-radius: 0; padding: 4px 12px; }
+  .sb-sum b { font-size: 24px; }
+  .sb-btn { border-radius: 4px; font-weight: 500; }
+  details.more { margin-top: 26px; border-top: 1px solid var(--grid); padding-top: 14px; }
+  details.more > summary { font-size: 14px; color: var(--ink-2); font-weight: 500; list-style: none; }
+  details.more > summary::before { content: "+ "; font-family: "IBM Plex Mono", monospace; }
+  details.more[open] > summary::before { content: "– "; }
+  details.more > .inner { margin-top: 14px; }
+  .pos { color: var(--good); } .neg { color: var(--critical); } .mono { font-family: "IBM Plex Mono", monospace; font-weight: 500; }
+  .story { display: grid; grid-template-columns: 34px 1fr; gap: 14px; margin-bottom: 14px; }
+  .story .step { font: 500 15px "IBM Plex Mono", monospace; color: var(--s1); border: 1px solid var(--grid); border-radius: 50%; width: 30px; height: 30px; display: grid; place-items: center; }
+  .story .lead { font-size: 15px; color: var(--ink); margin: 6px 0 12px; max-width: 760px; }
+  table.ex td { white-space: normal; }
+  .flow { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 10px; }
+  .flow div { padding: 0 16px 0 0; } .flow div + div { padding-left: 16px; border-left: 1px solid var(--grid); }
+  .flow b { display: block; font-weight: 600; margin-bottom: 2px; } .flow span { color: var(--ink-2); font-size: 13px; }
+  .barrow { display: grid; grid-template-columns: 56px 1fr 60px 210px; gap: 10px; align-items: center; margin: 8px 0; }
+  .bl { color: var(--ink-2); } .bt { height: 18px; background: var(--track); border-radius: 3px; overflow: hidden; } .bt i { display: block; height: 100%; border-radius: 3px; }
+  .bv { font: 500 16px "IBM Plex Mono", monospace; text-align: right; } .bn { color: var(--muted); font-size: 12px; }
+  .stack { display: flex; gap: 2px; height: 26px; border-radius: 4px; overflow: hidden; }
+  .stack i { display: block; height: 100%; }
+  .stack-leg { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 10px; font-size: 13px; color: var(--ink-2); }
+  .stack-leg i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+  .under { color: var(--muted); font-size: 13px; margin: 30px 0 12px; border-top: 1px solid var(--grid); padding-top: 14px; }
+  @media (max-width: 600px) { .story { grid-template-columns: 1fr; } .flow { grid-template-columns: 1fr; } .flow div + div { padding-left: 0; border-left: 0; border-top: 1px solid var(--grid); padding-top: 10px; margin-top: 10px; } .barrow { grid-template-columns: 48px 1fr 52px; } .bn { grid-column: 2 / 4; } }
+  @media (max-width: 600px) { header h1 { font-size: 22px; } nav.top a { margin-left: 10px; } }
+
+  /* shared tab bar: one tab per case */
+  nav.tabsbar { display: flex; align-items: flex-end; gap: 22px; border-bottom: 1px solid var(--rule, var(--grid)); margin: 0 0 26px; padding-top: 14px; }
+  nav.tabsbar b { font-weight: 600; font-size: 14px; padding-bottom: 11px; white-space: nowrap; }
+  nav.tabsbar .tablist { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; }
+  nav.tabsbar .tablist::-webkit-scrollbar { display: none; }
+  nav.tabsbar a { text-decoration: none; color: var(--ink-2); font-size: 13px; padding: 8px 12px 10px; border-bottom: 2px solid transparent; white-space: nowrap; margin-bottom: -1px; }
+  nav.tabsbar a:hover { color: var(--ink); }
+  nav.tabsbar a.on { color: var(--ink); border-bottom-color: var(--ink); font-weight: 500; }
+  @media (max-width: 600px) { nav.tabsbar { gap: 10px; } nav.tabsbar b { display: none; } nav.tabsbar a { padding: 8px 9px 10px; } }
+
+  nav.tabsbar b { display: inline-flex; align-items: center; gap: 8px; }
+  .logo { width: 48px; height: 20px; flex: none; }
+  .logo .px rect, .logo .nd circle, .logo .ly path { fill: var(--accent, var(--s1)); }
+  .logo .ln path { fill: none; stroke: var(--accent, var(--s1)); stroke-width: 1.4; opacity: .7; }
+  @media (max-width: 600px) { nav.tabsbar b { display: inline-flex; } nav.tabsbar b span { display: none; } }
+  #gq-ref .barrow { grid-template-columns: 210px 1fr 56px 0; }
+  @media (max-width: 600px) { #gq-ref .barrow { grid-template-columns: 1fr 50px; } #gq-ref .bt { grid-column: 1 / -1; grid-row: 2; } }
+
+  html { scroll-behavior: smooth; }
+  nav.tabsbar { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--page) 92%, transparent); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+  .endnav { border-top: 1px solid var(--rule, var(--grid)); margin-top: 56px; padding: 32px 0 40px; }
+  .endin { max-width: 1000px; margin: 0 auto; padding: 0 20px; }
+  .endh { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; }
+  .endgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .endgrid a { text-decoration: none; border: 1px solid var(--rule, var(--grid)); border-radius: 8px; padding: 12px 14px; transition: border-color .15s, transform .15s; }
+  .endgrid a:hover { border-color: var(--accent, var(--s1)); transform: translateY(-2px); }
+  .endgrid a.here { border-color: var(--accent, var(--s1)); background: color-mix(in srgb, var(--accent, var(--s1)) 7%, transparent); }
+  .endgrid b { display: block; font-size: 14px; color: var(--ink); } .endgrid span { color: var(--muted); font-size: 12px; }
+  .endfoot { margin-top: 18px; color: var(--muted); font-size: 12px; } .endfoot a { color: inherit; }
+  @media (max-width: 720px) { .endgrid { grid-template-columns: 1fr 1fr; } }
+  /* bigger brand mark */
+  nav.tabsbar .logo { width: 72px; height: 30px; }
+  nav.tabsbar b { font-size: 18px !important; letter-spacing: -.01em; gap: 10px !important; }
+  nav.tabsbar > a { padding-bottom: 8px !important; }
+  @media (max-width: 600px) { nav.tabsbar .logo { width: 56px; height: 24px; } }
 </style>
 </head>
-<body>
+<body id="top">
 <main>
+  <nav class="tabsbar"><a href="/" style="padding:0 0 11px;border:0;margin:0"><b><svg class="logo" viewBox="0 0 96 40" aria-hidden="true"><g class="px"><rect x="2" y="9" width="4" height="4"/><rect x="8" y="4" width="4" height="4"/><rect x="5" y="17" width="4" height="4" opacity=".6"/><rect x="11" y="13" width="4" height="4"/><rect x="2" y="26" width="4" height="4" opacity=".5"/><rect x="9" y="24" width="4" height="4"/><rect x="6" y="32" width="4" height="4" opacity=".7"/></g><g class="ln"><path d="M15,15 C22,15 22,20 30,20"/><path d="M13,26 C22,26 22,20 30,20"/><path d="M30,20 L40,9 L50,20 L40,31 Z"/><path d="M40,9 L40,31"/><path d="M50,20 C56,20 56,14 62,14"/><path d="M50,20 C56,20 56,24 62,24"/></g><g class="nd"><circle cx="30" cy="20" r="3"/><circle cx="40" cy="9" r="3"/><circle cx="40" cy="31" r="3"/><circle cx="50" cy="20" r="3"/><circle cx="40" cy="20" r="1.6"/></g><g class="ly"><path d="M62,26 L77,19 L92,26 L77,33 Z" opacity=".55"/><path d="M62,20 L77,13 L92,20 L77,27 Z" opacity=".75"/><path d="M62,14 L77,7 L92,14 L77,21 Z"/></g></svg><span>Data Refinery</span></b></a><div class="tablist"><a href="/">Overview</a><a href="/audit">Error detection</a><a href="/gsm8k-mixed">Maths</a><a href="/gpqa">Science</a><a href="/gsm8k">Maths v1</a><a href="/news">News</a><a href="/trade">Trading</a><a href="/future">Decentralisation</a></div></nav>
   <header>
     <div>
       <h1>GSM8K run · maths word problems</h1>
       <p class="sub">Finished run: 1,350 problems with known answers, so every number below is checked against the truth. Judge here picked answers for 2-vs-1 splits (the older method).</p>
     </div>
-    <span class="live"><a href="/" style="color:var(--ink-2);text-decoration:none;margin-right:10px">← Home</a><span class="dot stale" id="dot"></span><span id="updated">Connecting…</span></span>
+    <span class="live"><button class="sb-btn" id="sb-open">Model leaderboard</button><span class="dot stale" id="dot"></span><span id="updated">Connecting…</span></span>
   </header>
 
+  <section class="card" style="margin-bottom:14px">
+    <h2>Refinement summary</h2>
+    <p class="why">Individual votes in, verified training data out, checked afterwards against official answers the nodes never saw.</p>
+    <div class="sb-sum" id="ref-sum"></div>
+    <p class="why" id="ref-story" style="margin:0"></p>
+  </section>
+
+
+  <section class="card">
+    <h2>Where every item stands</h2>
+    <p class="why" id="pipe-why">Each problem is answered by 3 different nodes. All agree → kept. Two agree → the judge decides. No agreement → thrown out.</p>
+    <div class="bar" id="bar" role="img" aria-label="Problem status breakdown"></div>
+    <div class="legend" id="legend"></div>
+  </section>
+
+
+  <section class="card" style="margin-top:14px">
+    <h2>Which model and prompt style is right most often</h2>
+    <p class="why">Each vote uses a random model and one of 5 prompt styles. Cells show how often that pair matched the official answer.</p>
+    <div class="scroll"><div class="heat" id="heat"></div></div>
+    <div class="scale" aria-hidden="true">
+      <span>0%</span><i style="background:var(--seq-0)"></i><i style="background:var(--seq-1)"></i><i style="background:var(--seq-2)"></i><i style="background:var(--seq-3)"></i><i style="background:var(--seq-4)"></i><i style="background:var(--seq-5)"></i><span>100%</span>
+      <span style="margin-left:auto">grey = fewer than 3 votes</span>
+    </div>
+  </section>
+
+
+
+
+  <details class="more">
+    <summary>Technical details: nodes, judge, activity, settings</summary>
+    <div class="inner">
   <section class="grid kpis">
     <div class="card kpi">
       <div class="label">Refined</div>
@@ -171,17 +320,9 @@
       <div class="note" id="k-rate-note">average over the last 10 minutes</div>
     </div>
   </section>
-
-  <section class="card">
-    <h2>Where every problem stands</h2>
-    <p class="why" id="pipe-why">Each problem is answered by 3 different nodes. All agree → kept. Two agree → the judge decides. No agreement → thrown out.</p>
-    <div class="bar" id="bar" role="img" aria-label="Problem status breakdown"></div>
-    <div class="legend" id="legend"></div>
-  </section>
-
   <section class="card" style="margin-top:14px">
     <h2>Nodes</h2>
-    <p class="why">Volunteer machines running Llama. Credits come only from verified work: votes that matched a kept answer, plus hidden test problems passed.</p>
+    <p class="why">Volunteer machines and the models each one runs. Numbers are for this run only. Credits come only from verified work: votes that matched a kept answer, plus hidden test problems passed.</p>
     <div class="scroll">
       <table>
         <thead><tr>
@@ -198,17 +339,6 @@
     </div>
     <div class="empty" id="nodes-empty" hidden>No nodes yet. Start one on Kaggle or Colab and it appears here within seconds.</div>
   </section>
-
-  <section class="card" style="margin-top:14px">
-    <h2>Which model and instruction style is right most often</h2>
-    <p class="why">Every vote uses a random model and one of 5 instruction styles. Share matching the official answer, measured afterwards.</p>
-    <div class="scroll"><div class="heat" id="heat"></div></div>
-    <div class="scale" aria-hidden="true">
-      <span>0%</span><i style="background:var(--seq-0)"></i><i style="background:var(--seq-1)"></i><i style="background:var(--seq-2)"></i><i style="background:var(--seq-3)"></i><i style="background:var(--seq-4)"></i><i style="background:var(--seq-5)"></i><span>100%</span>
-      <span style="margin-left:auto">grey = fewer than 3 votes</span>
-    </div>
-  </section>
-
   <section class="grid two">
     <div class="card">
       <h2>Judge</h2>
@@ -225,16 +355,16 @@
       <div class="empty" id="feed-empty" hidden>No votes yet.</div>
     </div>
   </section>
-
   <section class="card" style="margin-top:14px">
     <h2>Rules of the network</h2>
     <p class="why">The settings the coordinator is running with right now.</p>
     <dl class="params" id="params"></dl>
   </section>
-
-  <details>
-    <summary>How this works, in one paragraph</summary>
+  <div class="card" style="margin-top:14px">
+    <h2>How this run worked</h2>
     <p>A coordinator on Cloudflare hands math problems to volunteer nodes on free Kaggle and Colab GPUs. For every problem, each node picks a random Llama model (1B, 3B or 8B) and a random instruction style, solves it, and signs the answer. The coordinator collects 3 independent answers, keeps the problem if they agree, and asks a 70B Llama judge when only two agree. Honeypots, timing checks and quarantine stop nodes from faking work. The kept problems, each with a full record of who answered what, become training data for a larger model. If small models agreeing can teach a bigger one, that's weak-to-strong generalisation (Burns et al., 2023).</p>
+  </div>
+    </div>
   </details>
 
   <footer>
@@ -247,14 +377,142 @@
 
 <script>
 // [key, label, short line shown under the label, longer tooltip]
-const HARNESSES = [
+// /gsm8k = first run (small Llamas); /gsm8k-mixed = Llama + Qwen + Granite run with the hint judge.
+const TASK = { "/gsm8k-mixed": "gsm8k_mixed", "/gpqa": "gpqa", "/audit": "audit" }[location.pathname] || "gsm8k";
+const MIXED = TASK === "gsm8k_mixed" || TASK === "gpqa" || TASK === "audit";
+if (TASK === "audit") addEventListener("DOMContentLoaded", async () => {
+  // The primary example: a dirty dataset in, a cleaned one out, told in three steps.
+  document.querySelector("h1").textContent = "Case study: detecting errors in a labelled dataset";
+  document.querySelector("header .sub").textContent = "A labelled dataset with deliberately corrupted labels, representative of scraped or crowd-sourced data, was processed by the network without access to the labels. This page documents the input, the method and the outcome.";
+  const sec = document.createElement("div");
+  sec.innerHTML = `
+  <section class="card story"><div class="step">1</div><div>
+    <h2>Input</h2>
+    <p class="lead" id="au-in">–</p>
+    <div class="scroll"><table class="ex"><thead><tr><th>Problem (excerpt)</th><th class="num">Label in the dataset</th><th class="num">Correct answer</th></tr></thead><tbody id="au-ex"></tbody></table></div>
+    <p class="why" style="margin:8px 0 0">Three of the corrupted labels. Each was a plausible error: off by one step, doubled, halved or a near miss.</p>
+  </div></section>
+  <section class="card story"><div class="step">2</div><div>
+    <h2>Method</h2>
+    <div class="flow">
+      <div><b>Independent solving</b><span>Five nodes solve each problem from scratch, without access to the label.</span></div>
+      <div><b>Consensus</b><span>4–5 of 5 in agreement: the answer is accepted. 3: a hint from Muse Glimmer and five new votes. Fewer: referred for review.</span></div>
+      <div><b>Verification</b><span>If the consensus matches the label, it is confirmed. If not, the label is flagged and replaced with the consensus answer.</span></div>
+    </div>
+  </div></section>
+  <section class="card story"><div class="step">3</div><div>
+    <h2>Outcome</h2>
+    <div id="au-ba"></div>
+    <div class="stack" id="au-stack"></div>
+    <div class="stack-leg" id="au-leg"></div>
+    <p class="lead" id="au-out" style="margin-top:14px">–</p>
+  </div></section>
+  <section class="card" style="margin-top:14px">
+    <h2>Corrupted labels and incorrect changes</h2>
+    <p class="why">Every corrupted label, plus any correct label the network changed. Votes show the five independent answers (after the hint, where one was given).</p>
+    <div class="scroll"><table><thead><tr><th>Problem (excerpt)</th><th class="num">Label</th><th class="num">Network</th><th class="num">Correct</th><th>Votes</th><th>Outcome</th></tr></thead><tbody id="au-rows"></tbody></table></div>
+  </section>
+  <p class="under">Supporting detail: voting pipeline, model × prompt accuracy and model leaderboard for this run.</p>`;
+  document.querySelector("header").after(sec);
+  try {
+    const d = await (await fetch("/api/audit", { cache: "no-store" })).json();
+    const by = {};
+    for (const v of d.votes) (by[v.item_id] ??= [[], []])[v.hinted ? 1 : 0].push(v.answer);
+    const short = (q) => esc(q.length > 90 ? q.slice(0, 88) + "…" : q);
+    const items = d.items, planted = items.filter((i) => i.planted), N = items.length;
+    const kept = items.filter((i) => i.status === "accepted");
+    const cls = (i) => (i.status !== "accepted" ? "review" : i.final_answer === i.label ? (i.planted ? "missed" : "ok") : i.planted ? "caught" : "false");
+    const c = { ok: 0, caught: 0, review: 0, missed: 0, false: 0 };
+    for (const i of items) c[cls(i)]++;
+    const wrongBefore = planted.length, wrongAfter = c.missed + c.false;
+    const pctOf = (a, b) => (b ? Math.round((a / b) * 1000) / 10 : 0);
+    $("au-in").innerHTML = `<b>${N} maths word problems</b> from the GSM8K test set, each with a label. <b>${wrongBefore} labels (${pctOf(wrongBefore, N)}%) were deliberately corrupted.</b> None of these problems appeared in earlier runs.`;
+    $("au-ex").innerHTML = planted.slice(0, 3).map((i) => `<tr><td>${short(i.question)}</td><td class="num neg">${esc(i.label)}</td><td class="num">${esc(i.gold)}</td></tr>`).join("");
+    const eb = pctOf(wrongBefore, N), ea = pctOf(wrongAfter, kept.length), mx = Math.max(eb, ea, 1);
+    const times = wrongAfter ? "An " + Math.round(eb / ea) + "× reduction in errors" : "No errors remain";
+    $("au-ba").innerHTML = [["Before", eb, `${wrongBefore} of ${N} labels wrong`, "var(--critical)"], ["After", ea, `${wrongAfter} of ${kept.length} kept labels wrong`, "var(--good)"]]
+      .map(([l, v, n, col]) => `<div class="barrow"><span class="bl">${l}</span><div class="bt"><i style="width:${(v / mx) * 100}%;background:${col}"></i></div><span class="bv">${v}%</span><span class="bn">${n}</span></div>`).join("") +
+      `<p class="why" style="margin:6px 0 16px">Label error rate. ${times}, with ${c.review} items (${pctOf(c.review, N)}%) referred for human review rather than accepted.</p>`;
+    const parts = [["ok", "Correct label confirmed", "var(--s1)"], ["caught", "Error corrected", "var(--good)"], ["review", "Referred for review", "var(--muted)"], ["missed", "Error missed", "var(--s2)"], ["false", "Correct label changed", "var(--critical)"]];
+    $("au-stack").innerHTML = parts.filter(([k]) => c[k]).map(([k, l, col]) => `<i style="flex-grow:${c[k]};background:${col}" title="${l}: ${c[k]}"></i>`).join("");
+    $("au-leg").innerHTML = parts.map(([k, l, col]) => `<span><i style="background:${col}"></i>${l} <b class="mono">${c[k]}</b></span>`).join("");
+    const plantedReview = planted.filter((i) => cls(i) === "review").length;
+    const falseLine = c.false ? `${c.false} correct label${c.false > 1 ? "s were" : " was"} changed in error, where four of five models made the same mistake.` : "No correct label was changed.";
+    $("au-out").innerHTML = `Of ${wrongBefore} corrupted labels, <b>${c.caught} were identified and corrected</b>, ${plantedReview} referred for review and <b>${c.missed} missed</b>. ${falseLine}`;
+    const split = (a) => (a.length ? Object.entries(a.reduce((m, x) => ((m[x] = (m[x] || 0) + 1), m), {})).sort((x, y) => y[1] - x[1]).map(([k, n]) => `${esc(k)}×${n}`).join(" ") : "–");
+    const word = { caught: '<span class="pos">corrected</span>', review: '<span style="color:var(--muted)">referred for review</span>', missed: '<span class="neg">missed</span>', false: '<span class="neg">correct label changed</span>', ok: "confirmed" };
+    $("au-rows").innerHTML = items.filter((i) => i.planted || cls(i) === "false").map((i) => {
+      const [r1, r2] = by[i.id] || [[], []];
+      return `<tr><td style="white-space:normal;min-width:220px">${short(i.question)}</td><td class="num">${esc(i.label)}</td><td class="num"><b>${i.status === "accepted" ? esc(i.final_answer) : "–"}</b></td><td class="num">${esc(i.gold)}</td><td>${split(r2.length ? r2 : r1)}</td><td>${word[cls(i)]}</td></tr>`;
+    }).join("");
+  } catch (e) { console.error(e); }
+});
+if (TASK === "gpqa") addEventListener("DOMContentLoaded", async () => {
+  // Every decided question, right or wrong: the mistakes are part of what the refinery learned.
+  const sec = document.createElement("section");
+  sec.className = "card"; sec.style.marginBottom = "14px";
+  sec.innerHTML = `<h2>Every decided question, including where it went wrong</h2><p class="why">Vote split per question (first round, then after the hint), what the network agreed on, and the official answer. Question text is hidden: GPQA asks that its questions stay off public pages.</p><div class="sb-sum" id="gq-sum"></div><div class="scroll"><table><thead><tr><th>#</th><th>Votes</th><th>After hint</th><th>Agreed</th><th>Official</th><th>Result</th></tr></thead><tbody id="gq-rows"></tbody></table></div>`;
+  document.querySelector("header").after(sec);
+  // Why it scored as it did, why the run stopped early, and what would change it.
+  const ex = document.createElement("section");
+  ex.className = "card"; ex.style.marginBottom = "14px";
+  ex.innerHTML = `<h2>Reading this result</h2>
+    <div class="flow" style="margin-top:12px">
+      <div><b>Why it scored low</b><span>GPQA is written so that experts outside the field score about 34%, even with web access. Our voters are 3–5B models; they lack the specialist knowledge, so they often agree on the same plausible wrong option. Consensus removes random mistakes, not shared gaps in knowledge.</span></div>
+      <div><b>Why it was paused</b><span>After 22 questions the pattern was clear: single votes at 37%, and agreement did not improve accuracy. With limited free GPU time, we stopped and moved the compute to the error-detection study, where the method applies.</span></div>
+      <div><b>How to raise the odds</b><span>The node software runs any model. Volunteers with larger GPUs can run 70B-class open models, which score well above small models on GPQA. Mixing several large families keeps errors independent, so agreement becomes meaningful again.</span></div>
+    </div>
+    <div style="margin-top:18px" id="gq-ref"></div>
+    <p class="why" style="margin:6px 0 0">Reference points are approximate, from the GPQA paper and public model reports; the 3–5B figure is measured in this run.</p>`;
+  document.querySelector("header").after(ex);
+  $("gq-ref").innerHTML = [["Random guessing", 25, "var(--muted)"], ["PhDs outside their field", 34, "var(--muted)"], ["Our 3–5B voters (single vote)", 37, "var(--s1)"], ["Open 70B-class models", 55, "var(--s1)"], ["Domain experts", 65, "var(--muted)"], ["Frontier models", 85, "var(--muted)"]]
+    .map(([l, v, c]) => `<div class="barrow"><span class="bl" style="white-space:nowrap">${l}</span><div class="bt"><i style="width:${v}%;background:${c}"></i></div><span class="bv">~${v}%</span><span class="bn"></span></div>`).join("");
+  try {
+    const d = await (await fetch("/api/gpqa", { cache: "no-store" })).json();
+    const by = {}; for (const v of d.votes) (by[v.item_id] ??= [[], []])[v.hinted ? 1 : 0].push(v.answer);
+    const split = (a) => a.length ? ["A", "B", "C", "D"].map((l) => [l, a.filter((x) => x === l).length]).filter(([, n]) => n).map(([l, n]) => `${l}×${n}`).join(" ") : "–";
+    let right = 0, wrong = 0, dropRight = 0, drop = 0;
+    $("gq-rows").innerHTML = d.items.map((it, i) => {
+      const [r1, r2] = by[it.id] || [[], []], kept = it.status === "accepted", ok = kept && it.final_answer === it.gold;
+      const last = r2.length ? r2 : r1, hadRight = last.filter((x) => x === it.gold).length;
+      if (kept) ok ? right++ : wrong++; else { drop++; if (hadRight >= 3) dropRight++; }
+      const res = kept ? (ok ? '<span class="pos">✓ kept, right</span>' : '<span class="neg">✗ kept, wrong</span>')
+        : `<span style="color:var(--muted)">thrown out${hadRight ? ` · ${hadRight}/${last.length} had it right` : ""}</span>`;
+      return `<tr><td>${i + 1}</td><td>${split(r1)}</td><td>${split(r2)}</td><td><b>${kept ? it.final_answer : "–"}</b></td><td>${it.gold}</td><td>${res}</td></tr>`;
+    }).join("");
+    $("gq-sum").innerHTML = [[`${right} / ${right + wrong}`, "kept answers right"], [wrong, "kept but wrong (shared mistake)"], [drop, "thrown out (no agreement)"], [d.items.length, "questions decided"]]
+      .map(([b, t]) => `<div><b>${b}</b><span>${t}</span></div>`).join("");
+  } catch {}
+
+  document.querySelector("h1").textContent = "GPQA-Diamond · PhD-level science";
+  document.querySelector("header .sub").textContent = "100 graduate physics, chemistry and biology questions (A-D), a random mix from GPQA-Diamond, built so experts outside the field score ~34%. Same 5 nodes and rules: 4-5 agree = kept; 3 = one hint (never the answer), then 4-5 of 5 fresh votes; 2 or fewer = thrown out. Random guessing = 25%.";
+});
+if (TASK === "gsm8k_mixed") addEventListener("DOMContentLoaded", () => {
+  const jw = [...document.querySelectorAll("h2")].find((h) => h.textContent === "Judge");
+  if (jw) jw.nextElementSibling.textContent = "Steps in only when 3 of 5 agree. It writes one hint, never the answer; 5 fresh votes then need 4+ in agreement.";
+  document.querySelector("h1").textContent = "GSM8K run 2 · mixed families";
+  document.querySelector("header .sub").textContent = "Same 1,350 problems. 5 nodes, each like one person's computer with 2 small models (10 families, none shared); every problem gets one vote per node from a random model. 4-5 agree = kept; 3 = one hint from the judge (never the answer), then 4-5 of 5 fresh votes; 2 or fewer = thrown out.";
+});
+const HARNESSES = TASK === "gpqa" ? [
+  ["direct", "Direct", "Told: answer it, keep the reasoning short.", "Answer directly, short reasoning."],
+  ["step_by_step", "Step by step", "Told: think step by step and write out each step.", "Think step by step."],
+  ["principles_first", "Principles", "Told: name the principles or formulas first, then use them.", "Name the principles first, then apply."],
+  ["eliminate", "Eliminate", "Told: rule out wrong options one by one, with a reason each.", "Rule out wrong options one by one."],
+  ["professor", "Professor", "Told: explain it like a university professor, then answer.", "Explain like a professor, then answer."],
+] : [
   ["direct", "Direct", "Told: just solve it, keep the working short.", "Solve directly, short reasoning."],
   ["step_by_step", "Step by step", "Told: think step by step and write out every calculation.", "Think step by step, writing each calculation."],
   ["equations_first", "Equations", "Told: write the equations first, then solve them.", "Write the equations first, then solve."],
   ["check_backwards", "Check back", "Told: solve, then check by working backwards from the answer; fix it if the check fails.", "Solve, then verify by working backwards from the answer."],
   ["teacher", "Teacher", "Told: explain it to a student like a teacher, then give the result.", "Explain it like a teacher, then answer."],
 ];
-const MODEL_NAMES = { "llama3.2:1b": "Llama 3.2 1B", "llama3.2:3b": "Llama 3.2 3B", "llama3.1:8b": "Llama 3.1 8B" };
+const MODEL_NAMES = { "llama3.2:1b": "Llama 3.2 1B", "llama3.2:3b": "Llama 3.2 3B", "llama3.1:8b": "Llama 3.1 8B",
+  "qwen3.5:9b": "Qwen 3.5 9B", "granite4.2:8b": "Granite 4.2 8B",
+  "qwen3.5:4b": "Qwen 3.5 4B", "granite4.2:3b": "Granite 4.2 3B", "phi4-mini": "Phi-4 mini", "gemma4:e4b": "Gemma 4 E4B", "ministral-3:3b": "Ministral 3 3B",
+  "exaone3.5:2.4b": "EXAONE 3.5 2.4B", "granite3.3:2b": "Granite 3.3 2B", "falcon3:3b": "Falcon 3 3B" };
+// Hugging Face builds are named by repo; show the model's own name.
+const HF_NAMES = { "Nemotron-3-Nano-4B": "Nemotron 3 Nano 4B", "Hunyuan-4B": "Hunyuan 4B", "Falcon-H1-3B": "Falcon-H1 3B",
+  "SmolLM3-3B": "SmolLM3 3B", "Spark-X2.6-4B": "Spark-X 2.6 4B", "MiniCPM5-2B": "MiniCPM5 2B", "glm-edge-4b": "GLM-Edge 4B", "Apriel-5B": "Apriel 5B", "kanana-1.5-2.1b": "Kanana 1.5 2.1B" };
 const MODEL_ORDER = ["llama3.2:1b", "llama3.2:3b", "llama3.1:8b"];
 const $ = (id) => document.getElementById(id);
 const fmt = (n) => Number(n).toLocaleString("en-IN");
@@ -263,8 +521,8 @@ const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&
 // Tooltips render HTML from a data-tip attribute, and the browser un-escapes attributes once,
 // so node-supplied text placed inside a tooltip must be escaped twice.
 const escTip = (s) => esc(esc(s));
-const modelName = (m) => MODEL_NAMES[m] || m;
-const shortModel = (m) => (MODEL_NAMES[m] || m).replace(/^Llama /, "");
+const modelName = (m) => MODEL_NAMES[m] || (Object.entries(HF_NAMES).find(([k]) => m.includes(k)) || [])[1] || m;
+const shortModel = (m) => modelName(m).replace(/^Llama /, "");
 const JUDGE_NAMES = {
   "@cf/meta/llama-3.3-70b-instruct-fp8-fast": "Llama 3.3 70B",
   "@cf/meta/llama-4-scout-17b-16e-instruct": "Llama 4 Scout",
@@ -307,7 +565,14 @@ function render(d) {
   $("k-rate-note").textContent = `${fmt(d.activity.votes_total)} votes in total · ${d.activity.leases_open} being solved now`;
 
   // pipeline: fixed categorical order, unfinished work is the grey track
-  const segs = [
+  const segs = MIXED ? [
+    ["Kept · 4-5 of 5 agreed", it.unanimous, "var(--s1)", "At least 4 of the 5 nodes (5 different model families) gave the same answer."],
+    ["Kept · after the hint", it.judge_accepted, "var(--s2)", "Only 3 agreed; the judge gave one hint (not the answer) and 4-5 of 5 fresh votes then agreed."],
+    ["Waiting for hint / re-check", it.disputed, "var(--s3)", "3 of 5 agreed; the judge's hint and the fresh votes are on their way."],
+    ["Thrown out · no agreement", it.no_majority, "var(--s4)", "2 or fewer of 5 agreed, so there was nothing to keep."],
+    ["Thrown out · after the hint", it.judge_rejected, "var(--s5)", "Even with the hint, fewer than 4 of 5 fresh votes agreed."],
+    ["Still being voted on", it.pending, "var(--track)", "Fewer than 5 votes so far."],
+  ] : [
     ["Kept · all agreed", it.unanimous, "var(--s1)", "All 3 nodes gave the same answer."],
     ["Kept · judge confirmed", it.judge_accepted, "var(--s2)", "Two agreed and the judge reached the same answer."],
     ["Waiting for judge", it.disputed, "var(--s3)", "Two agreed; the judge hasn't ruled yet."],
@@ -315,7 +580,9 @@ function render(d) {
     ["Thrown out · judge disagreed", it.judge_rejected, "var(--s5)", "Two agreed, but the judge got a different answer, so the majority was probably wrong."],
     ["Still being voted on", it.pending, "var(--track)", "Fewer than 3 votes so far."],
   ];
-  $("pipe-why").textContent = `Each problem is answered by ${d.config.votes_per_item} different nodes. All agree → kept. Two agree → the judge decides. No agreement → thrown out. ${fmt(it.honeypots)} hidden test problems are left out of this bar.`;
+  $("pipe-why").textContent = MIXED
+    ? `Each problem gets one vote from each of 5 nodes; a node is one person's computer with 2 small models and a random one answers. 4-5 agree → kept. 3 agree → one hint from the judge, then 5 fresh votes. 2 or fewer → thrown out. ${fmt(it.honeypots)} hidden test problems are left out of this bar.`
+    : `Each problem is answered by ${d.config.votes_per_item} different nodes. All agree → kept. Two agree → the judge decides. No agreement → thrown out. ${fmt(it.honeypots)} hidden test problems are left out of this bar.`;
   $("bar").innerHTML = segs
     .filter(([, n]) => n > 0)
     .map(([label, n, color, why]) => `<i style="flex-grow:${n};background:${color}" data-tip="<b>${label}</b>: ${fmt(n)} (${pct(n, work)})<br>${why}"></i>`)
@@ -338,7 +605,7 @@ function render(d) {
       const st = n.quarantined ? ["quarantined", "Quarantined"] : n.online ? ["online", "Online"] : ["", "Offline"];
       const tip = n.quarantined ? "Failed too many honeypots. Gets only test problems until its score recovers; its votes don't count." : n.online ? "Asked for work in the last 2 minutes." : "Not seen for over 2 minutes. Any unfinished job goes back to the pool after 5 minutes.";
       return `<tr>
-        <td><b>${esc(title)}</b><span class="sub">${counts ? "Llama " + esc(counts) : "no votes yet"}</span></td>
+        <td><b>${esc(title)}</b><span class="sub">${counts ? esc(counts) : "no votes yet"}</span></td>
         <td><span class="status ${st[0]}" data-tip="${tip}">${st[1]}</span></td>
         <td class="num">${fmt(n.votes)}</td>
         <td class="num">${n.honeypots ? `${n.honeypots_ok}/${n.honeypots} <span class="id">${pct(n.honeypots_ok, n.honeypots)}</span>` : "–"}</td>
@@ -373,7 +640,9 @@ function render(d) {
   $("heat").innerHTML = h;
 
   // judge
-  const judgeRows = Object.entries(d.judges).map(([m, n]) => [`Kept by ${shortJudge(m)}`, n, "Two nodes agreed and this judge reached the same answer."]);
+  const judgeRows = Object.entries(d.judges).map(([m, n]) => MIXED
+    ? [`Kept after a hint by ${shortJudge(m)}`, n, "This judge wrote the hint (never the answer); 4-5 of 5 fresh votes then agreed."]
+    : [`Kept by ${shortJudge(m)}`, n, "Two nodes agreed and this judge reached the same answer."]);
   if (!judgeRows.length) judgeRows.push(["Kept by judge", 0, "Two nodes agreed and the judge reached the same answer."]);
   const rows = [
     ...judgeRows,
@@ -383,7 +652,7 @@ function render(d) {
   const judged = it.judge_accepted + it.judge_rejected;
   $("judge").innerHTML =
     rows.map(([label, n, why]) => `<tr><td data-tip="${why}">${label}</td><td class="num"><b>${fmt(n)}</b></td></tr>`).join("") +
-    `<tr><td style="color:var(--muted)">Judge agrees with the 2-vote majority</td><td class="num">${judged ? pct(it.judge_accepted, judged) : "–"}</td></tr>` +
+    `<tr><td style="color:var(--muted)">${MIXED ? "Hint rounds that ended in agreement" : "Judge agrees with the 2-vote majority"}</td><td class="num">${judged ? pct(it.judge_accepted, judged) : "–"}</td></tr>` +
     `<tr><td style="color:var(--muted)">Models, in order</td><td class="num" style="white-space:normal">${d.config.judge_models.map(shortJudge).map(esc).join(" → ")}</td></tr>`;
 
   // feed
@@ -395,8 +664,8 @@ function render(d) {
   // parameters
   const c = d.config;
   const params = [
-    ["Votes per problem", c.votes_per_item, "Independent answers needed before a decision."],
-    ["Agreement to keep", `${c.votes_per_item} of ${c.votes_per_item}`, "Anything less goes to the judge or is thrown out."],
+    ["Votes per problem", MIXED ? 5 : c.votes_per_item, MIXED ? "One from each node; nodes never share a model, so 5 different families." : "Independent answers needed before a decision."],
+    ["Agreement to keep", MIXED ? "4 of 5" : `${c.votes_per_item} of ${c.votes_per_item}`, MIXED ? "3 of 5 gets one hint; 2 or fewer is thrown out." : "Anything less goes to the judge or is thrown out."],
     ["Hidden test problems", `${fmt(it.honeypots)} of ${fmt(it.total)} (${pct(it.honeypots, it.total)})`, "Known answers, mixed in unannounced to catch fake work."],
     ["Quarantine", `below ${Math.round(c.quarantine_below * 100)}% after ${c.quarantine_after} tests`, "Quarantined nodes only get test problems and earn nothing."],
     ["Speed floor", `${c.ms_per_billion} ms per billion parameters`, "Timed by the coordinator, so a node can't fake it."],
@@ -414,7 +683,7 @@ function render(d) {
 async function refresh() {
   if (document.hidden) return;
   try {
-    const r = await fetch("/api/stats?task=gsm8k", { cache: "no-store" });
+    const r = await fetch("/api/stats?task=" + TASK, { cache: "no-store" });
     if (!r.ok) throw new Error(r.status);
     last = await r.json();
     lastFetch = Date.now();
@@ -451,6 +720,77 @@ document.addEventListener("mousemove", (e) => {
   tip.style.left = x + "px";
   tip.style.top = y + "px";
 });
+
+// ---- model scoreboard popup ----
+async function openScoreboard() {
+  const d = await (await fetch("/api/scoreboard?task=" + TASK, { cache: "no-store" })).json();
+  const T = d.totals || {}, P = (a, b) => (b ? Math.round((a / b) * 1000) / 10 + "%" : "–");
+  $("sb-sum").innerHTML = [
+    [P(T.correct, T.votes), "a single vote alone"],
+    [P(T.kept_correct, T.kept), "kept answers correct"],
+    [fmt(T.wrong), "wrong votes cast"],
+    [fmt(T.wrong_kept), "wrong votes that reached the data"],
+  ].map(([b, s]) => `<div><b>${b}</b><span>${s}</span></div>`).join("");
+  const filtered = (T.wrong || 0) - (T.wrong_kept || 0);
+  $("sb-story").textContent = T.votes
+    ? `Voting filtered out ${fmt(filtered)} of ${fmt(T.wrong)} wrong votes (${P(filtered, T.wrong)}). That is how ${P(T.correct, T.votes)}-accurate single votes became a ${P(T.kept_correct, T.kept)}-accurate dataset.`
+    : "No votes yet.";
+  const max = Math.max(1, ...d.models.map((m) => m.correct / m.votes));
+  $("sb-rows").innerHTML = d.models.map((m, i) => {
+    const acc = m.correct / m.votes;
+    const medal = i + 1;
+    return `<tr><td class="rank">${medal}</td><td><b>${esc(modelName(m.model))}</b></td>
+      <td><span class="accbar" style="width:${Math.round((acc / max) * 60)}px"></span>${P(m.correct, m.votes)}</td>
+      <td class="num">${fmt(m.votes)}</td><td class="num">${P(m.sided_with_kept, m.on_settled)}</td>
+      <td class="num">${fmt(m.wrong_overruled)}</td><td class="num hide-sm">${fmt(m.right_outvoted)}</td>
+      <td class="num hide-sm">${m.hinted_votes ? P(m.hinted_correct, m.hinted_votes) : "–"}</td>
+      <td class="num hide-sm">${(m.avg_ms / 1000).toFixed(1)}s</td></tr>`;
+  }).join("");
+  $("sb").showModal();
+}
+// Always-visible refinement summary (same numbers as the scoreboard header).
+async function loadRefine() {
+  try {
+    const T = (await (await fetch("/api/scoreboard?task=" + TASK, { cache: "no-store" })).json()).totals || {};
+    const P = (a, b) => (b ? Math.round((a / b) * 1000) / 10 + "%" : "–"), filtered = (T.wrong || 0) - (T.wrong_kept || 0);
+    $("ref-sum").innerHTML = [
+      [fmt(T.votes || 0), "raw votes in"],
+      [P(T.correct, T.votes), "a single vote alone"],
+      [fmt(T.kept || 0), "answers kept as training data"],
+      [P(T.kept_correct, T.kept), "of kept answers correct"],
+      [`${fmt(filtered)} / ${fmt(T.wrong || 0)}`, "wrong votes filtered out"],
+    ].map(([b, t]) => `<div><b>${b}</b><span>${t}</span></div>`).join("");
+    $("ref-story").textContent = T.votes
+      ? `${fmt(T.votes)} votes that were right ${P(T.correct, T.votes)} of the time became ${fmt(T.kept)} kept answers that are right ${P(T.kept_correct, T.kept)} of the time. Only ${fmt(T.wrong_kept)} wrong answers got through.`
+      : "No votes yet.";
+  } catch {}
+}
+loadRefine(); setInterval(loadRefine, 30000);
+addEventListener("DOMContentLoaded", () => {
+  $("sb-open").addEventListener("click", openScoreboard);
+  $("sb-close").addEventListener("click", () => $("sb").close());
+  $("sb").addEventListener("click", (e) => { if (e.target.id === "sb") $("sb").close(); });
+});
 </script>
+
+<dialog class="sb" id="sb">
+  <div class="sb-head"><h2>Model leaderboard</h2><button class="sb-close" id="sb-close" aria-label="Close">×</button></div>
+  <div class="sb-body">
+    <div class="sb-sum" id="sb-sum"></div>
+    <p class="sb-story" id="sb-story"></p>
+    <div class="scroll"><table>
+      <thead><tr><th></th><th>Model</th><th>Accuracy</th><th class="num">Votes</th><th class="num">Sided with kept</th><th class="num" title="its wrong votes that the other nodes overruled">Wrong, overruled</th><th class="num hide-sm" title="right, but the majority was wrong">Right, outvoted</th><th class="num hide-sm">After hint</th><th class="num hide-sm">Avg time</th></tr></thead>
+      <tbody id="sb-rows"></tbody>
+    </table></div>
+    <p class="sb-story" style="margin-top:12px">Accuracy is checked against the official answers, which voters never see. "Wrong, overruled" = the model was wrong but the other nodes outvoted it, so the error never reached the dataset.</p>
+  </div>
+</dialog>
+<script>
+// highlight the current case's tab and keep it in view on narrow screens
+(() => { const a = [...document.querySelectorAll("nav.tabsbar a")].find((x) => x.getAttribute("href") === location.pathname);
+  if (a) { a.classList.add("on"); a.scrollIntoView({ inline: "center", block: "nearest" }); } })();
+</script>
+<nav class="endnav"><div class="endin"><div class="endh">Explore the project</div><div class="endgrid"><a href="/"><b>Overview</b><span>The idea, results and architecture</span></a><a href="/audit"><b>Error detection</b><span>Main result: 9 of 10 wrong labels fixed</span></a><a href="/gsm8k-mixed"><b>Maths</b><span>Ten model families, 500 problems</span></a><a href="/gsm8k"><b>Maths v1</b><span>First run, Llama only</span></a><a href="/gpqa"><b>Science</b><span>Expert questions, paused early</span></a><a href="/news"><b>News</b><span>Headline sentiment labels</span></a><a href="/trade"><b>Trading</b><span>Paper-money signal study</span></a><a href="/future"><b>Decentralisation</b><span>Idle home GPUs, rewards, costs</span></a></div><div class="endfoot">Data Refinery · Meta Global AI Hackathon · <a href="#top">Back to top ↑</a></div></div></nav>
+<script>(() => { const a = [...document.querySelectorAll(".endgrid a")].find((x) => x.getAttribute("href") === location.pathname); if (a) a.classList.add("here"); })();</script>
 </body>
 </html>

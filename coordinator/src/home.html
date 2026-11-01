@@ -4,165 +4,826 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Data Refinery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
     color-scheme: light;
-    --page: #f9f9f7; --surface: #fcfcfb; --ink: #0b0b0b; --ink-2: #52514e; --muted: #898781;
-    --grid: #e1e0d9; --ring: rgba(11, 11, 11, 0.10); --track: #ecebe6; --good: #0ca30c;
-    --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a;
+    --page: #f6f5f1; --ink: #141413; --ink-2: #4d4c48; --muted: #8a8880; --rule: #dedcd4; --track: #e8e6df;
+    --accent: #6d4fd8; --good: #1d7a3e; --bad: #c0392b; --warn: #d97b1a;
   }
   @media (prefers-color-scheme: dark) {
-    :root {
+    :root:not([data-theme="light"]) {
       color-scheme: dark;
-      --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
-      --grid: #2c2c2a; --ring: rgba(255, 255, 255, 0.10); --track: #2a2a28;
-      --s1: #3987e5; --s2: #d95926; --s3: #199e70;
+      --page: #121211; --ink: #ecebe6; --ink-2: #b8b6ae; --muted: #85837c; --rule: #2c2b29; --track: #24231f;
+      --accent: #9a82f2; --good: #5cbf7c; --bad: #e57368; --warn: #e8973f;
     }
   }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--page); color: var(--ink); font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
-  main { max-width: 1120px; margin: 0 auto; padding: 28px 16px 48px; }
-  header { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; justify-content: space-between; margin-bottom: 22px; }
-  h1 { font-size: 24px; font-weight: 650; margin: 0; }
-  .sub { color: var(--ink-2); margin: 4px 0 0; max-width: 640px; }
-  .live { display: inline-flex; align-items: center; gap: 8px; color: var(--ink-2); font-size: 13px; }
-  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--good); }
-  .card { background: var(--surface); border: 1px solid var(--ring); border-radius: 12px; padding: 18px 20px; }
-  .grid { display: grid; gap: 14px; }
-  .kpis { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); margin-bottom: 14px; }
-  .kpi .label { color: var(--ink-2); font-size: 13px; }
-  .kpi .value { font-size: 28px; font-weight: 650; margin: 2px 0; font-variant-numeric: tabular-nums; }
-  .kpi .value small { font-size: 15px; color: var(--muted); font-weight: 500; }
-  .kpi .note { color: var(--muted); font-size: 12px; }
-  .runs { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); margin-bottom: 14px; }
-  a.run { display: block; color: inherit; text-decoration: none; transition: border-color .15s; }
-  a.run:hover { border-color: var(--s1); }
-  .run .top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-  .run h2 { font-size: 17px; margin: 0; }
-  .badge { font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
-  .badge.done { background: var(--track); color: var(--ink-2); }
-  .badge.live { background: color-mix(in srgb, var(--good) 15%, transparent); color: var(--good); }
-  .run p { color: var(--ink-2); margin: 6px 0 14px; }
-  .bar { display: flex; height: 10px; border-radius: 5px; overflow: hidden; background: var(--track); gap: 2px; }
-  .bar i { display: block; height: 100%; }
-  .facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 14px; }
-  .facts b { display: block; font-size: 18px; font-variant-numeric: tabular-nums; }
-  .facts span { color: var(--muted); font-size: 12px; }
-  .go { margin-top: 14px; color: var(--s1); font-weight: 600; font-size: 13px; }
-  .how { color: var(--ink-2); }
-  .how ol { margin: 8px 0 0; padding-left: 20px; }
-  .how li { margin-bottom: 4px; }
+  body { margin: 0; background: var(--page); color: var(--ink); font: 15px/1.6 "IBM Plex Sans", system-ui, sans-serif; }
+  a { color: inherit; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 0 20px; }
+  .num { font-family: "IBM Plex Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; font-weight: 500; }
+
+  nav.top { display: flex; justify-content: space-between; align-items: center; padding: 18px 0; border-bottom: 1px solid var(--rule); font-size: 13px; }
+  nav.top b { font-weight: 600; }
+  nav.top .links { display: flex; gap: 18px; color: var(--ink-2); }
+  nav.top .links a { text-decoration: none; } nav.top .links a:hover { color: var(--ink); }
+
+  .hero { padding: 60px 0 36px; }
+  .eyebrow { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 14px; }
+  h1 { font-size: 40px; line-height: 1.15; font-weight: 600; letter-spacing: -.02em; margin: 0; max-width: 760px; }
+  .lede { color: var(--ink-2); font-size: 17px; max-width: 660px; margin: 18px 0 0; }
+
+  h2 { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 500; margin: 0 0 18px; }
+  section { margin-bottom: 56px; }
+
+  /* the main example */
+  .feature { border-top: 1px solid var(--ink); padding-top: 22px; }
+  .feature h3 { font-size: 24px; font-weight: 600; letter-spacing: -.01em; margin: 0 0 6px; }
+  .feature .d { color: var(--ink-2); max-width: 680px; margin: 0 0 24px; }
+  .trio { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+  .trio > div { padding: 18px 18px 18px 0; }
+  .trio > div + div { padding-left: 18px; border-left: 1px solid var(--rule); }
+  .trio .lab { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .trio .big { font-size: 34px; letter-spacing: -.02em; line-height: 1.15; margin: 6px 0 4px; }
+  .trio p { margin: 0; color: var(--ink-2); font-size: 14px; }
+  .chart { margin: 26px 0 8px; }
+  .barrow { display: grid; grid-template-columns: 64px 1fr 64px; gap: 12px; align-items: center; margin: 10px 0; }
+  .barrow .l { color: var(--ink-2); font-size: 14px; }
+  .bt { height: 22px; background: var(--track); border-radius: 3px; overflow: hidden; }
+  .bt i { display: block; height: 100%; border-radius: 3px; transition: width .6s ease; }
+  .barrow .v { text-align: right; font-size: 17px; }
+  .note { color: var(--muted); font-size: 13px; margin: 4px 0 0 76px; }
+  .cta { display: inline-block; margin-top: 22px; font-weight: 600; color: var(--accent); text-decoration: none; }
+  .cta:hover { text-decoration: underline; }
+
+  .steps { display: grid; grid-template-columns: repeat(4, 1fr); }
+  .steps div { padding: 0 18px 0 0; }
+  .steps div + div { padding-left: 18px; border-left: 1px solid var(--rule); }
+  .steps .n { font-family: "IBM Plex Mono", monospace; color: var(--accent); font-size: 13px; }
+  .steps b { display: block; font-weight: 600; margin: 4px 0; }
+  .steps p { margin: 0; color: var(--ink-2); font-size: 14px; }
+
+  .run { display: grid; grid-template-columns: 40px 1fr 170px 20px; gap: 18px; align-items: baseline; padding: 20px 0; border-top: 1px solid var(--rule); text-decoration: none; }
+  .run:last-of-type { border-bottom: 1px solid var(--rule); }
+  .run:hover .t { color: var(--accent); }
+  .run .i { font-family: "IBM Plex Mono", monospace; color: var(--muted); font-size: 13px; }
+  .run .t { font-size: 18px; font-weight: 600; transition: color .15s; }
+  .run .d { color: var(--ink-2); font-size: 14px; margin-top: 4px; max-width: 560px; }
+  .run .k { text-align: right; } .run .k .num { font-size: 20px; }
+  .run .k span { display: block; color: var(--muted); font-size: 12px; }
+  .run .arr { color: var(--muted); }
+  .tag { display: inline-block; font-size: 11px; letter-spacing: .04em; text-transform: uppercase; padding: 1px 7px; border: 1px solid var(--rule); border-radius: 3px; margin-left: 8px; vertical-align: 3px; font-weight: 500; }
+  .tag.ok { color: var(--good); border-color: color-mix(in srgb, var(--good) 40%, transparent); }
+  .tag.lim { color: var(--bad); border-color: color-mix(in srgb, var(--bad) 40%, transparent); }
+  .tag.old { color: var(--muted); }
+
+  footer { border-top: 1px solid var(--rule); padding: 22px 0 48px; color: var(--muted); font-size: 13px; display: flex; flex-wrap: wrap; gap: 8px 24px; justify-content: space-between; }
+  footer a { color: inherit; }
+
+  @media (max-width: 720px) {
+    .hero { padding: 36px 0 24px; }
+    h1 { font-size: 28px; } .lede { font-size: 15px; }
+    .feature h3 { font-size: 20px; }
+    .trio, .steps { grid-template-columns: 1fr; }
+    .trio > div + div, .steps div + div { padding-left: 0; border-left: 0; border-top: 1px solid var(--rule); }
+    .steps div { padding: 12px 0; }
+    .trio .big { font-size: 30px; }
+    .barrow { grid-template-columns: 52px 1fr 56px; } .note { margin-left: 0; }
+    .run { grid-template-columns: 28px 1fr; gap: 6px 12px; }
+    .run .k { grid-column: 2; text-align: left; } .run .k span { display: inline; margin-left: 6px; }
+    .run .arr { display: none; }
+    nav.top .links { gap: 12px; }
+  }
+
+  /* shared tab bar: one tab per case */
+  nav.tabsbar { display: flex; align-items: flex-end; gap: 22px; border-bottom: 1px solid var(--rule, var(--grid)); margin: 0 0 26px; padding-top: 14px; }
+  nav.tabsbar b { font-weight: 600; font-size: 14px; padding-bottom: 11px; white-space: nowrap; }
+  nav.tabsbar .tablist { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; }
+  nav.tabsbar .tablist::-webkit-scrollbar { display: none; }
+  nav.tabsbar a { text-decoration: none; color: var(--ink-2); font-size: 13px; padding: 8px 12px 10px; border-bottom: 2px solid transparent; white-space: nowrap; margin-bottom: -1px; }
+  nav.tabsbar a:hover { color: var(--ink); }
+  nav.tabsbar a.on { color: var(--ink); border-bottom-color: var(--ink); font-weight: 500; }
+  @media (max-width: 600px) { nav.tabsbar { gap: 10px; } nav.tabsbar b { display: none; } nav.tabsbar a { padding: 8px 9px 10px; } }
+
+  .sec-lede { color: var(--ink-2); max-width: 700px; margin: -6px 0 18px; }
+  .arch { border: 1px solid var(--rule); border-radius: 6px; padding: 14px; overflow-x: auto; }
+  .arch svg { width: 100%; min-width: 640px; height: auto; display: block; font-family: "IBM Plex Sans", sans-serif; }
+  .arch .box rect { fill: var(--page); stroke: var(--rule); stroke-width: 1.2; }
+  .arch .box.dash rect { stroke-dasharray: 5 4; }
+  .arch .box.main rect { stroke: var(--ink); stroke-width: 1.6; }
+  .arch .box.out rect { stroke: var(--good); stroke-width: 1.6; }
+  .arch .t { fill: var(--ink); font-size: 14px; font-weight: 600; }
+  .arch .s { fill: var(--ink-2); font-size: 12px; }
+  .arch .cap { fill: var(--muted); font-size: 10.5px; letter-spacing: .08em; }
+  .arch .lab { fill: var(--muted); font-size: 11.5px; }
+  .arch .ln { stroke: var(--muted); stroke-width: 1.3; fill: none; }
+  .arch .afill { fill: var(--muted); }
+  .walk { color: var(--ink-2); font-size: 14px; max-width: 760px; margin-top: 16px; }
+  .walk b { color: var(--ink); }
+  .chart2 { margin: 10px 0 12px; }
+  .crow { display: grid; grid-template-columns: 110px 1fr; gap: 18px; align-items: center; padding: 12px 0; }
+  .crow + .crow { border-top: 1px solid var(--rule); }
+  .crow .cl { font-size: 15px; font-weight: 500; } .crow .cl span { display: block; color: var(--muted); font-size: 12px; font-weight: 400; }
+  .pair { display: grid; gap: 6px; }
+  .hb { display: grid; grid-template-columns: 1fr 96px; gap: 12px; align-items: center; }
+  .hb .tr { height: 12px; background: var(--track); border-radius: 6px; overflow: hidden; }
+  .hb .tr i { display: block; height: 100%; border-radius: 6px; transition: width .7s cubic-bezier(.2,.7,.2,1); }
+  .hb .v { font-family: "IBM Plex Mono", monospace; font-size: 14px; font-weight: 500; text-align: right; }
+  .hb .v small { color: var(--muted); font-size: 11px; font-weight: 400; margin-left: 6px; }
+  .leg { display: flex; flex-wrap: wrap; gap: 6px 20px; color: var(--ink-2); font-size: 13px; margin: 6px 0 0; }
+  .leg i { display: inline-block; width: 10px; height: 10px; border-radius: 5px; margin-right: 6px; vertical-align: -1px; }
+  .takeaway { border-left: 2px solid var(--ink); padding: 2px 0 2px 14px; margin: 18px 0 0; max-width: 760px; }
+  .sub2 { font-size: 16px; font-weight: 600; margin: 40px 0 10px; }
+  .rules { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--rule); }
+  .rules div { padding: 16px 18px 16px 0; border-bottom: 1px solid var(--rule); }
+  .rules div:not(:nth-child(3n+1)) { padding-left: 18px; border-left: 1px solid var(--rule); }
+  .rules b { display: block; font-weight: 600; margin-bottom: 4px; }
+  .rules p { margin: 0; color: var(--ink-2); font-size: 14px; }
+  @media (max-width: 720px) {
+    .rules { grid-template-columns: 1fr; } .rules div:not(:nth-child(3n+1)) { padding-left: 0; border-left: 0; }
+    .crow { grid-template-columns: 1fr; gap: 6px; } .hb { grid-template-columns: 1fr 100px; }
+  }
+  /* hero with the voting animation */
+  .hero { display: grid; grid-template-columns: 1fr 300px; gap: 40px; align-items: center; }
+  h1 em { font-style: normal; color: var(--accent); }
+  .anim { width: 100%; height: auto; }
+  .anim .nodes circle { fill: var(--page); stroke: var(--ink-2); stroke-width: 1.5; }
+  .anim .nl { fill: var(--ink-2); font: 500 11px "IBM Plex Mono", monospace; text-anchor: middle; }
+  .anim .wires path { fill: none; stroke: var(--rule); stroke-width: 1.5; }
+  .anim .p { fill: var(--accent); } .anim .x { fill: var(--muted); }
+  .anim .kept { fill: color-mix(in srgb, var(--accent) 12%, var(--page)); stroke: var(--accent); stroke-width: 1.5; animation: glow 2.6s ease-in-out infinite; }
+  .anim .kt { fill: var(--accent); font: 600 14px "IBM Plex Sans", sans-serif; text-anchor: middle; }
+  .anim .ks { fill: var(--ink-2); font: 12px "IBM Plex Sans", sans-serif; text-anchor: middle; }
+  @keyframes glow { 0%, 60% { stroke-width: 1.5; } 80% { stroke-width: 3.5; } 100% { stroke-width: 1.5; } }
+
+  /* waffle + before/after columns */
+  .waffle-wrap { display: grid; grid-template-columns: 1fr 200px; gap: 36px; margin: 26px 0 6px; align-items: start; }
+  .wtitle { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
+  .waffle { display: grid; grid-template-columns: repeat(10, 1fr); gap: 5px; max-width: 420px; }
+  .w { display: block; aspect-ratio: 1; border-radius: 4px; position: relative; animation: pop .35s ease both; }
+  .wleg .w { display: inline-block; width: 12px; height: 12px; vertical-align: -2px; margin-right: 6px; animation: none; }
+  .w.ok { background: color-mix(in srgb, var(--accent) 22%, var(--track)); }
+  .w.fx { background: var(--accent); }
+  .w.rv { background: var(--track); box-shadow: inset 0 0 0 1.5px var(--rule); }
+  .w.ms { background: var(--warn); } .w.fl { background: var(--bad); }
+  .w.pl::after { content: ""; position: absolute; inset: 0; margin: auto; width: 28%; height: 28%; border-radius: 50%; background: var(--page); }
+  @keyframes pop { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: none; } }
+  .wleg { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 14px; font-size: 13px; color: var(--ink-2); }
+  .ba { display: grid; grid-template-columns: 1fr 1fr; gap: 0 18px; }
+  .ba .wtitle { grid-column: 1 / -1; }
+  .bacol { display: grid; justify-items: center; gap: 6px; }
+  .babar { width: 46px; height: 150px; background: var(--track); border-radius: 6px; display: flex; align-items: flex-end; overflow: hidden; }
+  .babar i { display: block; width: 100%; border-radius: 6px; transition: height .9s cubic-bezier(.2,.7,.2,1); }
+  .bacol b { font-size: 22px; } .bacol span { color: var(--muted); font-size: 12px; }
+  .note { margin: 14px 0 0; }
+
+  /* svg charts */
+  .chart2 { overflow-x: auto; }
+  @media (max-width: 720px) { .svgc { min-width: 540px; } }
+  .svgc { width: 100%; height: auto; display: block; overflow: visible; font-family: "IBM Plex Sans", sans-serif; }
+  .svgc .gl { stroke: var(--rule); stroke-width: 1; }
+  .svgc .chance { stroke: var(--muted); stroke-dasharray: 4 4; stroke-width: 1; }
+  .svgc .ax { fill: var(--muted); font-size: 11.5px; }
+  .svgc .ln { fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: draw 1.4s ease forwards; }
+  .svgc .ln.sci { animation-delay: .3s; }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  .svgc .pv { font: 500 12.5px "IBM Plex Mono", monospace; text-anchor: middle; }
+  .svgc .rn { fill: var(--ink); font-size: 14px; font-weight: 500; }
+  .svgc .d0 { fill: var(--page); stroke: var(--muted); stroke-width: 2.5; }
+  .svgc .dv { fill: var(--muted); font: 12px "IBM Plex Mono", monospace; } .svgc .dv.strong { font-size: 14px; font-weight: 500; }
+  @media (max-width: 720px) {
+    .hero { grid-template-columns: 1fr; gap: 20px; } .anim { max-width: 260px; }
+    .waffle-wrap { grid-template-columns: 1fr; gap: 24px; } .ba { max-width: 220px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .w, .svgc .ln, .anim .kept { animation: none; stroke-dashoffset: 0; } .anim .pulses { display: none; } }
+  .todo { margin: 0; padding: 0; list-style: none; max-width: 760px; }
+  .todo li { padding: 10px 0 10px 22px; border-top: 1px solid var(--rule); color: var(--ink-2); font-size: 14px; position: relative; }
+  .todo li::before { content: ""; position: absolute; left: 2px; top: 17px; width: 8px; height: 8px; border: 1.5px solid var(--accent); border-radius: 50%; }
+  .todo b { color: var(--ink); font-weight: 600; }
+
+  .chips { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .chips div { border: 1px solid var(--rule); border-radius: 8px; padding: 14px 16px; }
+  .chips b { display: block; font-size: 16px; font-weight: 600; }
+  .chips span { color: var(--muted); font-size: 13px; }
+  .road { display: flex; flex-wrap: wrap; gap: 0; margin-top: 18px; counter-reset: r; }
+  .road span { counter-increment: r; font-size: 13px; color: var(--ink-2); padding: 6px 14px 6px 0; margin-right: 14px; border-right: 1px solid var(--rule); }
+  .road span::before { content: counter(r) " "; font-family: "IBM Plex Mono", monospace; color: var(--accent); }
+  .road span:last-child { border-right: 0; }
+  @media (max-width: 720px) { .chips { grid-template-columns: 1fr 1fr; } }
+
+  nav.tabsbar b { display: inline-flex; align-items: center; gap: 8px; }
+  .logo { width: 48px; height: 20px; flex: none; }
+  .logo .px rect, .logo .nd circle, .logo .ly path { fill: var(--accent, var(--s1)); }
+  .logo .ln path { fill: none; stroke: var(--accent, var(--s1)); stroke-width: 1.4; opacity: .7; }
+  @media (max-width: 600px) { nav.tabsbar b { display: inline-flex; } nav.tabsbar b span { display: none; } }
+  .futlink { display: block; text-decoration: none; border: 1px solid var(--rule); border-left: 3px solid var(--accent); border-radius: 8px; padding: 18px 20px; }
+  .futlink b { display: block; font-size: 18px; } .futlink span { color: var(--accent); font-size: 14px; font-weight: 500; }
+  .futlink:hover { border-color: var(--accent); }
+
+  /* live architecture diagram */
+  .arch2 { border: 1px solid var(--rule); border-radius: 10px; padding: 16px; overflow-x: auto; }
+  .arch2 svg { width: 100%; min-width: 660px; height: auto; display: block; font-family: "IBM Plex Sans", sans-serif; }
+  .steps2 { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; min-width: 660px; }
+  .steps2 span { font-size: 12px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--rule); color: var(--muted); transition: all .25s; }
+  .steps2 span.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  #a-wires path { fill: none; stroke: var(--rule); stroke-width: 1.6; transition: stroke .25s; }
+  #a-wires path.hot { stroke: color-mix(in srgb, var(--accent) 55%, var(--rule)); }
+  .an rect, .ab rect { fill: var(--page); stroke: var(--rule); stroke-width: 1.4; transition: stroke .25s, fill .25s; }
+  .an circle { fill: var(--rule); transition: fill .25s; }
+  .an.hot rect, .ab.hot rect { stroke: var(--accent); fill: color-mix(in srgb, var(--accent) 7%, var(--page)); }
+  .an.hot circle { fill: var(--accent); }
+  .an.odd rect { stroke: var(--muted); } .an.odd circle { fill: var(--muted); }
+  #a-judge.hot rect { stroke: var(--warn); fill: color-mix(in srgb, var(--warn) 9%, var(--page)); }
+  #a-data.hot rect { stroke: var(--good); fill: color-mix(in srgb, var(--good) 9%, var(--page)); }
+  .arch2 .t { fill: var(--ink); font-size: 14px; font-weight: 600; }
+  .arch2 .s { fill: var(--muted); font-size: 11.5px; transition: opacity .18s; }
+  .arch2 .cap { fill: var(--muted); font-size: 10.5px; letter-spacing: .1em; }
+  .arch2 .v { fill: var(--accent); font: 600 15px "IBM Plex Mono", monospace; text-anchor: end; }
+  .arch2 .v.x { fill: var(--muted); }
+  .arch2 .big2 { fill: var(--good); font-size: 16px; }
+  .acap { margin: 12px 0 0; color: var(--ink-2); font-size: 14px; min-height: 22px; min-width: 660px; }
+
+  .pb { padding: 14px 0; } .pb + .pb { border-top: 1px solid var(--rule); }
+  .pbn { font-weight: 600; margin-bottom: 8px; }
+  .pbr { display: grid; grid-template-columns: 130px 1fr 64px; gap: 12px; align-items: center; margin: 5px 0; font-size: 13px; color: var(--ink-2); }
+  .pbt { height: 12px; background: var(--track); border-radius: 6px; overflow: hidden; }
+  .pbt i { display: block; height: 100%; border-radius: 6px; }
+  .pbr b { text-align: right; font-size: 15px; }
+  @media (max-width: 720px) { .pbr { grid-template-columns: 96px 1fr 54px; } }
+
+  html { scroll-behavior: smooth; }
+  nav.tabsbar { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--page) 92%, transparent); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+  .endnav { border-top: 1px solid var(--rule, var(--grid)); margin-top: 56px; padding: 32px 0 40px; }
+  .endin { max-width: 1000px; margin: 0 auto; padding: 0 20px; }
+  .endh { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; }
+  .endgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .endgrid a { text-decoration: none; border: 1px solid var(--rule, var(--grid)); border-radius: 8px; padding: 12px 14px; transition: border-color .15s, transform .15s; }
+  .endgrid a:hover { border-color: var(--accent, var(--s1)); transform: translateY(-2px); }
+  .endgrid a.here { border-color: var(--accent, var(--s1)); background: color-mix(in srgb, var(--accent, var(--s1)) 7%, transparent); }
+  .endgrid b { display: block; font-size: 14px; color: var(--ink); } .endgrid span { color: var(--muted); font-size: 12px; }
+  .endfoot { margin-top: 18px; color: var(--muted); font-size: 12px; } .endfoot a { color: inherit; }
+  @media (max-width: 720px) { .endgrid { grid-template-columns: 1fr 1fr; } }
+  .paper { display: block; text-decoration: none; border: 1px solid var(--rule); border-radius: 8px; padding: 14px 16px; transition: border-color .15s, transform .15s; }
+  .paper:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .paper .pmeta { font: 11.5px "IBM Plex Mono", monospace; color: var(--muted); }
+  .paper b { display: block; font-size: 15px; margin: 4px 0; }
+  .paper p { margin: 0; color: var(--ink-2); font-size: 13px; }
+  .paper.lead { border-left: 3px solid var(--accent); padding: 18px 20px; margin-bottom: 10px; }
+  .paper.lead b { font-size: 20px; }
+  .pgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 8px; color: var(--ink-2); font-size: 14px; }
+  .pgrid span { display: block; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); margin-bottom: 2px; }
+  .papers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  @media (max-width: 720px) { .papers, .pgrid { grid-template-columns: 1fr; } }
+  .infra { border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; }
+  .infra > div { display: grid; grid-template-columns: 120px 1fr 1fr; gap: 14px; padding: 10px 16px; font-size: 14px; align-items: baseline; }
+  .infra > div + div { border-top: 1px solid var(--rule); }
+  .infra .ih { background: var(--track); font-size: 12px; } .infra .ih b { font-weight: 600; }
+  .infra span { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
+  .infra p { margin: 0; color: var(--ink-2); } .infra p + p { color: var(--accent); }
+  @media (max-width: 720px) { .infra > div { grid-template-columns: 1fr 1fr; } .infra span { grid-column: 1 / -1; } .infra .ih span { display: none; } }
+  /* bigger brand mark */
+  nav.tabsbar .logo { width: 72px; height: 30px; }
+  nav.tabsbar b { font-size: 18px !important; letter-spacing: -.01em; gap: 10px !important; }
+  nav.tabsbar > a { padding-bottom: 8px !important; }
+  @media (max-width: 600px) { nav.tabsbar .logo { width: 56px; height: 24px; } }
+  details.drop { border: 1px solid var(--rule); border-radius: 10px; padding: 0 18px; background: var(--page); transition: border-color .2s, box-shadow .2s, background .2s; }
+  details.drop:hover { border-color: var(--accent); box-shadow: 0 6px 20px color-mix(in srgb, var(--accent) 14%, transparent); }
+  details.drop > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 16px 0; user-select: none; }
+  details.drop > summary::-webkit-details-marker { display: none; }
+  details.drop > summary span { font-size: 17px; font-weight: 600; }
+  details.drop > summary small { color: var(--muted); font-size: 13px; flex: 1; min-width: 200px; }
+  details.drop > summary::after { content: "+"; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%;
+    border: 1.5px solid var(--accent); color: var(--accent); font: 500 20px/1 "IBM Plex Mono", monospace; transition: transform .25s, background .2s, color .2s; flex: none; }
+  details.drop:hover > summary::after { background: var(--accent); color: #fff; }
+  details.drop[open] > summary::after { transform: rotate(45deg); background: var(--accent); color: #fff; }
+  details.drop[open] { padding-bottom: 18px; background: color-mix(in srgb, var(--accent) 4%, var(--page)); }
+  details.drop[open] > summary { border-bottom: 1px solid var(--rule); margin-bottom: 4px; }
+  details.drop > *:not(summary) { animation: dropin .3s ease; }
+  @keyframes dropin { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+  .hero { padding: 22px 0 28px !important; }
+  @media (max-width: 720px) { .hero { padding: 16px 0 20px !important; } }
+
+  .badv { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 12px; }
+  .badv .bh { grid-column: 1 / -1; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .badv > div:not(.bh) { border: 1px solid var(--rule); border-left: 3px solid var(--bad); border-radius: 8px; padding: 12px 14px; }
+  .badv b { display: block; font-size: 14px; } .badv span { color: var(--ink-2); font-size: 13px; }
+  @media (max-width: 720px) { .badv { grid-template-columns: 1fr 1fr; } }
+  .punch { display: flex; align-items: baseline; gap: 18px; margin: 4px 0 2px; }
+  .pn { font: 600 64px/1 "IBM Plex Mono", monospace; letter-spacing: -.04em; }
+  .pn.bad { color: var(--bad); text-decoration: line-through; text-decoration-thickness: 4px; text-decoration-color: color-mix(in srgb, var(--bad) 45%, transparent); }
+  .pn.good { color: var(--good); }
+  .parr { font-size: 40px; color: var(--muted); }
+  .feature h3 { font-size: 18px !important; font-weight: 500 !important; color: var(--ink-2); margin-bottom: 10px !important; }
+  @media (max-width: 720px) { .pn { font-size: 46px; } .parr { font-size: 28px; } }
+  /* robot at the desk */
+  .robo .table { fill: var(--ink-2); opacity: .85; }
+  .robo .robot .body { fill: var(--page); stroke: var(--ink-2); stroke-width: 2; }
+  .robo .robot .visor { fill: var(--page); stroke: var(--ink-2); stroke-width: 1.5; }
+  .robo .robot .eye { fill: var(--accent); }
+  .robo .arm { fill: none; stroke: var(--ink-2); stroke-width: 5; stroke-linecap: round; }
+  .robo .hand { fill: var(--page); stroke: var(--ink-2); stroke-width: 2; }
+  .robo .robot .ant { stroke: var(--ink-2); stroke-width: 2; }
+  .robo .paper rect { fill: #fff; stroke: var(--rule); stroke-width: 1.2; }
+  .robo .paper line { stroke: var(--muted); stroke-width: 1.4; stroke-linecap: round; }
+  .robo .tray { fill: none; stroke: var(--muted); stroke-width: 1.5; }
+  .robo .stack rect { fill: #fff; stroke: var(--good); stroke-width: 1.2; }
+  .robo .bin { fill: var(--page); stroke: var(--bad); stroke-width: 2; }
+  .robo .binlid { fill: var(--bad); }
+  .robo .lab { fill: var(--muted); font: 10px system-ui, sans-serif; text-anchor: middle; letter-spacing: .06em; }
+  .robo .cnt { font: 600 12px ui-monospace, monospace; text-anchor: middle; }
+  .robo .scan { stroke: var(--accent); stroke-width: 2; opacity: 0; }
+  .robo .mark { font: 700 22px system-ui, sans-serif; text-anchor: middle; opacity: 0; transition: opacity .15s; }
+  .robo { width: 100%; max-width: 340px; justify-self: end; }
+  .robo svg { width: 100%; height: auto; display: block; }
+  .hero { grid-template-columns: 1fr 340px !important; }
+  @media (max-width: 720px) { .hero { grid-template-columns: 1fr !important; } .robo { order: -1; justify-self: center; max-width: 280px; } }
 </style>
 </head>
-<body>
-<main>
-  <header>
+<body id="top">
+<div class="wrap">
+  <nav class="tabsbar"><a href="/" style="padding:0 0 11px;border:0;margin:0"><b><svg class="logo" viewBox="0 0 96 40" aria-hidden="true"><g class="px"><rect x="2" y="9" width="4" height="4"/><rect x="8" y="4" width="4" height="4"/><rect x="5" y="17" width="4" height="4" opacity=".6"/><rect x="11" y="13" width="4" height="4"/><rect x="2" y="26" width="4" height="4" opacity=".5"/><rect x="9" y="24" width="4" height="4"/><rect x="6" y="32" width="4" height="4" opacity=".7"/></g><g class="ln"><path d="M15,15 C22,15 22,20 30,20"/><path d="M13,26 C22,26 22,20 30,20"/><path d="M30,20 L40,9 L50,20 L40,31 Z"/><path d="M40,9 L40,31"/><path d="M50,20 C56,20 56,14 62,14"/><path d="M50,20 C56,20 56,24 62,24"/></g><g class="nd"><circle cx="30" cy="20" r="3"/><circle cx="40" cy="9" r="3"/><circle cx="40" cy="31" r="3"/><circle cx="50" cy="20" r="3"/><circle cx="40" cy="20" r="1.6"/></g><g class="ly"><path d="M62,26 L77,19 L92,26 L77,33 Z" opacity=".55"/><path d="M62,20 L77,13 L92,20 L77,27 Z" opacity=".75"/><path d="M62,14 L77,7 L92,14 L77,21 Z"/></g></svg><span>Data Refinery</span></b></a><div class="tablist"><a href="/">Overview</a><a href="/audit">Error detection</a><a href="/gsm8k-mixed">Maths</a><a href="/gpqa">Science</a><a href="/gsm8k">Maths v1</a><a href="/news">News</a><a href="/trade">Trading</a><a href="/future">Decentralisation</a></div></nav>
+
+  <header class="hero">
     <div>
-      <h1>Data Refinery</h1>
-      <p class="sub">Small Llama models on volunteer GPUs answer the same question independently. Only answers they agree on become data.</p>
+      <p class="eyebrow">Meta Global AI Hackathon · Indie track</p>
+      <h1>Reliable training data from small open models that <em>verify each other</em>.</h1>
+      <p class="lede">Five small models answer every item. Only what they agree on is kept.</p>
     </div>
-    <div class="live"><span class="dot"></span><span id="updated">connecting…</span></div>
+    <aside class="robo"><svg viewBox="0 0 360 270" aria-hidden="true" data-label="A robot picks up each paper, checks it, puts correct ones on the accepted pile and throws wrong ones in the bin.">
+    <!-- robot body (behind the table) -->
+    <g class="robot">
+      <line class="ant" x1="180" y1="44" x2="180" y2="30"/><circle id="r-bulb" cx="180" cy="27" r="4" fill="var(--accent)"/>
+      <rect class="body" x="152" y="44" width="56" height="42" rx="12"/>
+      <rect class="visor" x="160" y="55" width="40" height="18" rx="9"/>
+      <circle class="eye" id="r-eyeL" cx="172" cy="64" r="3.6"/><circle class="eye" id="r-eyeR" cx="188" cy="64" r="3.6"/>
+      <rect class="body" x="146" y="92" width="68" height="62" rx="14"/>
+      <circle cx="180" cy="122" r="7" fill="none" stroke="var(--accent)" stroke-width="2"/>
+    </g>
+    <!-- slim table -->
+    <rect class="table" x="40" y="162" width="250" height="5" rx="2.5"/>
+    <!-- tray, accepted pile, bin -->
+    <path class="tray" d="M72,162 L76,152 L114,152 L118,162"/>
+    <text class="lab" x="95" y="180">TO CHECK</text>
+    <g class="stack" id="r-stack"></g>
+    <text class="lab" x="258" y="180">ACCEPTED</text>
+    <text class="cnt" x="258" y="194" fill="var(--good)" id="r-okc">0</text>
+    <rect class="bin" x="300" y="196" width="42" height="50" rx="4"/>
+    <rect class="binlid" id="r-lid" x="296" y="190" width="50" height="6" rx="2"/>
+    <line x1="313" y1="206" x2="313" y2="238" stroke="var(--bad)" stroke-opacity=".4"/><line x1="321" y1="206" x2="321" y2="238" stroke="var(--bad)" stroke-opacity=".4"/><line x1="329" y1="206" x2="329" y2="238" stroke="var(--bad)" stroke-opacity=".4"/>
+    <text class="lab" x="321" y="262">REJECTED</text>
+    <text class="cnt" x="321" y="184" fill="var(--bad)" id="r-badc">0</text>
+    <!-- paper, then arms on top so the hands hold it -->
+    <g class="paper" id="r-paper"><rect x="-15" y="-19" width="30" height="38" rx="2"/>
+      <line x1="-9" y1="-10" x2="9" y2="-10"/><line x1="-9" y1="-3" x2="7" y2="-3"/><line x1="-9" y1="4" x2="9" y2="4"/><line x1="-9" y1="11" x2="2" y2="11"/></g>
+    <path class="arm" id="r-armL"/><circle class="hand" id="r-handL" r="5.5"/>
+    <path class="arm" id="r-armR"/><circle class="hand" id="r-handR" r="5.5"/>
+    <line class="scan" id="r-scan" x1="164" x2="196"/>
+    <text class="mark" id="r-mark" x="180" y="100">✓</text>
+  </svg></aside>
   </header>
 
-  <section class="grid kpis">
-    <div class="card kpi"><div class="label">Votes cast</div><div class="value" id="k-votes">–</div><div class="note" id="k-votes-note"></div></div>
-    <div class="card kpi"><div class="label">Items refined</div><div class="value" id="k-items">–</div><div class="note">settled across all runs</div></div>
-    <div class="card kpi"><div class="label">Kept as data</div><div class="value" id="k-kept">–</div><div class="note" id="k-kept-note"></div></div>
-    <div class="card kpi"><div class="label">Nodes online</div><div class="value" id="k-nodes">–</div><div class="note">Kaggle GPUs voting right now</div></div>
-    <div class="card kpi"><div class="label">Honeypots passed</div><div class="value" id="k-hp">–</div><div class="note">hidden test items with known answers</div></div>
+  <section>
+    <h2>Main result</h2>
+    <div class="feature">
+      <div class="punch"><span class="pn bad">20%</span><span class="parr">→</span><span class="pn good">2.4%</span></div>
+      <h3>wrong labels in the dataset, before and after refining</h3>
+      <p class="d" id="f-d">We hid 10 wrong answers among 50 maths problems. The models never saw the given answers, solved each problem themselves, and fixed 9 of the 10. That is an 8× cleaner dataset.</p>
+      <div class="trio">
+        <div><div class="lab">Input</div><div class="big num" id="f-in">–</div><p id="f-in2">labels, some secretly wrong</p></div>
+        <div><div class="lab">Errors corrected</div><div class="big num" id="f-caught">–</div><p id="f-caught2">corrupted labels identified and fixed</p></div>
+        <div><div class="lab">Errors remaining</div><div class="big num" id="f-missed">–</div><p id="f-missed2">wrong labels left in the kept data</p></div>
+      </div>
+      <div class="waffle-wrap">
+        <div><div class="wtitle">Outcome for each of the 50 labels</div><div class="waffle" id="waffle"></div><div class="wleg" id="wleg"></div></div>
+        <div class="ba">
+          <div class="wtitle">Label error rate</div>
+          <div class="bacol"><div class="babar"><i id="b-before" style="height:0;background:var(--bad)"></i></div><b class="num" id="v-before">–</b><span>before</span></div>
+          <div class="bacol"><div class="babar"><i id="b-after" style="height:0;background:var(--good)"></i></div><b class="num" id="v-after">–</b><span>after</span></div>
+        </div>
+      </div>
+      <p class="note" id="b-note"></p>
+      <a class="cta" href="/audit">View the full case study: input, method and every corrected label →</a>
+    </div>
   </section>
 
-  <section class="grid runs">
-    <a class="card run" href="/gsm8k">
-      <div class="top"><h2>Maths word problems (GSM8K)</h2><span class="badge" id="g-badge">–</span></div>
-      <p>Grade-school maths with known answers, so the refinery itself can be graded.</p>
-      <div class="bar" id="g-bar"></div>
-      <div class="facts">
-        <div><b id="g-acc">–</b><span>kept answers correct</span></div>
-        <div><b id="g-kept">–</b><span>kept / problems</span></div>
-        <div><b id="g-single">74%</b><span>a single vote alone</span></div>
+  <section>
+    <h2>Decision process</h2>
+    <div class="steps">
+      <div><span class="n">01</span><b>5 independent votes</b><p>No node sees another's answer.</p></div>
+      <div><span class="n">02</span><b>4–5 agree → accepted</b><p>Strong consensus is kept.</p></div>
+      <div><span class="n">03</span><b>3 agree → hint, re-vote</b><p>Muse Glimmer hints, never answers.</p></div>
+      <div><span class="n">04</span><b>≤2 agree → rejected</b><p>Unsure items never enter the data.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Architecture</h2>
+    <div class="arch2">
+      <div class="steps2" id="a-steps">
+        <span data-s="0">1 · Assign</span><span data-s="1">2 · Vote</span><span data-s="2">3 · Count</span><span data-s="3">4 · Hint</span><span data-s="4">5 · Accept</span>
       </div>
-      <div class="go">Open the analysis →</div>
+      <svg viewBox="0 0 960 400" id="a-svg" role="img" aria-label="Live diagram: the coordinator assigns an item to five nodes, collects their signed answers, counts the votes, asks the judge for a hint when the vote is split, and adds accepted items to the dataset.">
+        <g id="a-wires">
+          <path id="aw0" d="M380,190 C320,190 300,60 240,60"/>
+          <path id="aw1" d="M380,195 C320,195 300,130 240,130"/>
+          <path id="aw2" d="M380,200 L240,200"/>
+          <path id="aw3" d="M380,205 C320,205 300,270 240,270"/>
+          <path id="aw4" d="M380,210 C320,210 300,340 240,340"/>
+          <path id="awj" d="M580,175 C650,175 660,80 730,80"/>
+          <path id="awd" d="M580,225 C650,225 660,320 730,320"/>
+          <path id="awb" d="M480,260 L480,318"/>
+        </g>
+        <g id="a-nodes">
+          <g class="an" data-i="0"><rect x="20" y="36" width="220" height="48" rx="8"/><circle cx="44" cy="60" r="6"/><text x="60" y="56" class="t">Node 1</text><text x="60" y="73" class="s">Llama 3.2 3B</text><text x="222" y="65" class="v" id="av0"></text></g>
+          <g class="an" data-i="1"><rect x="20" y="106" width="220" height="48" rx="8"/><circle cx="44" cy="130" r="6"/><text x="60" y="126" class="t">Node 2</text><text x="60" y="143" class="s">Gemma 4 E4B</text><text x="222" y="135" class="v" id="av1"></text></g>
+          <g class="an" data-i="2"><rect x="20" y="176" width="220" height="48" rx="8"/><circle cx="44" cy="200" r="6"/><text x="60" y="196" class="t">Node 3</text><text x="60" y="213" class="s">Ministral 3 3B</text><text x="222" y="205" class="v" id="av2"></text></g>
+          <g class="an" data-i="3"><rect x="20" y="246" width="220" height="48" rx="8"/><circle cx="44" cy="270" r="6"/><text x="60" y="266" class="t">Node 4</text><text x="60" y="283" class="s">SmolLM3 3B</text><text x="222" y="275" class="v" id="av3"></text></g>
+          <g class="an" data-i="4"><rect x="20" y="316" width="220" height="48" rx="8"/><circle cx="44" cy="340" r="6"/><text x="60" y="336" class="t">Node 5</text><text x="60" y="353" class="s">Qwen 3.5 4B</text><text x="222" y="345" class="v" id="av4"></text></g>
+        </g>
+        <text x="20" y="22" class="cap">VOLUNTEER NODES</text>
+
+        <g class="ab" id="a-core"><rect x="380" y="140" width="200" height="120" rx="10"/></g>
+        <text x="480" y="168" class="t" text-anchor="middle">Coordinator</text>
+        <text x="480" y="186" class="s" text-anchor="middle">Cloudflare Worker</text>
+        <g id="a-tally" transform="translate(410,202)"></g>
+        <text x="480" y="248" class="s" text-anchor="middle" id="a-verdict">waiting</text>
+
+        <g class="ab" id="a-db"><rect x="410" y="320" width="140" height="50" rx="8"/></g>
+        <text x="480" y="342" class="t" text-anchor="middle">Vote ledger</text>
+        <text x="480" y="359" class="s" text-anchor="middle" id="a-ledger">every vote, right or wrong</text>
+
+        <text x="730" y="22" class="cap">JUDGE</text>
+        <g class="ab" id="a-judge"><rect x="730" y="36" width="210" height="88" rx="10"/></g>
+        <text x="750" y="64" class="t">Muse Glimmer 30B</text>
+        <text x="750" y="82" class="s">only for 3-of-5 splits</text>
+        <text x="750" y="104" class="s" id="a-hint">hint, never the answer</text>
+
+        <text x="730" y="262" class="cap">OUTPUT</text>
+        <g class="ab" id="a-data"><rect x="730" y="276" width="210" height="88" rx="10"/></g>
+        <text x="750" y="304" class="t">Refined dataset</text>
+        <text x="750" y="322" class="s">answer + full vote record</text>
+        <text x="750" y="346" class="num big2" id="a-count">0 items</text>
+
+        <g id="a-packets"></g>
+      </svg>
+      <p class="acap" id="a-cap">The coordinator sends the same item to five independent nodes.</p>
+    </div>
+    <details class="drop" style="margin-top:12px">
+      <summary><span>What happens to bad votes</span><small>outvoted, logged, never become data · click to expand</small></summary>
+      <div class="badv" style="margin-top:14px">
+      <div><b>Never become data</b><span>A disagreeing answer is outvoted; only the consensus answer is written to the dataset.</span></div>
+      <div><b>Kept as evidence</b><span>Every vote stays in the ledger and in each item's exported record, marked as disagreeing.</span></div>
+      <div><b>Count against the node</b><span>Nodes earn nothing for outvoted answers; repeated failures on test items trigger quarantine.</span></div>
+      <div><b>Useful later</b><span>Wrong answers next to the accepted one form "rejected vs chosen" pairs, the format used for preference training.</span></div>
+      </div>
+    </details>
+  </section>
+
+  <section>
+    <h2>More agreement, more accuracy</h2>
+    <p class="sec-lede">500 maths problems, checked against official answers.</p>
+    <div class="chart2" id="agree-chart"></div>
+    <div class="leg"><span><i style="background:var(--accent)"></i>Maths word problems (GSM8K)</span></div>
+    <p class="takeaway" id="agree-take">4 or 5 of 5 agree → right 99% of the time.</p>
+
+    <h3 class="sub2">Before vs after refining</h3>
+    <div class="chart2" id="case-chart"></div>
+    <p class="sec-lede" style="margin:10px 0 0">Share of answers that were correct, checked against official answers.</p>
+  </section>
+
+  <section>
+    <h2>Research foundation</h2>
+    <a class="paper lead" href="https://arxiv.org/abs/2312.09390" target="_blank" rel="noopener">
+      <div class="pmeta">OpenAI · Burns et al., 2023 · arXiv:2312.09390</div>
+      <b>Weak-to-Strong Generalization</b>
+      <div class="pgrid"><div><span>Shows</span>A strong model trained on labels from weaker models can outperform those weaker supervisors.</div>
+      <div><span>For us</span>Our small models are the weak supervisors. Consensus filtering gives the stronger model cleaner weak labels to learn from.</div></div>
     </a>
-    <a class="card run" href="/news">
-      <div class="top"><h2>Market headlines (India small caps)</h2><span class="badge" id="n-badge">–</span></div>
-      <p>1,872 headlines from Apr–Oct 2026, newer than any Llama. Labelled for sentiment and kind, then checked against real price moves.</p>
-      <div class="bar" id="n-bar"></div>
-      <div class="facts">
-        <div><b id="n-done">–</b><span>labelled</span></div>
-        <div><b id="n-kept">–</b><span>labels kept</span></div>
-        <div><b id="n-hint">–</b><span>re-checking with a hint</span></div>
-      </div>
-      <div class="go">Open the live signals →</div>
+    <div class="papers">
+      <a class="paper" href="https://arxiv.org/abs/2203.11171" target="_blank" rel="noopener"><div class="pmeta">Google · Wang et al., 2022</div><b>Self-Consistency</b><p>Majority vote over several reasoning paths beats any single answer. We vote across different models instead of one.</p></a>
+      <a class="paper" href="https://arxiv.org/abs/2210.11610" target="_blank" rel="noopener"><div class="pmeta">Google · Huang et al., 2022</div><b>LLMs Can Self-Improve</b><p>Training on high-agreement answers improves the model. Our accepted items are exactly that kind of data.</p></a>
+      <a class="paper" href="https://arxiv.org/abs/2402.05120" target="_blank" rel="noopener"><div class="pmeta">Tencent · Li et al., 2024</div><b>More Agents Is All You Need</b><p>Accuracy grows with the number of voting agents. The basis for scaling to many volunteer nodes.</p></a>
+      <a class="paper" href="https://arxiv.org/abs/2103.14749" target="_blank" rel="noopener"><div class="pmeta">MIT · Northcutt et al., 2021</div><b>Pervasive Label Errors</b><p>Even benchmark test sets contain wrong labels. The problem our error-detection study targets.</p></a>
+      <a class="paper" href="https://arxiv.org/abs/2110.14168" target="_blank" rel="noopener"><div class="pmeta">OpenAI · Cobbe et al., 2021</div><b>GSM8K</b><p>The maths benchmark with official answers we use to verify every result.</p></a>
+      <a class="paper" href="https://arxiv.org/abs/2311.12022" target="_blank" rel="noopener"><div class="pmeta">NYU · Rein et al., 2023</div><b>GPQA</b><p>Graduate-level questions written to resist search; our test of where small models stop.</p></a>
+    </div>
+  </section>
+
+  <section>
+    <details class="drop">
+      <summary><span>Anti-cheating and integrity</span><small>9 safeguards · honeypots, HMAC-SHA256 signatures, timing checks · click to expand</small></summary>
+      <p class="sec-lede" style="margin:14px 0">Nodes are strangers' machines, so every vote is treated as untrusted until it is verified.</p>
+      <div class="chips">
+      <div><b>Honeypot questions</b><span>a few test items with known answers, hidden among real data; a node below 30% is quarantined</span></div>
+      <div><b>HMAC-SHA256 signatures</b><span>every answer is signed with the node's secret key; forged or altered votes are rejected</span></div>
+      <div><b>Blind voting</b><span>nodes only receive the question, never other answers, so they can't copy</span></div>
+      <div><b>Timing checks</b><span>answers faster than the model could compute are discarded as fake work</span></div>
+      <div><b>One vote per node per item</b><span>leases and duplicate checks stop a node from voting twice</span></div>
+      <div><b>Judges can't decide</b><span>signed hints only, with answers and letters scrubbed out automatically</span></div>
+      <div><b>Model diversity</b><span>ten model families, so no single model's blind spot can win</span></div>
+      <div><b>Credit for agreeing with consensus</b><span>a vote earns credit when it matches what the network accepted. No answer key needed</span></div>
+      <div><b>Full audit trail</b><span>every signed vote is stored, so any result can be recounted</span></div>
+    </div>
+    </details>
+    <details class="drop" style="margin-top:10px">
+      <summary><span>Infrastructure: demo today, production next</span><small>free Cloudflare Workers + Supabase now · production-grade upgrade path · click to expand</small></summary>
+      <div class="infra">
+      <div class="ih"><span></span><b>Now (hackathon demo)</b><b>Production upgrade</b></div>
+      <div><span>Coordinator</span><p>Cloudflare Workers, free tier</p><p>Paid Workers + Durable Objects, multiple regions</p></div>
+      <div><span>Database</span><p>Supabase Postgres, free tier</p><p>Managed Postgres with replicas, or a public vote ledger</p></div>
+      <div><span>Nodes</span><p>Free Colab and Kaggle GPUs</p><p>One-click client on volunteer PCs and partner GPUs</p></div>
+      <div><span>Judge</span><p>Muse Glimmer 30B on Kaggle</p><p>Dedicated judge pool, 30–70B models</p></div>
+      <div><span>Scale</span><p>~20,000 votes so far</p><p>Millions of votes per day across thousands of nodes</p></div>
+    </div>
+      <p class="sec-lede" style="margin-top:10px">The free tiers were chosen to keep the demo at zero cost. The code is the same; only the hosting plan changes.</p>
+    </details>
+  </section>
+
+  <section>
+    <h2>Future: decentralisation</h2>
+    <a class="futlink" href="/future"><b>Every idle GPU becomes part of the refinery.</b><span>Home nodes, judge nodes, rewards, and a live cost calculator →</span></a>
+  </section>
+
+  <section id="tests">
+    <h2>All experiments</h2>
+    <a class="run" href="/audit">
+      <span class="i">01</span>
+      <div><div class="t">Error detection <span class="tag ok">main result</span></div><div class="d">50 labelled maths problems, 10 labels deliberately wrong.</div></div>
+      <div class="k"><span class="num" id="a-k">–</span><span>wrong labels found and fixed</span></div><span class="arr">→</span>
+    </a>
+    <a class="run" href="/gsm8k-mixed">
+      <span class="i">02</span>
+      <div><div class="t">Maths, ten model families <span class="tag ok">works</span></div><div class="d">500 school maths problems with official answers.</div></div>
+      <div class="k"><span class="num" id="m-k">–</span><span>correct: one model → refinery</span></div><span class="arr">→</span>
+    </a>
+    <a class="run" href="/gsm8k">
+      <span class="i">03</span>
+      <div><div class="t">Maths, Llama only <span class="tag old">first run</span></div><div class="d">1,350 problems, three Llama sizes voting.</div></div>
+      <div class="k"><span class="num" id="g-k">–</span><span>correct: one model → refinery</span></div><span class="arr">→</span>
+    </a>
+    <a class="run" href="/gpqa">
+      <span class="i">04</span>
+      <div><div class="t">Graduate-level science <span class="tag old">paused early</span></div><div class="d">Expert questions beyond what small models know.</div></div>
+      <div class="k"><span class="num" id="q-k">–</span><span>questions tested</span></div><span class="arr">→</span>
+    </a>
+    <a class="run" href="/news">
+      <span class="i">05</span>
+      <div><div class="t">News sentiment <span class="tag old">no answer key</span></div><div class="d">Indian small-cap headlines labelled positive, negative or neutral.</div></div>
+      <div class="k"><span class="num" id="n-k">–</span><span>headlines labelled with agreement</span></div><span class="arr">→</span>
+    </a>
+    <a class="run" href="/trade">
+      <span class="i">06</span>
+      <div><div class="t">Trading signals <span class="tag old">closed</span></div><div class="d">Buy / sell / skip calls on Nifty 50 news, paper money.</div></div>
+      <div class="k"><span class="num" id="t-k">–</span><span>calls the models agreed on</span></div><span class="arr">→</span>
     </a>
   </section>
 
-  <section class="card how">
-    <b>How a label is decided</b>
-    <ol>
-      <li>Three different nodes answer, each with a random Llama model and instruction style.</li>
-      <li>All three agree: kept.</li>
-      <li>They don't: a large judge model gives one hint (never the answer), three fresh votes try again, and only unanimous answers are kept.</li>
-      <li>Hidden honeypots with known answers catch cheating nodes, which get quarantined.</li>
-    </ol>
-  </section>
-</main>
+  <footer>
+    <span>Voters include Meta Llama 3.2 · judge: Meta Muse Glimmer 30B · nodes on free Colab and Kaggle GPUs</span>
+    <span class="num" id="votes">–</span>
+  </footer>
+</div>
 <script>
 const $ = (id) => document.getElementById(id);
 const fmt = (n) => Number(n || 0).toLocaleString("en-IN");
-const pct = (a, b) => (b ? Math.round((a / b) * 1000) / 10 + "%" : "–");
+const pc = (a, b, d = 1) => (b ? Math.round((a / b) * 100 * 10 ** d) / 10 ** d : 0);
+const get = async (u) => (await fetch(u, { cache: "no-store" })).json();
 
-function bar(it) {
-  const parts = [[it.unanimous, "var(--s1)"], [it.judge_accepted, "var(--s2)"], [it.disputed, "var(--s3)"], [it.no_majority + it.judge_rejected, "var(--muted)"]];
-  return parts.filter(([n]) => n > 0).map(([n, c]) => `<i style="flex-grow:${n};background:${c}"></i>`).join("") +
-    (it.pending ? `<i style="flex-grow:${it.pending};background:transparent"></i>` : "");
-}
+get("/api/audit").then((d) => {
+  const items = d.items || [], N = items.length, planted = items.filter((i) => i.planted);
+  const kept = items.filter((i) => i.status === "accepted");
+  const caught = planted.filter((i) => i.status === "accepted" && i.final_answer !== i.label).length;
+  const wrongAfter = kept.filter((i) => i.final_answer !== i.gold).length;
+  const review = N - kept.length;
+  $("f-in").textContent = N;
+  $("f-in2").textContent = `labelled problems, ${planted.length} with incorrect labels`;
+  $("f-caught").textContent = `${caught} of ${planted.length}`; if ($("a-k")) $("a-k").textContent = `${caught} of ${planted.length}`;
+  $("f-missed").textContent = wrongAfter;
+  $("f-missed2").textContent = `incorrect labels among ${kept.length} accepted; ${review} referred for review`;
+  const eb = pc(planted.length, N), ea = pc(wrongAfter, kept.length), mx = Math.max(eb, ea, 1);
+  $("v-before").textContent = eb + "%"; $("v-after").textContent = ea + "%";
+  requestAnimationFrame(() => { $("b-before").style.height = (eb / mx) * 100 + "%"; $("b-after").style.height = Math.max((ea / mx) * 100, 2) + "%"; });
+  // waffle: one square per label, coloured by what happened to it (planted ones get a dot)
+  const kind = (i) => i.status !== "accepted" ? "rv" : i.final_answer === i.label ? (i.planted ? "ms" : "ok") : (i.planted ? "fx" : "fl");
+  const order = { fx: 0, ok: 1, rv: 2, ms: 3, fl: 4 };
+  $("waffle").innerHTML = items.slice().sort((a, b) => order[kind(a)] - order[kind(b)] || a.planted - b.planted)
+    .map((i, n) => `<i class="w ${kind(i)}${i.planted ? " pl" : ""}" style="animation-delay:${n * 12}ms" title="${i.planted ? "planted error · " : ""}${{ fx: "caught and corrected", ok: "correct label confirmed", rv: "held for review", ms: "missed", fl: "correct label changed" }[kind(i)]}"></i>`).join("");
+  const cnt = (k) => items.filter((i) => kind(i) === k).length;
+  $("wleg").innerHTML = [["fx", "error corrected"], ["ok", "correct label confirmed"], ["rv", "referred for review"], ["fl", "correct label changed"], ["ms", "error missed"]]
+    .filter(([k]) => cnt(k) || k === "ms").map(([k, l]) => `<span><i class="w ${k}"></i>${l} <b class="num">${cnt(k)}</b></span>`).join("") + `<span><i class="w ok pl"></i>dot marks a corrupted label</span>`;
+  $("b-note").textContent = `Label error rate fell from ${eb}% (${planted.length} of ${N}) to ${ea}% (${wrongAfter} of ${kept.length} accepted)${ea ? `, an ${Math.round(eb / ea)}× reduction` : ""}.`;
+}).catch(() => {});
+const arrow = (T) => `${Math.round(pc(T.correct, T.votes))}% → ${pc(T.kept_correct, T.kept)}%`;
+get("/api/scoreboard?task=gsm8k_mixed").then((d) => { $("m-k").textContent = arrow(d.totals || {}); }).catch(() => {});
+get("/api/scoreboard?task=gsm8k").then((d) => { $("g-k").textContent = arrow(d.totals || {}); }).catch(() => {});
+get("/api/gpqa").then((d) => { $("q-k").textContent = d.items.length; }).catch(() => {});
 
-function render(d) {
-  const T = d.by_task || {};
-  const all = Object.values(T);
-  const sum = (k) => all.reduce((s, t) => s + (t[k] || 0), 0);
-  const kept = sum("unanimous") + sum("judge_accepted");
-  const settled = kept + sum("no_majority") + sum("judge_rejected");
-  $("k-votes").textContent = fmt(d.activity.votes_total);
-  $("k-votes-note").textContent = `${fmt(d.activity.votes_10min)} in the last 10 minutes`;
-  $("k-items").textContent = fmt(settled);
-  $("k-kept").textContent = fmt(kept);
-  $("k-kept-note").textContent = settled ? `${pct(kept, settled)} of settled items` : "";
-  const online = d.nodes.filter((n) => n.online).length;
-  $("k-nodes").innerHTML = `${online} <small>/ ${d.nodes.length}</small>`;
-  const hpN = d.nodes.reduce((s, n) => s + n.honeypots, 0), hpOk = d.nodes.reduce((s, n) => s + n.honeypots_ok, 0);
-  $("k-hp").textContent = pct(hpOk, hpN);
+// Agreement vs accuracy on the maths run.
+Promise.all([get("/api/agreement?task=gsm8k_mixed")]).then(([m]) => {
+  // line chart: x = how many of 5 agreed, y = how often that answer was right
+  const W = 640, H = 300, L = 46, R = 18, T = 18, B = 46, xs = [2, 3, 4, 5];
+  const x = (k) => L + ((k - 2) / 3) * (W - L - R), y = (v) => T + (1 - v / 100) * (H - T - B);
+  const pts = (d) => xs.map((k) => d.buckets.find((b) => b.agree === k)).map((b, i) => b && { k: xs[i], v: (b.correct / b.items) * 100, b }).filter(Boolean);
+  const line = (p) => p.map((o, i) => `${i ? "L" : "M"}${x(o.k)},${y(o.v)}`).join("");
+  const area = (p) => p.length ? `${line(p)} L${x(p[p.length - 1].k)},${y(0)} L${x(p[0].k)},${y(0)} Z` : "";
+  const series = (p, col, cls, above) => `<path d="${area(p)}" fill="${col}" opacity=".08"/><path d="${line(p)}" class="ln ${cls}" stroke="${col}"/>` +
+    p.map((o) => `<g class="pt"><circle cx="${x(o.k)}" cy="${y(o.v)}" r="5" fill="var(--page)" stroke="${col}" stroke-width="2.5"><title>${o.k} of 5 agreed: ${o.b.correct} of ${o.b.items} right</title></circle>` +
+      `<text x="${x(o.k)}" y="${y(o.v) + (above ? -12 : 20)}" class="pv" fill="${col}">${Math.round(o.v)}%</text></g>`).join("");
+  const grid = [0, 25, 50, 75, 100].map((v) => `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" class="gl"/><text x="${L - 10}" y="${y(v) + 4}" class="ax" text-anchor="end">${v}%</text>`).join("") +
+    
+    xs.map((k) => `<text x="${x(k)}" y="${H - B + 22}" class="ax" text-anchor="middle">${k} of 5</text>`).join("") +
+    `<text x="${(L + W - R) / 2}" y="${H - 6}" class="ax" text-anchor="middle">how many of the 5 votes agreed</text>`;
+  $("agree-chart").innerHTML = `<svg viewBox="0 0 ${W} ${H}" class="svgc" role="img" aria-label="Accuracy by agreement level on maths problems">${grid}${series(pts(m), "var(--accent)", "mat", true)}</svg>`;
+}).catch(() => {});
+// Single vote vs kept, per test case.
+const CASES = [["audit", "Error detection"], ["gsm8k_mixed", "Maths, mixed models"], ["gsm8k", "Maths, Llama only"]];
+Promise.all(CASES.map(([t]) => get("/api/scoreboard?task=" + t).catch(() => ({})))).then((all) => {
+  // paired bars per experiment: one model on its own vs the refinery's accepted answers
+  $("case-chart").innerHTML = CASES.map(([, name], k) => {
+    const t = all[k].totals || {}, a = t.votes ? (t.correct / t.votes) * 100 : 0, b = t.kept ? (t.kept_correct / t.kept) * 100 : 0;
+    return `<div class="pb"><div class="pbn">${name}</div>
+      <div class="pbr"><span>One model alone</span><div class="pbt"><i style="width:${a}%;background:var(--muted)"></i></div><b class="num">${Math.round(a)}%</b></div>
+      <div class="pbr"><span>Refinery</span><div class="pbt"><i style="width:${b}%;background:var(--accent)"></i></div><b class="num" style="color:var(--accent)">${Math.round(b * 10) / 10}%</b></div></div>`;
+  }).join("");
+}).catch(() => {});
 
-  const g = T.gsm8k, n = T.news;
-  if (g) {
-    const gk = g.unanimous + g.judge_accepted;
-    $("g-badge").className = "badge " + (g.pending ? "live" : "done");
-    $("g-badge").textContent = g.pending ? "Live" : "Finished";
-    $("g-bar").innerHTML = bar(g);
-    $("g-acc").textContent = pct(g.accepted_correct, gk);
-    $("g-kept").textContent = `${fmt(gk)} / ${fmt(g.total - g.honeypots)}`;
+// Live architecture: one item cycles through assign -> vote -> count -> (hint) -> accept.
+(() => {
+  const svg = $("a-svg"); if (!svg) return;
+  const NS = "http://www.w3.org/2000/svg", P = $("a-packets");
+  const caps = ["The coordinator sends the same item to five independent nodes.",
+    "Each node answers on its own and returns a signed vote. No node sees another's answer.",
+    "The coordinator counts the votes. All five go to the ledger; the disagreeing ones are logged but never become data.",
+    "Only 3 agreed, so the judge writes a hint and five fresh votes are taken.",
+    "Consensus reached: the item and its full vote record join the dataset."];
+  const wire = (id) => $(id);
+  const hot = (ids, on) => ids.forEach((id) => { const e = $(id) || document.querySelector(id); if (e) e.classList.toggle("hot", on); });
+  const move = (pathId, color, reverse, dur = 900, r = 6) => new Promise((res) => {
+    const path = wire(pathId), len = path.getTotalLength(), c = document.createElementNS(NS, "circle");
+    c.setAttribute("r", r); c.setAttribute("fill", color); P.appendChild(c);
+    const t0 = performance.now();
+    const step = (t) => { const k = Math.min(1, (t - t0) / dur), e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+      const pt = path.getPointAtLength((reverse ? 1 - e : e) * len); c.setAttribute("cx", pt.x); c.setAttribute("cy", pt.y);
+      if (k < 1) setTimeout(() => step(performance.now()), 16); else { c.remove(); res(); } };
+    step(t0); // timer-driven, so it also runs where animation frames are throttled
+  });
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  const setStep = (i) => { document.querySelectorAll("#a-steps span").forEach((s) => s.classList.toggle("on", +s.dataset.s === i)); $("a-cap").textContent = caps[i]; };
+  const nodes = [...document.querySelectorAll(".an")];
+  // each node owns two models and picks one at random per item, like the real node script
+  const PAIRS = [["Llama 3.2 3B", "Phi-4 mini"], ["Gemma 4 E4B", "Granite 3.3 2B"], ["Ministral 3 3B", "Nemotron 3 Nano 4B"],
+    ["SmolLM3 3B", "Apriel 5B"], ["GLM-Edge 4B", "Qwen 3.5 4B"]];
+  const pickModels = () => nodes.forEach((n, i) => { const t = n.querySelector("text.s"), m = PAIRS[i][Math.random() < .5 ? 0 : 1];
+    if (t.textContent !== m) { t.style.opacity = 0; setTimeout(() => { t.textContent = m; t.style.opacity = 1; }, 180); } });
+  const tally = (votes) => {
+    const g = $("a-tally"); g.innerHTML = "";
+    votes.forEach((v, i) => { const r = document.createElementNS(NS, "rect");
+      r.setAttribute("x", i * 29); r.setAttribute("y", 0); r.setAttribute("width", 24); r.setAttribute("height", 24); r.setAttribute("rx", 5);
+      r.setAttribute("fill", v === "42" ? "var(--accent)" : v ? "var(--muted)" : "var(--track)"); g.appendChild(r);
+      if (v) { const t = document.createElementNS(NS, "text"); t.setAttribute("x", i * 29 + 12); t.setAttribute("y", 16); t.setAttribute("text-anchor", "middle");
+        t.setAttribute("fill", "#fff"); t.setAttribute("style", "font: 600 10px 'IBM Plex Mono', monospace"); t.textContent = v; g.appendChild(t); } });
+  };
+  let count = 0, cycle = 0;
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  async function run() {
+    const split = cycle % 2 === 1;                       // every other item needs a hint
+    const first = split ? ["42", "42", "42", "40", "36"] : ["42", "42", "42", "42", "48"];
+    // 1 assign
+    setStep(0); tally([0, 0, 0, 0, 0]); $("a-verdict").textContent = "assigning"; pickModels();
+    nodes.forEach((n, i) => { n.classList.remove("odd"); $("av" + i).textContent = ""; });
+    hot(["a-core"], true); hot(["aw0", "aw1", "aw2", "aw3", "aw4"], true);
+    await Promise.all([0, 1, 2, 3, 4].map((i) => wait(i * 90).then(() => move("aw" + i, "var(--accent)", false, 800))));
+    nodes.forEach((n) => n.classList.add("hot"));
+    // 2 vote
+    setStep(1); $("a-verdict").textContent = "collecting votes"; await wait(350);
+    const votes = [0, 0, 0, 0, 0];
+    await Promise.all(first.map((v, i) => wait(150 + i * 160).then(() => { $("av" + i).textContent = v; $("av" + i).classList.toggle("x", v !== "42"); if (v !== "42") nodes[i].classList.add("odd");
+      return move("aw" + i, v === "42" ? "var(--accent)" : "var(--muted)", true, 800).then(() => { votes[i] = v; tally(votes); }); })));
+    hot(["aw0", "aw1", "aw2", "aw3", "aw4"], false);
+    // 3 count
+    setStep(2); const agree = first.filter((v) => v === "42").length;
+    $("a-verdict").textContent = `${agree} of 5 agree`; hot(["a-db"], true);
+    await Promise.all([move("awb", "var(--accent)", false, 600, 5), wait(150).then(() => move("awb", "var(--bad)", false, 600, 5))]);
+    $("a-ledger").textContent = `${5 - agree} disagreeing vote${5 - agree === 1 ? "" : "s"} logged`; $("a-ledger").style.fill = "var(--bad)";
+    await wait(900); hot(["a-db"], false); $("a-ledger").textContent = "every vote, right or wrong"; $("a-ledger").style.fill = "";
+    if (split) {
+      // 4 hint
+      setStep(3); $("a-verdict").textContent = "split: asking the judge"; hot(["awj", "a-judge"], true);
+      await move("awj", "var(--warn)", false, 900); $("a-hint").textContent = "“Check the units in step 2.”"; await wait(700);
+      await move("awj", "var(--warn)", true, 900); hot(["awj", "a-judge"], false); $("a-hint").textContent = "hint, never the answer";
+      $("a-verdict").textContent = "5 fresh votes"; tally([0, 0, 0, 0, 0]);
+      nodes.forEach((n, i) => { n.classList.remove("odd"); $("av" + i).textContent = ""; });
+      const second = ["42", "42", "42", "42", "42"].map((v, i) => (i === 4 ? "40" : v));
+      const v2 = [0, 0, 0, 0, 0];
+      await Promise.all(second.map((v, i) => wait(i * 140).then(() => { $("av" + i).textContent = v; $("av" + i).classList.toggle("x", v !== "42"); if (v !== "42") nodes[i].classList.add("odd");
+        return move("aw" + i, v === "42" ? "var(--accent)" : "var(--muted)", true, 700).then(() => { v2[i] = v; tally(v2); }); })));
+      $("a-verdict").textContent = "4 of 5 agree"; await wait(500);
+    }
+    // 5 accept
+    setStep(4); $("a-verdict").textContent = "accepted: 42"; hot(["awd", "a-data"], true);
+    await move("awd", "var(--good)", false, 900, 7); count++; $("a-count").textContent = count + (count === 1 ? " item" : " items");
+    await wait(900); hot(["awd", "a-data", "a-core"], false); nodes.forEach((n) => n.classList.remove("hot", "odd"));
+    cycle++; setTimeout(run, 600);
   }
-  if (n) {
-    const nk = n.unanimous + n.judge_accepted, nd = nk + n.no_majority + n.judge_rejected;
-    $("n-badge").className = "badge " + (n.pending || n.disputed ? "live" : "done");
-    $("n-badge").textContent = n.pending || n.disputed ? "Live" : "Finished";
-    $("n-bar").innerHTML = bar(n);
-    $("n-done").textContent = `${fmt(nd)} / ${fmt(n.total - n.honeypots)}`;
-    $("n-kept").textContent = fmt(nk);
-    $("n-hint").textContent = fmt(n.disputed);
-  }
-  $("updated").textContent = "Live · updated " + new Date(d.now).toLocaleTimeString();
-}
+  if (reduce) { setStep(4); tally(["42", "42", "42", "42", "48"]); $("a-verdict").textContent = "4 of 5 agree"; return; }
+  // start when the diagram scrolls into view
+  let started = false;
+  const start = () => { if (!started) { started = true; run(); } };
+  const io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) { io.disconnect(); start(); } }, { threshold: .3 });
+  io.observe(svg);
+  setTimeout(start, 2500); // fallback where the observer never fires
+})();
+get("/api/stats").then((d) => {
+  $("votes").textContent = `${fmt(d.activity.votes_total)} votes cast in total`;
+  const T = d.by_task || {}, g = T.gsm8k, n = T.news, t = T.trade;
+  if (n) $("n-k").textContent = `${fmt(n.unanimous + n.judge_accepted)} of ${fmt(n.total - n.honeypots)}`;
+  if (t) $("t-k").textContent = fmt(t.unanimous + t.judge_accepted);
+}).catch(() => {});
+</script>
+<script>
+// highlight the current case's tab and keep it in view on narrow screens
+(() => { const a = [...document.querySelectorAll("nav.tabsbar a")].find((x) => x.getAttribute("href") === location.pathname);
+  if (a) { a.classList.add("on"); a.scrollIntoView({ inline: "center", block: "nearest" }); } })();
+</script>
+<script>
+(() => {
 
-async function refresh() {
-  if (document.hidden) return;
-  try { render(await (await fetch("/api/stats", { cache: "no-store" })).json()); }
-  catch { $("updated").textContent = "Reconnecting…"; }
+const $ = (id) => document.getElementById(id);
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+const ease = (k) => (k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2);
+const SL = { x: 150, y: 106 }, SR = { x: 210, y: 106 };          // shoulders
+const REST_L = { x: 140, y: 150 }, REST_R = { x: 220, y: 150 };
+const st = { L: { ...REST_L }, R: { ...REST_R }, P: { x: 95, y: 143, r: 0, show: 1 } };
+
+function draw() {
+  for (const [k, S] of [["L", SL], ["R", SR]]) {
+    const H = st[k], cx = (S.x + H.x) / 2 + (k === "L" ? -14 : 14), cy = (S.y + H.y) / 2 + 16;  // elbow bends outward
+    $("r-arm" + k).setAttribute("d", `M${S.x},${S.y} Q${cx},${cy} ${H.x},${H.y}`);
+    $("r-hand" + k).setAttribute("cx", H.x); $("r-hand" + k).setAttribute("cy", H.y);
+  }
+  const P = st.P; $("r-paper").setAttribute("transform", `translate(${P.x},${P.y}) rotate(${P.r})`); $("r-paper").style.opacity = P.show;
 }
-refresh();
-setInterval(refresh, 5000);
-document.addEventListener("visibilitychange", refresh);
+// animate several targets together; "hold" glues the paper to a hand while it moves; timer-driven so it always runs
+function tween(targets, dur, { arc = 0, hold = null } = {}) {
+  const from = Object.fromEntries(Object.keys(targets).map((k) => [k, { ...st[k] }]));
+  const t0 = performance.now();
+  return new Promise((res) => {
+    const tick = () => {
+      const k = Math.min(1, (performance.now() - t0) / dur), e = ease(k), lift = Math.sin(Math.PI * e) * arc;
+      for (const key in targets) for (const f in targets[key]) st[key][f] = from[key][f] + (targets[key][f] - from[key][f]) * e;
+      if (arc) { for (const key in targets) if ("y" in targets[key]) st[key].y -= lift; }
+      if (hold) { st.P.x = st[hold].x; st.P.y = st[hold].y - 6; }
+      draw(); if (k < 1) setTimeout(tick, 16); else res();
+    };
+    tick();
+  });
+}
+let ok = 0, bad = 0, n = 0;
+function addToPile() {
+  const r = document.createElementNS("http://www.w3.org/2000/svg", "rect"), h = Math.min(ok, 7);
+  r.setAttribute("x", 242 + (h % 2)); r.setAttribute("y", 154 - h * 2.2); r.setAttribute("width", 32); r.setAttribute("height", 8); r.setAttribute("rx", 1.5);
+  $("r-stack").appendChild(r); if ($("r-stack").children.length > 7) $("r-stack").firstChild.remove();
+}
+async function loop() {
+  const wrong = [2, 5].includes(n % 6);
+  Object.assign(st.P, { x: 95, y: 143, r: 0, show: 1 }); draw();
+  await wait(250);
+  await tween({ L: { x: 95, y: 137 } }, 600);                             // left hand reaches the tray
+  await tween({ L: { x: 180, y: 126 } }, 650, { arc: 10, hold: "L" });    // carries it to the visor
+  const sc = $("r-scan"); sc.style.opacity = .9;
+  for (let i = 0; i < 2; i++) for (let y = 103; y <= 139; y += 2) {
+    sc.setAttribute("y1", y); sc.setAttribute("y2", y);
+    $("r-eyeL").setAttribute("cx", 170 + (y % 8) / 2); $("r-eyeR").setAttribute("cx", 186 + (y % 8) / 2); await wait(14);
+  }
+  sc.style.opacity = 0; $("r-eyeL").setAttribute("cx", 172); $("r-eyeR").setAttribute("cx", 188);
+  const m = $("r-mark"); m.textContent = wrong ? "✗" : "✓"; m.setAttribute("fill", wrong ? "var(--bad)" : "var(--good)"); m.style.opacity = 1;
+  $("r-bulb").setAttribute("fill", wrong ? "var(--bad)" : "var(--good)");
+  await wait(500); m.style.opacity = 0;
+  // hand-over: right hand takes the paper, left hand goes back
+  await tween({ R: { x: 186, y: 126 }, L: REST_L }, 400);
+  if (wrong) {
+    await tween({ R: { x: 226, y: 112 } }, 300, { hold: "R" });            // wind up
+    // throw: the paper flies on its own in an arc into the bin while the arm follows through
+    const p0 = { ...st.P }, t0 = performance.now();
+    const fly = new Promise((res) => { const tick = () => { const k = Math.min(1, (performance.now() - t0) / 650), e = k;
+      st.P.x = p0.x + (321 - p0.x) * e; st.P.y = p0.y + (200 - p0.y) * e - Math.sin(Math.PI * e) * 50; st.P.r = 260 * e; draw();
+      if (k < 1) setTimeout(tick, 16); else res(); }; tick(); });
+    await Promise.all([fly, tween({ R: REST_R }, 500)]);
+    $("r-lid").setAttribute("y", 184); st.P.show = 0; draw(); bad++; $("r-badc").textContent = bad;
+    await wait(150); $("r-lid").setAttribute("y", 190);
+  } else {
+    await tween({ R: { x: 258, y: 150 } }, 650, { arc: 14, hold: "R" });   // places it on the accepted pile
+    st.P.show = 0; draw(); ok++; $("r-okc").textContent = ok; addToPile();
+    await tween({ R: REST_R }, 400);
+  }
+  $("r-bulb").setAttribute("fill", "var(--accent)");
+  n++; await wait(300); loop();
+}
+draw(); loop();
+
+})();
 </script>
 </body>
 </html>

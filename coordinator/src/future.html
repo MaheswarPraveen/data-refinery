@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Decentralisation · Data Refinery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme: light;
+    --page: #f6f5f1; --ink: #141413; --ink-2: #4d4c48; --muted: #8a8880; --rule: #dedcd4; --track: #e8e6df;
+    --accent: #6d4fd8; --good: #1d7a3e; --bad: #c0392b; --warn: #d97b1a; --gold: #c08a00;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --page: #121211; --ink: #ecebe6; --ink-2: #b8b6ae; --muted: #85837c; --rule: #2c2b29; --track: #24231f;
+      --accent: #9a82f2; --good: #5cbf7c; --bad: #e57368; --warn: #e8973f; --gold: #e2b33c;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--ink); font: 15px/1.6 "IBM Plex Sans", system-ui, sans-serif; }
+  a { color: inherit; }
+  .wrap { max-width: 1000px; margin: 0 auto; padding: 0 20px 60px; }
+  .num { font-family: "IBM Plex Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; font-weight: 500; }
+  h1 { font-size: 36px; line-height: 1.15; font-weight: 600; letter-spacing: -.02em; margin: 40px 0 10px; max-width: 760px; }
+  h1 em { font-style: normal; color: var(--accent); }
+  .lede { color: var(--ink-2); font-size: 17px; max-width: 640px; margin: 0 0 30px; }
+  h2 { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 500; margin: 56px 0 16px; }
+
+  /* animated network */
+  .net { border: 1px solid var(--rule); border-radius: 10px; padding: 10px; overflow-x: auto; }
+  .net svg { width: 100%; min-width: 680px; height: auto; display: block; font-family: "IBM Plex Sans", sans-serif; }
+  .net .wire { fill: none; stroke: var(--rule); stroke-width: 1.4; }
+  .net .wire.j { stroke-dasharray: 4 4; }
+  .net .home rect, .net .home path { fill: var(--page); stroke: var(--ink-2); stroke-width: 1.3; }
+  .net .home .scr { fill: color-mix(in srgb, var(--accent) 14%, var(--page)); }
+  .net .judge rect { fill: color-mix(in srgb, var(--warn) 12%, var(--page)); stroke: var(--warn); stroke-width: 1.5; }
+  .net .core rect { fill: var(--page); stroke: var(--ink); stroke-width: 1.8; }
+  .net .owner rect { fill: color-mix(in srgb, var(--gold) 12%, var(--page)); stroke: var(--gold); stroke-width: 1.5; }
+  .net .data rect { fill: color-mix(in srgb, var(--good) 12%, var(--page)); stroke: var(--good); stroke-width: 1.5; }
+  .net .t { fill: var(--ink); font-size: 13px; font-weight: 600; }
+  .net .s { fill: var(--muted); font-size: 11px; }
+  .net .q { fill: var(--accent); } .net .a { fill: var(--accent); opacity: .55; }
+  .net .h { fill: var(--warn); } .net .c { fill: var(--gold); } .net .d { fill: var(--good); }
+  .net .ctext { fill: var(--page); font: 700 8px "IBM Plex Mono", monospace; text-anchor: middle; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 20px; margin-top: 12px; font-size: 13px; color: var(--ink-2); }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
+
+  /* roles */
+  .roles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .roles div { border: 1px solid var(--rule); border-radius: 8px; padding: 16px; border-top: 3px solid var(--c); }
+  .roles b { display: block; font-size: 16px; }
+  .roles .who { color: var(--muted); font-size: 12px; margin: 2px 0 10px; }
+  .roles ul { margin: 0; padding-left: 16px; color: var(--ink-2); font-size: 13px; }
+  .roles li { margin: 3px 0; }
+
+  /* calculator */
+  .calc { display: grid; grid-template-columns: 330px 1fr; gap: 28px; border: 1px solid var(--rule); border-radius: 10px; padding: 22px; }
+  .ctl { display: grid; gap: 16px; align-content: start; }
+  .ctl label { display: grid; gap: 4px; font-size: 13px; color: var(--ink-2); }
+  .ctl .row { display: flex; justify-content: space-between; }
+  .ctl .row b { color: var(--ink); font-family: "IBM Plex Mono", monospace; font-weight: 500; }
+  input[type=range] { width: 100%; accent-color: var(--accent); }
+  .out { display: grid; gap: 22px; align-content: start; }
+  .tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+  .tiles div { padding: 14px 14px 14px 0; } .tiles div + div { padding-left: 14px; border-left: 1px solid var(--rule); }
+  .tiles .l { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .tiles .v { font-size: 24px; margin: 4px 0 0; letter-spacing: -.01em; }
+  .tiles .n { color: var(--muted); font-size: 12px; }
+  .cmp .r { display: grid; grid-template-columns: 130px 1fr 150px; gap: 12px; align-items: center; margin: 9px 0; font-size: 13px; color: var(--ink-2); }
+  .cmp .tr { height: 14px; background: var(--track); border-radius: 7px; overflow: hidden; }
+  .cmp .tr i { display: block; height: 100%; border-radius: 7px; transition: width .5s ease; }
+  .cmp .r .num { text-align: right; color: var(--ink); }
+  .ctitle { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+  .assume { color: var(--muted); font-size: 12px; margin: 14px 0 0; }
+  .story { margin: 0; font-size: 15px; line-height: 1.6; padding: 14px 16px; background: color-mix(in srgb, var(--accent) 7%, var(--page)); border-radius: 8px; }
+  .story b { color: var(--accent); font-weight: 600; }
+  .derived { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: -6px; }
+  .derived div { background: var(--track); border-radius: 6px; padding: 6px 8px; font-size: 11px; color: var(--muted); }
+  .derived b { display: block; color: var(--ink); font: 500 13px "IBM Plex Mono", monospace; }
+  .cur { display: inline-flex; border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; text-transform: none; letter-spacing: 0; }
+  .cur button { border: 0; background: transparent; color: var(--ink-2); font: 500 12px "IBM Plex Sans", sans-serif; padding: 5px 12px; cursor: pointer; }
+  .cur button.on { background: var(--accent); color: #fff; }
+  .usd { color: var(--muted); font-size: 12px; font-weight: 400; margin-left: 6px; }
+
+  .road { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; border-top: 2px solid var(--accent); }
+  .road div { padding: 14px 14px 0 0; position: relative; }
+  .road div::before { content: ""; position: absolute; top: -7px; left: 0; width: 12px; height: 12px; border-radius: 50%; background: var(--page); border: 2px solid var(--accent); }
+  .road b { display: block; font-size: 14px; margin-top: 6px; } .road span { color: var(--muted); font-size: 12px; }
+
+  /* tab bar (shared look) */
+  nav.tabsbar { display: flex; align-items: flex-end; gap: 22px; border-bottom: 1px solid var(--rule); padding-top: 14px; }
+  nav.tabsbar b { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px; white-space: nowrap; }
+  nav.tabsbar .tablist { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; }
+  nav.tabsbar .tablist::-webkit-scrollbar { display: none; }
+  nav.tabsbar .tablist a { text-decoration: none; color: var(--ink-2); font-size: 13px; padding: 8px 12px 10px; border-bottom: 2px solid transparent; white-space: nowrap; margin-bottom: -1px; }
+  nav.tabsbar .tablist a:hover { color: var(--ink); }
+  nav.tabsbar .tablist a.on { color: var(--ink); border-bottom-color: var(--ink); font-weight: 500; }
+  .logo { width: 48px; height: 20px; flex: none; }
+  .logo .px rect, .logo .nd circle, .logo .ly path { fill: var(--accent); }
+  .logo .ln path { fill: none; stroke: var(--accent); stroke-width: 1.4; opacity: .7; }
+
+  @media (max-width: 760px) {
+    h1 { font-size: 26px; } .lede { font-size: 15px; }
+    .roles { grid-template-columns: 1fr 1fr; } .calc { grid-template-columns: 1fr; padding: 16px; }
+    .tiles { grid-template-columns: 1fr 1fr; } .tiles div:nth-child(3) { border-left: 0; padding-left: 0; }
+    .cmp .r { grid-template-columns: 110px 1fr 96px; }
+    .road { grid-template-columns: 1fr; border-top: 0; border-left: 2px solid var(--accent); }
+    .road div { padding: 0 0 14px 18px; } .road div::before { top: 2px; left: -7px; }
+    nav.tabsbar b span { display: none; } nav.tabsbar { gap: 10px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .net .moving { display: none; } }
+
+  html { scroll-behavior: smooth; }
+  nav.tabsbar { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--page) 92%, transparent); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+  .endnav { border-top: 1px solid var(--rule, var(--grid)); margin-top: 56px; padding: 32px 0 40px; }
+  .endin { max-width: 1000px; margin: 0 auto; padding: 0 20px; }
+  .endh { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; }
+  .endgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .endgrid a { text-decoration: none; border: 1px solid var(--rule, var(--grid)); border-radius: 8px; padding: 12px 14px; transition: border-color .15s, transform .15s; }
+  .endgrid a:hover { border-color: var(--accent, var(--s1)); transform: translateY(-2px); }
+  .endgrid a.here { border-color: var(--accent, var(--s1)); background: color-mix(in srgb, var(--accent, var(--s1)) 7%, transparent); }
+  .endgrid b { display: block; font-size: 14px; color: var(--ink); } .endgrid span { color: var(--muted); font-size: 12px; }
+  .endfoot { margin-top: 18px; color: var(--muted); font-size: 12px; } .endfoot a { color: inherit; }
+  @media (max-width: 720px) { .endgrid { grid-template-columns: 1fr 1fr; } }
+  /* bigger brand mark */
+  nav.tabsbar .logo { width: 72px; height: 30px; }
+  nav.tabsbar b { font-size: 18px !important; letter-spacing: -.01em; gap: 10px !important; }
+  nav.tabsbar > a { padding-bottom: 8px !important; }
+  @media (max-width: 600px) { nav.tabsbar .logo { width: 56px; height: 24px; } }
+</style>
+</head>
+<body id="top">
+<div class="wrap">
+  <nav class="tabsbar"><a href="/" style="padding:0 0 11px;border:0;margin:0;text-decoration:none"><b><svg class="logo" viewBox="0 0 96 40" aria-hidden="true"><g class="px"><rect x="2" y="9" width="4" height="4"/><rect x="8" y="4" width="4" height="4"/><rect x="5" y="17" width="4" height="4" opacity=".6"/><rect x="11" y="13" width="4" height="4"/><rect x="2" y="26" width="4" height="4" opacity=".5"/><rect x="9" y="24" width="4" height="4"/><rect x="6" y="32" width="4" height="4" opacity=".7"/></g><g class="ln"><path d="M15,15 C22,15 22,20 30,20"/><path d="M13,26 C22,26 22,20 30,20"/><path d="M30,20 L40,9 L50,20 L40,31 Z"/><path d="M40,9 L40,31"/><path d="M50,20 C56,20 56,14 62,14"/><path d="M50,20 C56,20 56,24 62,24"/></g><g class="nd"><circle cx="30" cy="20" r="3"/><circle cx="40" cy="9" r="3"/><circle cx="40" cy="31" r="3"/><circle cx="50" cy="20" r="3"/><circle cx="40" cy="20" r="1.6"/></g><g class="ly"><path d="M62,26 L77,19 L92,26 L77,33 Z" opacity=".55"/><path d="M62,20 L77,13 L92,20 L77,27 Z" opacity=".75"/><path d="M62,14 L77,7 L92,14 L77,21 Z"/></g></svg><span>Data Refinery</span></b></a><div class="tablist"><a href="/">Overview</a><a href="/audit">Error detection</a><a href="/gsm8k-mixed">Maths</a><a href="/gpqa">Science</a><a href="/gsm8k">Maths v1</a><a href="/news">News</a><a href="/trade">Trading</a><a href="/future" class="on">Decentralisation</a></div></nav>
+
+  <h1>Every idle GPU becomes part of <em>the refinery</em>.</h1>
+  <p class="lede">The plan: anyone can contribute a home PC as a node, larger GPUs act as judges, dataset owners fund a reward pool, and contributors are paid for verified work.</p>
+
+  <div class="net">
+    <svg viewBox="0 0 980 470" role="img" aria-label="Animated network: dataset owners fund a reward pool; the coordinator sends questions to home nodes, collects answers, asks judge nodes for hints on split items, delivers the refined dataset, and pays rewards to nodes that agreed.">
+      <!-- wires -->
+      <g id="wires">
+        <path class="wire" id="w1" d="M150,70 C300,70 330,235 430,235"/>
+        <path class="wire" id="w2" d="M150,160 C300,160 330,235 430,235"/>
+        <path class="wire" id="w3" d="M150,250 L430,235"/>
+        <path class="wire" id="w4" d="M150,340 C300,340 330,235 430,235"/>
+        <path class="wire" id="w5" d="M150,430 C300,430 330,235 430,235"/>
+        <path class="wire j" id="wj1" d="M590,215 C680,215 690,90 770,90"/>
+        <path class="wire j" id="wj2" d="M590,225 C680,225 690,190 770,190"/>
+        <path class="wire" id="wd" d="M590,250 C680,250 690,330 770,330"/>
+        <path class="wire" id="wo" d="M770,425 C680,425 600,320 510,290"/>
+      </g>
+      <!-- home nodes -->
+      <g class="home">
+        <g transform="translate(40,45)"><rect x="0" y="0" width="56" height="36" rx="4"/><rect class="scr" x="4" y="4" width="48" height="28" rx="2"/><path d="M-6,40 L62,40 L58,46 L-2,46 Z"/></g>
+        <g transform="translate(40,135)"><rect x="0" y="0" width="56" height="36" rx="4"/><rect class="scr" x="4" y="4" width="48" height="28" rx="2"/><path d="M-6,40 L62,40 L58,46 L-2,46 Z"/></g>
+        <g transform="translate(40,225)"><rect x="8" y="0" width="40" height="46" rx="4"/><rect class="scr" x="13" y="6" width="30" height="8" rx="2"/></g>
+        <g transform="translate(40,315)"><rect x="0" y="0" width="56" height="36" rx="4"/><rect class="scr" x="4" y="4" width="48" height="28" rx="2"/><path d="M-6,40 L62,40 L58,46 L-2,46 Z"/></g>
+        <g transform="translate(40,405)"><rect x="8" y="0" width="40" height="46" rx="4"/><rect class="scr" x="13" y="6" width="30" height="8" rx="2"/></g>
+      </g>
+      <text x="106" y="66" class="t">Priya</text><text x="106" y="81" class="s">laptop · 3B model</text>
+      <text x="106" y="156" class="t">Arjun</text><text x="106" y="171" class="s">laptop · 4B model</text>
+      <text x="106" y="246" class="t">Meera</text><text x="106" y="261" class="s">gaming PC · 3B</text>
+      <text x="106" y="336" class="t">Kabir</text><text x="106" y="351" class="s">laptop · 2B model</text>
+      <text x="106" y="426" class="t">Sara</text><text x="106" y="441" class="s">gaming PC · 4B</text>
+      <text x="40" y="22" class="s" style="letter-spacing:.08em">REGULAR NODES · idle home GPUs</text>
+
+      <!-- coordinator -->
+      <g class="core"><rect x="430" y="190" width="160" height="100" rx="8"/></g>
+      <text x="510" y="222" class="t" text-anchor="middle">Coordinator</text>
+      <text x="510" y="240" class="s" text-anchor="middle">assigns jobs · counts votes</text>
+      <text x="510" y="256" class="s" text-anchor="middle">public vote ledger</text>
+      <text x="510" y="276" class="s" text-anchor="middle" id="ctr">items refined: 0</text>
+
+      <!-- judges -->
+      <text x="770" y="40" class="s" style="letter-spacing:.08em">JUDGE NODES · 24 GB+ GPUs</text>
+      <g class="judge"><rect x="770" y="58" width="190" height="64" rx="8"/><rect x="770" y="158" width="190" height="64" rx="8"/></g>
+      <text x="786" y="84" class="t">Dev · RTX 4090</text><text x="786" y="102" class="s">Muse Glimmer 30B · hints</text>
+      <text x="786" y="184" class="t">Lab server</text><text x="786" y="202" class="s">70B model · hints</text>
+
+      <!-- dataset + owner -->
+      <g class="data"><rect x="770" y="298" width="190" height="64" rx="8"/></g>
+      <text x="786" y="324" class="t">Refined dataset</text><text x="786" y="342" class="s">accepted items + vote record</text>
+      <g class="owner"><rect x="770" y="393" width="190" height="64" rx="8"/></g>
+      <text x="786" y="419" class="t">Dataset owner</text><text x="786" y="437" class="s">funds the reward pool</text>
+
+      <!-- moving packets -->
+      <g class="moving">
+        <circle r="5" class="q"><animateMotion dur="3s" repeatCount="indefinite" keyPoints="1;0" keyTimes="0;1" calcMode="linear"><mpath href="#w1"/></animateMotion></circle>
+        <circle r="5" class="q"><animateMotion dur="3s" begin=".2s" repeatCount="indefinite" keyPoints="1;0" keyTimes="0;1" calcMode="linear"><mpath href="#w3"/></animateMotion></circle>
+        <circle r="5" class="q"><animateMotion dur="3s" begin=".4s" repeatCount="indefinite" keyPoints="1;0" keyTimes="0;1" calcMode="linear"><mpath href="#w5"/></animateMotion></circle>
+        <circle r="5" class="a"><animateMotion dur="3s" begin="1.5s" repeatCount="indefinite"><mpath href="#w2"/></animateMotion></circle>
+        <circle r="5" class="a"><animateMotion dur="3s" begin="1.7s" repeatCount="indefinite"><mpath href="#w4"/></animateMotion></circle>
+        <circle r="5" class="a"><animateMotion dur="3s" begin="1.1s" repeatCount="indefinite"><mpath href="#w1"/></animateMotion></circle>
+        <circle r="5" class="h"><animateMotion dur="4s" begin=".6s" repeatCount="indefinite"><mpath href="#wj1"/></animateMotion></circle>
+        <circle r="5" class="h"><animateMotion dur="4s" begin="2.6s" repeatCount="indefinite" keyPoints="1;0" keyTimes="0;1" calcMode="linear"><mpath href="#wj2"/></animateMotion></circle>
+        <circle r="6" class="d"><animateMotion dur="2.5s" begin=".3s" repeatCount="indefinite"><mpath href="#wd"/></animateMotion></circle>
+        <g><circle r="8" class="c"/><text class="ctext" y="3">₹</text><animateMotion dur="3.5s" repeatCount="indefinite"><mpath href="#wo"/></animateMotion></g>
+        <g><circle r="8" class="c"/><text class="ctext" y="3">₹</text><animateMotion dur="3.2s" begin="1s" repeatCount="indefinite" keyPoints="1;0" keyTimes="0;1" calcMode="linear"><mpath href="#w2"/></animateMotion></g>
+        <g><circle r="8" class="c"/><text class="ctext" y="3">₹</text><animateMotion dur="3.2s" begin="2.2s" repeatCount="indefinite" keyPoints="1;0" keyTimes="0;1" calcMode="linear"><mpath href="#w4"/></animateMotion></g>
+        <g><circle r="8" class="c"/><text class="ctext" y="3">₹</text><animateMotion dur="4s" begin="3s" repeatCount="indefinite" keyPoints="1;0" keyTimes="0;1" calcMode="linear"><mpath href="#wj1"/></animateMotion></g>
+      </g>
+    </svg>
+  </div>
+  <div class="legend">
+    <span><i style="background:var(--accent)"></i>question out</span>
+    <span><i style="background:var(--accent);opacity:.55"></i>signed answer back</span>
+    <span><i style="background:var(--warn)"></i>split item → hint</span>
+    <span><i style="background:var(--good)"></i>accepted item</span>
+    <span><i style="background:var(--gold)"></i>reward</span>
+  </div>
+
+  <h2>Who does what</h2>
+  <div class="roles">
+    <div style="--c:var(--accent)"><b>Regular node</b><div class="who">anyone with a 2–4 GB GPU</div><ul><li>Runs small models while the PC is idle</li><li>Answers questions independently</li><li>Paid when its answer agrees with the network's consensus</li></ul></div>
+    <div style="--c:var(--warn)"><b>Judge node</b><div class="who">24 GB+ GPU owners, labs</div><ul><li>Runs a 30–70B model</li><li>Writes hints for split items, never answers</li><li>Paid per hint that leads to agreement</li></ul></div>
+    <div style="--c:var(--gold)"><b>Dataset owner</b><div class="who">model builders, researchers</div><ul><li>Uploads data to refine or verify</li><li>Funds the reward pool</li><li>Pays only for accepted items</li></ul></div>
+    <div style="--c:var(--ink)"><b>Coordinator</b><div class="who">open, replicated</div><ul><li>Assigns jobs, enforces the rules</li><li>Publishes every signed vote</li><li>Anyone can audit the result</li></ul></div>
+  </div>
+
+  <h2 style="display:flex;justify-content:space-between;align-items:center">Scale and cost calculator <span class="cur" id="cur"><button data-c="inr" class="on">₹ INR</button><button data-c="usd">$ USD</button></span></h2>
+  <div class="calc">
+    <div class="ctl">
+      <label><span class="row">Regular nodes online<b id="o-nodes"></b></span><input type="range" id="nodes" min="0" max="100" value="45"></label>
+      <label><span class="row">Idle hours per node per day<b id="o-hours"></b></span><input type="range" id="hours" min="1" max="20" value="6"></label>
+      <label><span class="row">Dataset size (items)<b id="o-items"></b></span><input type="range" id="items" min="0" max="100" value="55"></label>
+      <label><span class="row">Voter model size<b id="o-model"></b></span><input type="range" id="model" min="0" max="7" value="2" step="1"></label>
+      <div class="derived" id="o-derived"></div>
+      <label><span class="row">Electricity price per kWh<b id="o-kwh"></b></span><input type="range" id="kwh" min="3" max="20" value="8"></label>
+    </div>
+    <div class="out">
+      <p class="story" id="t-story"></p>
+      <div class="tiles">
+        <div><div class="l">Finished in</div><div class="v num" id="t-days">–</div><div class="n" id="t-days-n"></div></div>
+        <div><div class="l">Owner pays</div><div class="v num" id="t-cost">–</div><div class="n" id="t-cost-n"></div></div>
+        <div><div class="l">Each volunteer earns</div><div class="v num" id="t-earn">–</div><div class="n" id="t-earn-n"></div></div>
+      </div>
+      <div class="cmp">
+        <div class="ctitle">Cost to label the dataset</div>
+        <div class="r"><span>Data Refinery</span><div class="tr"><i id="c-dr" style="background:var(--accent)"></i></div><span class="num" id="c-dr-v"></span></div>
+        <div class="r"><span>Cloud GPUs</span><div class="tr"><i id="c-cloud" style="background:var(--muted)"></i></div><span class="num" id="c-cloud-v"></span></div>
+        <div class="r"><span>Human labellers</span><div class="tr"><i id="c-human" style="background:var(--bad)"></i></div><span class="num" id="c-human-v"></span></div>
+      </div>
+      <div class="cmp">
+        <div class="ctitle">One volunteer, per idle hour</div>
+        <div class="r"><span>Earns</span><div class="tr"><i id="n-earn" style="background:var(--gold)"></i></div><span class="num" id="n-earn-v"></span></div>
+        <div class="r"><span>Electricity</span><div class="tr"><i id="n-power" style="background:var(--muted)"></i></div><span class="num" id="n-power-v"></span></div>
+      </div>
+    </div>
+  </div>
+  <p class="assume">Estimates, not measurements. Assumptions: 5.6 votes per item and 84% accepted (both measured in our runs); 18% of items need a hint; speed, memory and power per model size are typical figures for 4-bit models on consumer GPUs; cloud GPU at ₹30/hour; human labelling at ₹10 per item; owners pay ₹0.50 per accepted item for 3B work, scaled up for larger models in proportion to compute time; judges receive 15% of the pool, regular nodes 85%, shared among votes that agreed with the accepted consensus. 1 USD ≈ ₹84.</p>
+
+  <h2>Roadmap</h2>
+  <div class="road">
+    <div><b>Public vote ledger</b><span>anyone can recount</span></div>
+    <div><b>Multiple coordinators</b><span>no single operator</span></div>
+    <div><b>One-click idle client</b><span>runs only when idle</span></div>
+    <div><b>Reward payouts</b><span>credits become income</span></div>
+    <div><b>Private datasets</b><span>trusted nodes only</span></div>
+  </div>
+</div>
+<script>
+const $ = (id) => document.getElementById(id);
+const inr = (v) => (v < 0 ? "−" : "") + "₹" + ((v = Math.abs(v)) >= 1e7 ? (v / 1e7).toFixed(1) + " Cr" : v >= 1e5 ? (v / 1e5).toFixed(1) + " L" : v < 100 ? v.toFixed(v < 10 ? 2 : 1) : Math.round(v).toLocaleString("en-IN"));
+const usd = (v) => { const d = v / 84; return "$" + (d >= 1e6 ? (d / 1e6).toFixed(1) + "M" : d >= 1000 ? Math.round(d).toLocaleString("en-US") : d.toFixed(d < 10 ? 2 : 0)); };
+const fmt = (n) => Math.round(n).toLocaleString("en-IN");
+// sliders map to log-ish scales for nodes and dataset size
+const nodesAt = (p) => Math.round(10 * Math.pow(10, (p / 100) * 4));        // 10 .. 100,000
+const itemsAt = (p) => Math.round(1000 * Math.pow(10, (p / 100) * 4) / 100) * 100; // 1k .. 10M
+const VPI = 5.6, ACC = 0.84, HINT = 0.18, MATCH = 0.8, CLOUD_HR = 30, HUMAN = 10;
+// [size, seconds per answer on a typical GPU for that size, GPU memory (4-bit), power draw W, who can run it]
+const MODELS = [["1B", 6, 1.5, 150, "almost any GPU"], ["2B", 9, 2.2, 170, "entry laptops"], ["3B", 14, 2.8, 200, "most gaming laptops"],
+  ["4B", 17, 3.5, 200, "most gaming laptops"], ["8B", 28, 6, 250, "mid-range gaming PCs"], ["14B", 40, 10, 300, "high-end gaming PCs"],
+  ["32B", 70, 20, 350, "24 GB cards (RTX 4090)"], ["70B", 120, 42, 450, "workstations, labs"]];
+let CUR = "inr";
+const money = (v) => (CUR === "inr" ? inr(v) : usd(v));
+const small = (v) => (CUR === "inr" ? "₹" + v.toFixed(v < 10 ? 2 : 1) : usd(v));
+const both = (v) => money(v);
+
+function calc() {
+  const nodes = nodesAt(+$("nodes").value), hours = +$("hours").value, items = Math.max(1000, itemsAt(+$("items").value));
+  const [mName, sec, vram, WATTS, who] = MODELS[+$("model").value], base = 0.5, kwh = +$("kwh").value;
+  // bigger models do slower, harder work, so each accepted item pays in proportion to the compute it took
+  const mult = sec / 14, rew = base * mult;
+  $("o-nodes").textContent = fmt(nodes); $("o-hours").textContent = hours + " h"; $("o-items").textContent = fmt(items);
+  $("o-model").textContent = mName + " parameters"; $("o-kwh").textContent = small(kwh);
+  $("o-derived").innerHTML = `<div><b>~${sec} s</b>per answer</div><div><b>~${vram} GB</b>GPU memory</div><div><b>${WATTS} W</b>${who}</div>`;
+
+  const votesPerNodeHr = 3600 / sec;
+  const itemsPerDay = (nodes * hours * votesPerNodeHr) / VPI;
+  const days = items / itemsPerDay;
+  const accepted = items * ACC, pool = accepted * rew;
+  const nodeVotesTotal = items * VPI;
+  const hoursPerNode = days * hours;                          // idle hours each volunteer contributes
+  const earnTotal = (pool * 0.85) / nodes;                    // regular nodes share 85% of the pool
+  const powerTotal = (WATTS / 1000) * kwh * hoursPerNode;
+  const earnHr = earnTotal / Math.max(hoursPerNode, 1e-9), powerHr = (WATTS / 1000) * kwh;
+  const cloud = (nodeVotesTotal * sec / 3600) * CLOUD_HR, human = items * HUMAN;
+  const dur = (d) => d < 1 ? (d * 24 < 1 ? Math.max(1, Math.round(d * 1440)) + " min" : (d * 24).toFixed(1) + " hours") : d < 365 ? d.toFixed(1) + " days" : (d / 365).toFixed(1) + " years";
+  const hrs = (h) => h < 1 ? Math.max(1, Math.round(h * 60)) + " min" : h.toFixed(h < 10 ? 1 : 0) + " h";
+
+  $("t-story").innerHTML = `With <b>${fmt(nodes)} volunteers</b> giving ${hours} idle hours a day on ${mName} models, a <b>${fmt(items)}-item</b> dataset is refined in <b>${dur(days)}</b>. ` +
+    `The owner pays <b>${money(pool)}</b> instead of ${money(human)} for human labelling, and each volunteer earns about <b>${money(earnHr)} per idle hour</b>, well above the ${money(powerHr)} of electricity it uses.`;
+  $("t-days").textContent = dur(days);
+  $("t-days-n").textContent = `${fmt(itemsPerDay)} items per day`;
+  $("t-cost").textContent = money(pool);
+  $("t-cost-n").textContent = `${fmt(accepted)} accepted items`;
+  $("t-earn").textContent = money(earnHr) + " / hour";
+  $("t-earn-n").textContent = `${money(earnTotal)} for this job (${hrs(hoursPerNode)}) · power ${money(powerHr)} / hour`;
+
+  const mx = Math.max(pool, cloud, human);
+  [["c-dr", pool], ["c-cloud", cloud], ["c-human", human]].forEach(([id, v]) => { $(id).style.width = Math.max(1, (v / mx) * 100) + "%"; $(id + "-v").textContent = money(v); });
+  const m2 = Math.max(earnHr, powerHr, 1e-9);
+  $("n-earn").style.width = (earnHr / m2) * 100 + "%"; $("n-earn-v").textContent = money(earnHr);
+  $("n-power").style.width = (powerHr / m2) * 100 + "%"; $("n-power-v").textContent = money(powerHr);
+}
+document.querySelectorAll(".ctl input").forEach((el) => el.addEventListener("input", calc));
+$("cur").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; CUR = b.dataset.c;
+  document.querySelectorAll("#cur button").forEach((x) => x.classList.toggle("on", x === b)); calc(); });
+calc();
+
+// counter in the coordinator box ticks with the accepted-item packets
+let n = 0; setInterval(() => { n += 1; $("ctr").textContent = "items refined: " + n.toLocaleString("en-IN"); }, 2500);
+</script>
+<nav class="endnav"><div class="endin"><div class="endh">Explore the project</div><div class="endgrid"><a href="/"><b>Overview</b><span>The idea, results and architecture</span></a><a href="/audit"><b>Error detection</b><span>Main result: 9 of 10 wrong labels fixed</span></a><a href="/gsm8k-mixed"><b>Maths</b><span>Ten model families, 500 problems</span></a><a href="/gsm8k"><b>Maths v1</b><span>First run, Llama only</span></a><a href="/gpqa"><b>Science</b><span>Expert questions, paused early</span></a><a href="/news"><b>News</b><span>Headline sentiment labels</span></a><a href="/trade"><b>Trading</b><span>Paper-money signal study</span></a><a href="/future"><b>Decentralisation</b><span>Idle home GPUs, rewards, costs</span></a></div><div class="endfoot">Data Refinery · Meta Global AI Hackathon · <a href="#top">Back to top ↑</a></div></div></nav>
+<script>(() => { const a = [...document.querySelectorAll(".endgrid a")].find((x) => x.getAttribute("href") === location.pathname); if (a) a.classList.add("here"); })();</script>
+</body>
+</html>
