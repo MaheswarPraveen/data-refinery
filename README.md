@@ -93,6 +93,18 @@ Home PCs run small voter models, larger GPUs act as judges, dataset owners fund 
 
 **Roadmap:** public vote ledger → multiple coordinators → one-click idle client → reward payouts → private datasets  ·  [Try the scale and cost calculator →](https://data-refinery.primemax.workers.dev/future)
 
+## Variant: the agentic refinery
+
+The same refinery can run inside **one large model**, organised as an agentic system instead of a network of small ones (planned, not yet built):
+
+- **Solver agents:** several instances of the large model, each with a different role, prompt or toolset (step-by-step, code execution, checking backwards, domain expert), answer every item independently
+- **Verifier agent:** re-checks answers with tools, for example by running the arithmetic or code, before they are counted
+- **Consensus rule:** the same 4-of-5 vote, hint round and rejection rule as the network, with every agent vote kept in the ledger
+- **Judge agent:** writes a hint for split items, never the answer
+- **Where it fits:** expert data that small models cannot handle (such as GPQA-level science), or private data that must stay on one machine
+
+Both versions share the same rules, vote ledger and anti-cheating design. This variant is described here as part of the Data Refinery project and is covered by the same [license](LICENSE).
+
 ## Repository
 
 ```
