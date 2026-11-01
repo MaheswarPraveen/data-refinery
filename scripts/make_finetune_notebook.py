@@ -143,7 +143,10 @@ code("""print("\\nGSM8K test accuracy, Llama 3.1 8B Instruct")
 for k in ["base", "raw", "refined", "official"]:
     if k in RESULTS: print(f"  {k:9s} {RESULTS[k]:.1%}")
 print("\\nRefined vs raw:", f"{(RESULTS['refined'] - RESULTS['raw']) * 100:+.1f} points")
-print("Scores are on the dashboard. Stop the runtime now to save units: Runtime → Disconnect and delete runtime.")""")
+print("Scores are on the dashboard. Shutting the runtime down to save compute units...")
+time.sleep(20)
+from google.colab import runtime
+runtime.unassign()   # disconnects and deletes the runtime, so nothing keeps billing overnight""")
 
 # Everything in one cell: install, config, data, base test, three trainings, summary.
 codes = [c["source"] for c in cells if c["cell_type"] == "code"]
