@@ -130,6 +130,11 @@
   nav.tabsbar b { font-size: 18px !important; letter-spacing: -.01em; gap: 10px !important; }
   nav.tabsbar > a { padding-bottom: 8px !important; }
   @media (max-width: 600px) { nav.tabsbar .logo { width: 56px; height: 24px; } }
+  /* header: logo and tabs share one centre line; the active underline still sits on the bottom rule */
+  nav.tabsbar { align-items: stretch !important; }
+  nav.tabsbar > a { display: flex !important; align-items: center; padding: 1px 0 3px !important; }
+  nav.tabsbar .tablist { align-items: stretch; }
+  nav.tabsbar .tablist a { display: flex; align-items: center; padding-top: 0 !important; padding-bottom: 0 !important; }
 </style>
 </head>
 <body id="top">

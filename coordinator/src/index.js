@@ -79,6 +79,9 @@ export default {
       if (req.method === "GET" && pathname === "/api/trade") return await tradeBoard(env);
       if (req.method === "GET" && pathname === "/api/audit") return await auditBoard(env);
       if (req.method === "GET" && pathname === "/api/gpqa") return await gpqaBoard(env);
+      if (req.method === "GET" && pathname === "/api/ft/data") return await ftData(env);
+      if (req.method === "GET" && pathname === "/api/ft/results") return await ftResults(env);
+      if (req.method === "POST" && pathname === "/api/ft/result") return await ftSubmit(req, env);
       if (req.method === "GET" && pathname === "/api/agreement") return await agreementCurve(env, new URL(req.url).searchParams.get("task") || "gsm8k_mixed");
       if (req.method === "GET" && pathname === "/future") return new Response(futurePage, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-cache" } });
       if (req.method === "GET" && pathname === "/trade") return new Response(tradePage, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-cache" } });
@@ -899,6 +902,42 @@ async function tradeBoard(env) {
   for (const r of counts.results) c[r.status] = r.n;
   tradeCache = { at: t, body: { now: t, counts: c, totals: vt.results[0], items: items.results, votes: votes.results } };
   return json(tradeCache.body);
+}
+
+// ---------- fine-tuning: training data out, scores back in ----------
+
+// One row per unique maths problem the network accepted: the refined answer (a vote that matched the
+// consensus) and a raw answer (one random first-round vote, right or wrong), for training side by side.
+async function ftData(env) {
+  const { results } = await env.DB.prepare(
+    `WITH it AS (SELECT DISTINCT ON (question) id, question, final_answer FROM items
+                 WHERE task IN ('gsm8k', 'gsm8k_mixed') AND status = 'accepted' AND is_honeypot = 0 ORDER BY question, id)
+     SELECT it.id, it.question, it.final_answer,
+            (SELECT v.reasoning FROM votes v WHERE v.item_id = it.id AND v.answer = it.final_answer ORDER BY v.id LIMIT 1) AS refined,
+            r.reasoning AS raw, r.answer AS raw_answer
+     FROM it LEFT JOIN LATERAL (SELECT reasoning, answer FROM votes v WHERE v.item_id = it.id AND v.hinted = 0
+                                ORDER BY md5(v.id::text) LIMIT 1) r ON true
+     ORDER BY it.id`
+  ).all();
+  const body = results.map((r) => JSON.stringify(r)).join("\n") + "\n";
+  return new Response(body, { headers: { "content-type": "application/x-ndjson", "cache-control": "no-store" } });
+}
+
+async function ftSubmit(req, env) {
+  const b = await req.json().catch(() => ({}));
+  if (!env.JOIN_CODE || b.join_code !== env.JOIN_CODE) return json({ error: "bad join code" }, 403);
+  const variant = String(b.variant || "").slice(0, 40), correct = Number(b.correct), total = Number(b.total);
+  if (!variant || !Number.isFinite(correct) || !Number.isFinite(total) || total <= 0) return json({ error: "bad result" }, 400);
+  await env.DB.prepare("INSERT INTO ft_results (variant, correct, total, train_n, meta, created_at) VALUES (?, ?, ?, ?, ?::jsonb, ?)")
+    .bind(variant, correct, total, Number(b.train_n) || null, JSON.stringify(b.meta || {}), Date.now()).run();
+  return json({ ok: true });
+}
+
+async function ftResults(env) {
+  const { results } = await env.DB.prepare(
+    "SELECT DISTINCT ON (variant) variant, correct, total, train_n, meta, created_at FROM ft_results ORDER BY variant, created_at DESC"
+  ).all();
+  return json({ results });
 }
 
 // ---------- agreement vs accuracy ----------

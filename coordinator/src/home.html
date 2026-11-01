@@ -341,6 +341,25 @@
   @media (max-width: 720px) { .hero { grid-template-columns: 1fr !important; } .robo { order: -1; justify-self: center; max-width: 280px; } }
   .hero h1 { font-size: 52px; line-height: 1.05; }
   @media (max-width: 720px) { .hero h1 { font-size: 36px; } }
+  /* header: logo and tabs share one centre line; the active underline still sits on the bottom rule */
+  nav.tabsbar { align-items: stretch !important; }
+  nav.tabsbar > a { display: flex !important; align-items: center; padding: 13px 0 3px !important; }
+  nav.tabsbar .tablist { align-items: stretch; }
+  nav.tabsbar .tablist a { display: flex; align-items: center; padding-top: 0 !important; padding-bottom: 0 !important; }
+  /* dropdown +: drawn with two bars so it is exactly centred in the circle */
+  details.drop > summary::after { content: "" !important; font: inherit !important;
+    background: linear-gradient(var(--accent), var(--accent)) center / 12px 2px no-repeat, linear-gradient(var(--accent), var(--accent)) center / 2px 12px no-repeat !important; }
+  details.drop:hover > summary::after, details.drop[open] > summary::after {
+    background: linear-gradient(#fff, #fff) center / 12px 2px no-repeat, linear-gradient(#fff, #fff) center / 2px 12px no-repeat, var(--accent) !important; }
+  .io { border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+  .iohead, .iorow, .iototal { display: grid; grid-template-columns: 1.6fr .8fr .8fr .8fr 1.4fr; gap: 12px; align-items: center; padding: 10px 16px; }
+  .iohead { background: var(--track); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .iorow { border-top: 1px solid var(--rule); font-size: 14px; }
+  .iototal { border-top: 2px solid var(--ink); font-weight: 600; font-size: 14px; }
+  .io .acc { color: var(--accent); } .io .mu { color: var(--muted); }
+  .kb { display: flex; align-items: center; gap: 8px; } .kb i { display: block; height: 8px; background: var(--accent); border-radius: 4px; max-width: 70%; }
+  .kb b { font-size: 12px; color: var(--ink-2); }
+  @media (max-width: 720px) { .iohead, .iorow, .iototal { grid-template-columns: 1.4fr .7fr .7fr .7fr; font-size: 12px; } .iohead span:last-child, .kb, .iototal span:last-child { display: none; } }
 </style>
 </head>
 <body id="top">
@@ -407,6 +426,15 @@
       </div>
       <p class="note" id="b-note"></p>
       <a class="cta" href="/audit">View the full case study: input, method and every corrected label →</a>
+    </div>
+  </section>
+
+  <section>
+    <h2>Inputs and outputs, every run</h2>
+    <div class="io">
+      <div class="iohead"><span>Run</span><span>Items in</span><span>Refined out</span><span>Rejected</span><span>Kept</span></div>
+      <div id="io-rows"></div>
+      <div class="iototal" id="io-total"></div>
     </div>
   </section>
 
@@ -737,6 +765,20 @@ Promise.all(CASES.map(([t]) => get("/api/scoreboard?task=" + t).catch(() => ({})
   io.observe(svg);
   setTimeout(start, 2500); // fallback where the observer never fires
 })();
+
+// inputs and outputs per run, straight from the coordinator's tallies (hidden test items excluded)
+get("/api/stats").then((d) => {
+  const T = d.by_task || {};
+  const RUNS = [["audit", "Error detection"], ["gsm8k_mixed", "Maths, ten families"], ["gsm8k", "Maths, Llama only"], ["news", "News sentiment"], ["trade", "Trading signals"], ["gpqa", "Graduate science"]];
+  let tin = 0, tout = 0, trej = 0;
+  $("io-rows").innerHTML = RUNS.filter(([k]) => T[k]).map(([k, name]) => {
+    const t = T[k], inn = t.total - t.honeypots, out = t.unanimous + t.judge_accepted, rej = t.no_majority + t.judge_rejected;
+    tin += inn; tout += out; trej += rej;
+    return `<div class="iorow"><span>${name}</span><span class="num">${fmt(inn)}</span><span class="num acc">${fmt(out)}</span><span class="num mu">${fmt(rej)}</span>
+      <span class="kb"><i style="width:${(out / Math.max(inn, 1)) * 100}%"></i><b class="num">${Math.round((out / Math.max(inn, 1)) * 100)}%</b></span></div>`;
+  }).join("");
+  $("io-total").innerHTML = `<span>Total</span><span class="num">${fmt(tin)}</span><span class="num acc">${fmt(tout)}</span><span class="num mu">${fmt(trej)}</span><span class="num">${fmt(d.activity.votes_total)} votes cast</span>`;
+}).catch(() => {});
 get("/api/stats").then((d) => {
   $("votes").textContent = `${fmt(d.activity.votes_total)} votes cast in total`;
   const T = d.by_task || {}, g = T.gsm8k, n = T.news, t = T.trade;
@@ -746,7 +788,7 @@ get("/api/stats").then((d) => {
 </script>
 <script>
 // highlight the current case's tab and keep it in view on narrow screens
-(() => { const a = [...document.querySelectorAll("nav.tabsbar a")].find((x) => x.getAttribute("href") === location.pathname);
+(() => { const a = [...document.querySelectorAll("nav.tabsbar .tablist a")].find((x) => x.getAttribute("href") === location.pathname);
   if (a) { a.classList.add("on"); a.scrollIntoView({ inline: "center", block: "nearest" }); } })();
 </script>
 <script>

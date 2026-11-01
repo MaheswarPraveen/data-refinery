@@ -247,6 +247,11 @@
   nav.tabsbar b { font-size: 18px !important; letter-spacing: -.01em; gap: 10px !important; }
   nav.tabsbar > a { padding-bottom: 8px !important; }
   @media (max-width: 600px) { nav.tabsbar .logo { width: 56px; height: 24px; } }
+  /* header: logo and tabs share one centre line; the active underline still sits on the bottom rule */
+  nav.tabsbar { align-items: stretch !important; }
+  nav.tabsbar > a { display: flex !important; align-items: center; padding: 13px 0 3px !important; }
+  nav.tabsbar .tablist { align-items: stretch; }
+  nav.tabsbar .tablist a { display: flex; align-items: center; padding-top: 0 !important; padding-bottom: 0 !important; }
 </style>
 </head>
 <body id="top">
@@ -787,7 +792,7 @@ addEventListener("DOMContentLoaded", () => {
 </dialog>
 <script>
 // highlight the current case's tab and keep it in view on narrow screens
-(() => { const a = [...document.querySelectorAll("nav.tabsbar a")].find((x) => x.getAttribute("href") === location.pathname);
+(() => { const a = [...document.querySelectorAll("nav.tabsbar .tablist a")].find((x) => x.getAttribute("href") === location.pathname);
   if (a) { a.classList.add("on"); a.scrollIntoView({ inline: "center", block: "nearest" }); } })();
 </script>
 <nav class="endnav"><div class="endin"><div class="endh">Explore the project</div><div class="endgrid"><a href="/"><b>Overview</b><span>The idea, results and architecture</span></a><a href="/audit"><b>Error detection</b><span>Main result: 9 of 10 wrong labels fixed</span></a><a href="/gsm8k-mixed"><b>Maths</b><span>Ten model families, 500 problems</span></a><a href="/gsm8k"><b>Maths v1</b><span>First run, Llama only</span></a><a href="/gpqa"><b>Science</b><span>Expert questions, paused early</span></a><a href="/news"><b>News</b><span>Headline sentiment labels</span></a><a href="/trade"><b>Trading</b><span>Paper-money signal study</span></a><a href="/future"><b>Decentralisation</b><span>Idle home GPUs, rewards, costs</span></a></div><div class="endfoot">Data Refinery · Meta Global AI Hackathon · <a href="#top">Back to top ↑</a></div></div></nav>
