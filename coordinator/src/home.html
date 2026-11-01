@@ -339,6 +339,8 @@
   .robo svg { width: 100%; height: auto; display: block; }
   .hero { grid-template-columns: 1fr 340px !important; }
   @media (max-width: 720px) { .hero { grid-template-columns: 1fr !important; } .robo { order: -1; justify-self: center; max-width: 280px; } }
+  .hero h1 { font-size: 52px; line-height: 1.05; }
+  @media (max-width: 720px) { .hero h1 { font-size: 36px; } }
 </style>
 </head>
 <body id="top">
@@ -348,8 +350,8 @@
   <header class="hero">
     <div>
       <p class="eyebrow">Meta Global AI Hackathon · Indie track</p>
-      <h1>Reliable training data from small open models that <em>verify each other</em>.</h1>
-      <p class="lede">Five small models answer every item. Only what they agree on is kept.</p>
+      <h1>Dirty data in.<br><em>Clean data out.</em></h1>
+      <p class="lede">Five small open models check every item, blind. Only what they agree on survives, and the result is training data you can trust.</p>
     </div>
     <aside class="robo"><svg viewBox="0 0 360 270" aria-hidden="true" data-label="A robot picks up each paper, checks it, puts correct ones on the accepted pile and throws wrong ones in the bin.">
     <!-- robot body (behind the table) -->

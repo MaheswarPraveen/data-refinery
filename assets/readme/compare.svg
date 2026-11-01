@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 300" width="960" height="300" role="img" aria-label="One model alone vs refinery: error detection 78% to 97.6%, maths ten families 81% to 98.6%, maths Llama only 74% to 98.7%.">
+<style>
+  svg { --bg:#fbfaf7; --ink:#141413; --ink2:#4d4c48; --mut:#8a8880; --rule:#e2e0d8; --track:#ebe9e2;
+        --acc:#6d4fd8; --acc2:#b3a2f0; --good:#1d7a3e; --bad:#c0392b; --warn:#d97b1a; }
+  @media (prefers-color-scheme: dark) {
+    svg { --bg:#161b22; --ink:#ecebe6; --ink2:#b8b6ae; --mut:#8b949e; --rule:#30363d; --track:#21262d;
+          --acc:#9a82f2; --acc2:#5b43bf; --good:#5cbf7c; --bad:#e57368; --warn:#e8973f; } }
+  .card { fill: var(--bg); stroke: var(--rule); }
+  .sans { font-family: -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; }
+  .mono { font-family: ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', monospace; }
+  .ink { fill: var(--ink); } .ink2 { fill: var(--ink2); } .mut { fill: var(--mut); } .acc { fill: var(--acc); }
+  .good { fill: var(--good); } .bad { fill: var(--bad); } .warn { fill: var(--warn); }
+  .cap { font-size: 11px; letter-spacing: .12em; fill: var(--mut); }
+</style>
+<rect class="card" x="1" y="1" width="958" height="298" rx="14"/>
+<text x="44" y="42" class="sans cap">ONE MODEL ALONE vs THE REFINERY · SHARE OF CORRECT ANSWERS</text>
+<text x="44" y="92" class="sans ink" font-size="15" font-weight="600">Error detection</text>
+<text x="288" y="86" text-anchor="end" class="sans mut" font-size="11.5">one model</text>
+<rect x="300" y="76" width="520" height="12" rx="6" fill="var(--track)"/>
+<rect x="300" y="76" width="0" height="12" rx="6" fill="var(--mut)"><animate attributeName="width" from="0" to="404.0" dur="1s" begin="0.20s" fill="freeze" calcMode="spline" keySplines=".2 .7 .2 1"/></rect>
+<text x="834" y="87" class="mono ink2" font-size="14" font-weight="600">77.7%</text>
+<text x="288" y="108" text-anchor="end" class="sans mut" font-size="11.5">refinery</text>
+<rect x="300" y="98" width="520" height="12" rx="6" fill="var(--track)"/>
+<rect x="300" y="98" width="0" height="12" rx="6" fill="var(--acc)"><animate attributeName="width" from="0" to="507.5" dur="1s" begin="0.20s" fill="freeze" calcMode="spline" keySplines=".2 .7 .2 1"/></rect>
+<text x="834" y="109" class="mono acc" font-size="14" font-weight="600">97.6%</text>
+<text x="44" y="164" class="sans ink" font-size="15" font-weight="600">Maths, ten model families</text>
+<text x="288" y="158" text-anchor="end" class="sans mut" font-size="11.5">one model</text>
+<rect x="300" y="148" width="520" height="12" rx="6" fill="var(--track)"/>
+<rect x="300" y="148" width="0" height="12" rx="6" fill="var(--mut)"><animate attributeName="width" from="0" to="421.2" dur="1s" begin="0.45s" fill="freeze" calcMode="spline" keySplines=".2 .7 .2 1"/></rect>
+<text x="834" y="159" class="mono ink2" font-size="14" font-weight="600">81%</text>
+<text x="288" y="180" text-anchor="end" class="sans mut" font-size="11.5">refinery</text>
+<rect x="300" y="170" width="520" height="12" rx="6" fill="var(--track)"/>
+<rect x="300" y="170" width="0" height="12" rx="6" fill="var(--acc)"><animate attributeName="width" from="0" to="512.7" dur="1s" begin="0.45s" fill="freeze" calcMode="spline" keySplines=".2 .7 .2 1"/></rect>
+<text x="834" y="181" class="mono acc" font-size="14" font-weight="600">98.6%</text>
+<text x="44" y="236" class="sans ink" font-size="15" font-weight="600">Maths, Llama only</text>
+<text x="288" y="230" text-anchor="end" class="sans mut" font-size="11.5">one model</text>
+<rect x="300" y="220" width="520" height="12" rx="6" fill="var(--track)"/>
+<rect x="300" y="220" width="0" height="12" rx="6" fill="var(--mut)"><animate attributeName="width" from="0" to="383.2" dur="1s" begin="0.70s" fill="freeze" calcMode="spline" keySplines=".2 .7 .2 1"/></rect>
+<text x="834" y="231" class="mono ink2" font-size="14" font-weight="600">73.7%</text>
+<text x="288" y="252" text-anchor="end" class="sans mut" font-size="11.5">refinery</text>
+<rect x="300" y="242" width="520" height="12" rx="6" fill="var(--track)"/>
+<rect x="300" y="242" width="0" height="12" rx="6" fill="var(--acc)"><animate attributeName="width" from="0" to="513.2" dur="1s" begin="0.70s" fill="freeze" calcMode="spline" keySplines=".2 .7 .2 1"/></rect>
+<text x="834" y="253" class="mono acc" font-size="14" font-weight="600">98.7%</text>
+<text x="44" y="282" class="sans mut" font-size="12">Checked afterwards against official answers the nodes never saw.</text>
+</svg>

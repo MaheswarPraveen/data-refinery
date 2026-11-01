@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 430" width="960" height="430" role="img" aria-label="Architecture: the coordinator sends an item to five nodes, collects signed answers, logs every vote, asks the judge for a hint on splits, and adds agreed items to the dataset.">
+<style>
+  svg { --bg:#fbfaf7; --ink:#141413; --ink2:#4d4c48; --mut:#8a8880; --rule:#e2e0d8; --track:#ebe9e2;
+        --acc:#6d4fd8; --acc2:#b3a2f0; --good:#1d7a3e; --bad:#c0392b; --warn:#d97b1a; }
+  @media (prefers-color-scheme: dark) {
+    svg { --bg:#161b22; --ink:#ecebe6; --ink2:#b8b6ae; --mut:#8b949e; --rule:#30363d; --track:#21262d;
+          --acc:#9a82f2; --acc2:#5b43bf; --good:#5cbf7c; --bad:#e57368; --warn:#e8973f; } }
+  .card { fill: var(--bg); stroke: var(--rule); }
+  .sans { font-family: -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; }
+  .mono { font-family: ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', monospace; }
+  .ink { fill: var(--ink); } .ink2 { fill: var(--ink2); } .mut { fill: var(--mut); } .acc { fill: var(--acc); }
+  .good { fill: var(--good); } .bad { fill: var(--bad); } .warn { fill: var(--warn); }
+  .cap { font-size: 11px; letter-spacing: .12em; fill: var(--mut); }
+</style>
+<rect class="card" x="1" y="1" width="958" height="428" rx="14"/>
+<text x="34" y="40" class="sans cap">ARCHITECTURE · ONE ITEM, START TO FINISH</text>
+<path d="M380,205 C310,205 330,104 270,104" fill="none" stroke="var(--rule)" stroke-width="1.6"/>
+<rect x="34" y="80" width="236" height="48" rx="9" fill="var(--bg)" stroke="var(--rule)" stroke-width="1.4"/>
+<circle cx="58" cy="104" r="6" class="acc"/>
+<text x="74" y="100" class="sans ink" font-size="14" font-weight="600">Node 1</text>
+<text x="74" y="117" class="sans mut" font-size="11.5">Llama 3.2 3B<animate attributeName="opacity" values="1;1;0;0;1" keyTimes="0;.48;.5;.98;1" dur="16s" repeatCount="indefinite"/></text>
+<text x="74" y="117" class="sans mut" font-size="11.5">Phi-4 mini<animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;.48;.5;.98;1" dur="16s" repeatCount="indefinite"/></text>
+<text x="256" y="109" text-anchor="end" class="mono acc" font-size="15" font-weight="600" opacity="0">42<animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;.18;.2;.9;1" dur="8s" repeatCount="indefinite"/></text>
+<path d="M380,210 C310,210 330,170 270,170" fill="none" stroke="var(--rule)" stroke-width="1.6"/>
+<rect x="34" y="146" width="236" height="48" rx="9" fill="var(--bg)" stroke="var(--rule)" stroke-width="1.4"/>
+<circle cx="58" cy="170" r="6" class="acc"/>
+<text x="74" y="166" class="sans ink" font-size="14" font-weight="600">Node 2</text>
+<text x="74" y="183" class="sans mut" font-size="11.5">Gemma 4 E4B<animate attributeName="opacity" values="1;1;0;0;1" keyTimes="0;.48;.5;.98;1" dur="16s" repeatCount="indefinite"/></text>
+<text x="74" y="183" class="sans mut" font-size="11.5">Granite 3.3 2B<animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;.48;.5;.98;1" dur="16s" repeatCount="indefinite"/></text>
+<text x="256" y="175" text-anchor="end" class="mono acc" font-size="15" font-weight="600" opacity="0">42<animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;.18;.2;.9;1" dur="8s" repeatCount="indefinite"/></text>
+<path d="M380,215 C310,215 330,236 270,236" fill="none" stroke="var(--rule)" stroke-width="1.6"/>
+<rect x="34" y="212" width="236" height="48" rx="9" fill="var(--bg)" stroke="var(--rule)" stroke-width="1.4"/>
+<circle cx="58" cy="236" r="6" class="acc"/>
+<text x="74" y="232" class="sans ink" font-size="14" font-weight="600">Node 3</text>
+<text x="74" y="249" class="sans mut" font-size="11.5">Ministral 3 3B<animate attributeName="opacity" values="1;1;0;0;1" keyTimes="0;.48;.5;.98;1" dur="16s" repeatCount="indefinite"/></text>
+<text x="74" y="249" class="sans mut" font-size="11.5">Nemotron 3 Nano 4B<animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;.48;.5;.98;1" dur="16s" repeatCount="indefinite"/></text>
+<text x="256" y="241" text-anchor="end" class="mono acc" font-size="15" font-weight="600" opacity="0">42<animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;.18;.2;.9;1" dur="8s" repeatCount="indefinite"/></text>
+<path d="M380,220 C310,220 330,302 270,302" fill="none" stroke="var(--rule)" stroke-width="1.6"/>
+<rect x="34" y="278" width="236" height="48" rx="9" fill="var(--bg)" stroke="var(--rule)" stroke-width="1.4"/>
+<circle cx="58" cy="302" r="6" class="acc"/>
+<text x="74" y="298" class="sans ink" font-size="14" font-weight="600">Node 4</text>
+<text x="74" y="315" class="sans mut" font-size="11.5">SmolLM3 3B<animate attributeName="opacity" values="1;1;0;0;1" keyTimes="0;.48;.5;.98;1" dur="16s" repeatCount="indefinite"/></text>
+<text x="74" y="315" class="sans mut" font-size="11.5">Apriel 5B<animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;.48;.5;.98;1" dur="16s" repeatCount="indefinite"/></text>
+<text x="256" y="307" text-anchor="end" class="mono acc" font-size="15" font-weight="600" opacity="0">42<animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;.18;.2;.9;1" dur="8s" repeatCount="indefinite"/></text>
+<path d="M380,225 C310,225 330,368 270,368" fill="none" stroke="var(--rule)" stroke-width="1.6"/>
+<rect x="34" y="344" width="236" height="48" rx="9" fill="var(--bg)" stroke="var(--rule)" stroke-width="1.4"/>
+<circle cx="58" cy="368" r="6" class="acc"/>
+<text x="74" y="364" class="sans ink" font-size="14" font-weight="600">Node 5</text>
+<text x="74" y="381" class="sans mut" font-size="11.5">GLM-Edge 4B<animate attributeName="opacity" values="1;1;0;0;1" keyTimes="0;.48;.5;.98;1" dur="16s" repeatCount="indefinite"/></text>
+<text x="74" y="381" class="sans mut" font-size="11.5">Qwen 3.5 4B<animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;.48;.5;.98;1" dur="16s" repeatCount="indefinite"/></text>
+<text x="256" y="373" text-anchor="end" class="mono mut" font-size="15" font-weight="600" opacity="0">40<animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;.18;.2;.9;1" dur="8s" repeatCount="indefinite"/></text>
+<text x="34" y="66" class="sans cap">VOLUNTEER NODES</text>
+<rect x="380" y="153" width="200" height="124" rx="12" fill="var(--bg)" stroke="var(--ink)" stroke-width="1.8"/>
+<text x="480" y="181" text-anchor="middle" class="sans ink" font-size="15" font-weight="600">Coordinator</text>
+<text x="480" y="199" text-anchor="middle" class="sans mut" font-size="11.5">Cloudflare Worker</text>
+<rect x="408" y="215" width="24" height="24" rx="5" fill="var(--acc)" opacity="0"><animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.30;0.32;.92;1" dur="8s" repeatCount="indefinite"/></rect>
+<rect x="437" y="215" width="24" height="24" rx="5" fill="var(--acc)" opacity="0"><animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.32;0.34;.92;1" dur="8s" repeatCount="indefinite"/></rect>
+<rect x="466" y="215" width="24" height="24" rx="5" fill="var(--acc)" opacity="0"><animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.34;0.36;.92;1" dur="8s" repeatCount="indefinite"/></rect>
+<rect x="495" y="215" width="24" height="24" rx="5" fill="var(--acc)" opacity="0"><animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.36;0.38;.92;1" dur="8s" repeatCount="indefinite"/></rect>
+<rect x="524" y="215" width="24" height="24" rx="5" fill="var(--mut)" opacity="0"><animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.38;0.40;.92;1" dur="8s" repeatCount="indefinite"/></rect>
+<text x="480" y="261" text-anchor="middle" class="sans acc" font-size="12" font-weight="600" opacity="0">4 of 5 agree<animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;.42;.44;.92;1" dur="8s" repeatCount="indefinite"/></text>
+<path id="aw-l" d="M480,277 L480,323" stroke="var(--rule)" stroke-width="1.6"/>
+<rect x="405" y="325" width="150" height="54" rx="9" fill="var(--bg)" stroke="var(--rule)" stroke-width="1.4"/>
+<text x="480" y="348" text-anchor="middle" class="sans ink" font-size="13.5" font-weight="600">Vote ledger</text>
+<text x="480" y="366" text-anchor="middle" class="sans mut" font-size="11">every vote, right or wrong</text>
+<path d="M580,185 C650,185 650,110 720,110" fill="none" stroke="var(--rule)" stroke-width="1.6" stroke-dasharray="5 5"/>
+<path d="M580,245 C650,245 650,320 720,320" fill="none" stroke="var(--rule)" stroke-width="1.6"/>
+<text x="720" y="66" class="sans cap">JUDGE</text>
+<rect x="720" y="76" width="210" height="70" rx="11" fill="var(--bg)" stroke="var(--warn)" stroke-width="1.5"/>
+<text x="738" y="104" class="sans ink" font-size="14" font-weight="600">Meta Muse Glimmer 30B</text>
+<text x="738" y="124" class="sans mut" font-size="11.5">hints on 3-of-5 splits, never answers</text>
+<text x="720" y="276" class="sans cap">OUTPUT</text>
+<rect x="720" y="286" width="210" height="70" rx="11" fill="var(--bg)" stroke="var(--good)" stroke-width="1.5"/>
+<text x="738" y="314" class="sans ink" font-size="14" font-weight="600">Refined dataset</text>
+<text x="738" y="334" class="sans mut" font-size="11.5">answer + full vote record</text>
+<circle r="5.5" fill="var(--acc)" opacity="0"><animateMotion dur="8s" repeatCount="indefinite" keyPoints="0;0;1;1" keyTimes="0;.02;.14;1" calcMode="linear" path="M380,205 C310,205 330,104 270,104"/><animate attributeName="opacity" values="0;1;1;0;0" keyTimes="0;.02;.13;.14;1" dur="8s" repeatCount="indefinite"/></circle>
+<circle r="5.5" fill="var(--acc)" opacity="0"><animateMotion dur="8s" repeatCount="indefinite" keyPoints="1;1;0;0" keyTimes="0;.2;.3;1" calcMode="linear" path="M380,205 C310,205 330,104 270,104"/><animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;.19;.2;.29;.3;1" dur="8s" repeatCount="indefinite"/></circle>
+<circle r="5.5" fill="var(--acc)" opacity="0"><animateMotion dur="8s" repeatCount="indefinite" keyPoints="0;0;1;1" keyTimes="0;.02;.14;1" calcMode="linear" path="M380,210 C310,210 330,170 270,170"/><animate attributeName="opacity" values="0;1;1;0;0" keyTimes="0;.02;.13;.14;1" dur="8s" repeatCount="indefinite"/></circle>
+<circle r="5.5" fill="var(--acc)" opacity="0"><animateMotion dur="8s" repeatCount="indefinite" keyPoints="1;1;0;0" keyTimes="0;.2;.3;1" calcMode="linear" path="M380,210 C310,210 330,170 270,170"/><animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;.19;.2;.29;.3;1" dur="8s" repeatCount="indefinite"/></circle>
+<circle r="5.5" fill="var(--acc)" opacity="0"><animateMotion dur="8s" repeatCount="indefinite" keyPoints="0;0;1;1" keyTimes="0;.02;.14;1" calcMode="linear" path="M380,215 C310,215 330,236 270,236"/><animate attributeName="opacity" values="0;1;1;0;0" keyTimes="0;.02;.13;.14;1" dur="8s" repeatCount="indefinite"/></circle>
+<circle r="5.5" fill="var(--acc)" opacity="0"><animateMotion dur="8s" repeatCount="indefinite" keyPoints="1;1;0;0" keyTimes="0;.2;.3;1" calcMode="linear" path="M380,215 C310,215 330,236 270,236"/><animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;.19;.2;.29;.3;1" dur="8s" repeatCount="indefinite"/></circle>
+<circle r="5.5" fill="var(--acc)" opacity="0"><animateMotion dur="8s" repeatCount="indefinite" keyPoints="0;0;1;1" keyTimes="0;.02;.14;1" calcMode="linear" path="M380,220 C310,220 330,302 270,302"/><animate attributeName="opacity" values="0;1;1;0;0" keyTimes="0;.02;.13;.14;1" dur="8s" repeatCount="indefinite"/></circle>
+<circle r="5.5" fill="var(--acc)" opacity="0"><animateMotion dur="8s" repeatCount="indefinite" keyPoints="1;1;0;0" keyTimes="0;.2;.3;1" calcMode="linear" path="M380,220 C310,220 330,302 270,302"/><animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;.19;.2;.29;.3;1" dur="8s" repeatCount="indefinite"/></circle>
+<circle r="5.5" fill="var(--acc)" opacity="0"><animateMotion dur="8s" repeatCount="indefinite" keyPoints="0;0;1;1" keyTimes="0;.02;.14;1" calcMode="linear" path="M380,225 C310,225 330,368 270,368"/><animate attributeName="opacity" values="0;1;1;0;0" keyTimes="0;.02;.13;.14;1" dur="8s" repeatCount="indefinite"/></circle>
+<circle r="5.5" fill="var(--mut)" opacity="0"><animateMotion dur="8s" repeatCount="indefinite" keyPoints="1;1;0;0" keyTimes="0;.2;.3;1" calcMode="linear" path="M380,225 C310,225 330,368 270,368"/><animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;.19;.2;.29;.3;1" dur="8s" repeatCount="indefinite"/></circle>
+<circle r="5" fill="var(--bad)" opacity="0"><animateMotion dur="8s" repeatCount="indefinite" keyPoints="0;0;1;1" keyTimes="0;.44;.52;1" calcMode="linear" path="M480,277 L480,323"/><animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;.43;.44;.51;.52;1" dur="8s" repeatCount="indefinite"/></circle>
+<circle r="6" fill="var(--warn)" opacity="0"><animateMotion dur="8s" repeatCount="indefinite" keyPoints="0;0;1;0;0" keyTimes="0;.52;.62;.72;1" calcMode="linear" path="M580,185 C650,185 650,110 720,110"/><animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;.51;.52;.71;.72;1" dur="8s" repeatCount="indefinite"/></circle>
+<circle r="7" fill="var(--good)" opacity="0"><animateMotion dur="8s" repeatCount="indefinite" keyPoints="0;0;1;1" keyTimes="0;.76;.88;1" calcMode="linear" path="M580,245 C650,245 650,320 720,320"/><animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;.75;.76;.88;.89;1" dur="8s" repeatCount="indefinite"/></circle>
+<rect x="34" y="394" width="104" height="24" rx="12" fill="var(--acc)" opacity=".12"><animate attributeName="opacity" values=".12;.12;1;1;.12;.12" keyTimes="0;0.00;0.01;0.16;0.17;1" dur="8s" repeatCount="indefinite"/></rect>
+<text x="86" y="410" text-anchor="middle" class="sans ink" font-size="12" font-weight="600">1 Assign</text>
+<rect x="146" y="394" width="104" height="24" rx="12" fill="var(--acc)" opacity=".12"><animate attributeName="opacity" values=".12;.12;1;1;.12;.12" keyTimes="0;0.16;0.17;0.32;0.33;1" dur="8s" repeatCount="indefinite"/></rect>
+<text x="198" y="410" text-anchor="middle" class="sans ink" font-size="12" font-weight="600">2 Vote</text>
+<rect x="258" y="394" width="104" height="24" rx="12" fill="var(--acc)" opacity=".12"><animate attributeName="opacity" values=".12;.12;1;1;.12;.12" keyTimes="0;0.32;0.33;0.52;0.53;1" dur="8s" repeatCount="indefinite"/></rect>
+<text x="310" y="410" text-anchor="middle" class="sans ink" font-size="12" font-weight="600">3 Count</text>
+<rect x="370" y="394" width="104" height="24" rx="12" fill="var(--acc)" opacity=".12"><animate attributeName="opacity" values=".12;.12;1;1;.12;.12" keyTimes="0;0.52;0.53;0.74;0.75;1" dur="8s" repeatCount="indefinite"/></rect>
+<text x="422" y="410" text-anchor="middle" class="sans ink" font-size="12" font-weight="600">4 Hint</text>
+<rect x="482" y="394" width="104" height="24" rx="12" fill="var(--acc)" opacity=".12"><animate attributeName="opacity" values=".12;.12;1;1;.12;.12" keyTimes="0;0.74;0.75;0.96;0.97;1" dur="8s" repeatCount="indefinite"/></rect>
+<text x="534" y="410" text-anchor="middle" class="sans ink" font-size="12" font-weight="600">5 Accept</text>
+</svg>
