@@ -12,6 +12,8 @@
   <a href="https://data-refinery.primemax.workers.dev/future">Decentralisation</a>
 </p>
 
+> **At a glance** · **Track:** Push the Frontier · **Built with Meta open-weight models:** Llama 3.2 / 3.1 voters, Muse Glimmer 30B judge, Llama 3.3 70B agent · A **decentralised** consensus network for **AI training data quality** · **Agentic** data search · **Results:** wrong labels 35.5% → 1.3%; a 1B model fine-tuned on 2,183 refined examples gained +32 points on six unseen datasets.
+
 <br>
 
 <p align="center">
