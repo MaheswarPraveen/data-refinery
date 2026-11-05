@@ -33,7 +33,7 @@ sleep 5
 MODELS_ALL="llama3.2:1b llama3.2:3b llama3.1:8b"
 NODE_MODELS=("" "" "" "" "")
 case "$TASKS" in *agent*)
-  NODE_MODELS=("llama3.2:3b" "llama3.1:8b" "qwen3.5:4b" "phi4-mini" "gemma4:e4b")   # Meta, Meta, Alibaba, Microsoft, Google
+  NODE_MODELS=("llama3.2:3b" "ministral-3:3b" "qwen3.5:4b" "phi4-mini" "gemma4:e4b")   # Meta, Mistral, Alibaba, Microsoft, Google
   MODELS_ALL="${NODE_MODELS[*]}" ;;
 esac
 echo "== 3/4 models (first time ~3-5 min)"
