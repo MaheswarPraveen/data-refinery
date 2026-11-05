@@ -9,6 +9,7 @@ import futurePage from "./future.html";
 import hardPage from "./hard.html";
 import dataPage from "./data.html";
 import trainingPage from "./training.html";
+import agentTools from "./agent_tools.json";
 import livePage from "./live.html";
 import { agentStep } from "./agent.js";
 import { pickWorking } from "./steps.js";
@@ -94,6 +95,7 @@ export default {
       if (req.method === "GET" && pathname === "/api/ft/news") return await ftNews(env, new URL(req.url).searchParams.get("all") === "1");
       if (req.method === "POST" && pathname === "/api/ft/telemetry") return await ftTelemetryPost(req, env);
       if (req.method === "GET" && pathname === "/api/ft/telemetry") return await ftTelemetryGet(env);
+      if (req.method === "GET" && pathname === "/agent_tools.json") return json(agentTools);
       if (req.method === "GET" && pathname === "/live") return new Response(livePage, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-cache" } });
       if (req.method === "GET" && pathname === "/training") return new Response(trainingPage, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-cache" } });
       if (req.method === "GET" && pathname === "/api/ft/pairs") return await ftPairs(env);
@@ -163,6 +165,21 @@ export function normalizeNews(raw) {
   const parts = String(raw ?? "").toLowerCase().split("|").map((s) => s.trim().replace(/[\s-]+/g, "_"));
   if (parts.length !== NEWS_FIELDS.length || parts.some((p, i) => !NEWS_FIELDS[i].includes(p))) return null;
   return parts.join("|");
+}
+
+// Agent answers are one tool call {"tool", "args"}. Canonical form: known tool name, args sorted, string values
+// trimmed and lower-cased, so "Close Gmail" and "close gmail" count as the same vote. Unknown tools are rejected.
+const AGENT_TOOLS = new Set(agentTools.tools.map((t) => t.name));
+export function normalizeAgent(raw) {
+  let c; try { c = typeof raw === "string" ? JSON.parse(raw) : raw; } catch { return null; }
+  if (!c || !AGENT_TOOLS.has(c.tool)) return null;
+  const args = c.args && typeof c.args === "object" ? c.args : {};
+  const clean = {};
+  for (const k of Object.keys(args).sort()) {
+    const v = args[k];
+    clean[k] = typeof v === "string" ? v.trim().toLowerCase() : v;
+  }
+  return JSON.stringify({ tool: c.tool, args: clean });
 }
 
 // Fastest believable time for a model: ~250 ms per billion parameters. Faster = suspicious.
@@ -299,11 +316,11 @@ async function submit(req, env, ctx) {
 
   const item = await env.DB.prepare("SELECT id, question, gold, is_honeypot, task, need, hint, hint_model, split_fields, final_answer FROM items WHERE id = ?").bind(a.item_id).first();
   // A vote must be a well-formed answer for its task; anything else is a broken node, not an opinion.
-  const kind = item.task === "news" ? "news" : item.task === "trade" ? "trade" : item.task === "gpqa" ? "letter" : "number";
-  const norm = kind === "news" ? normalizeNews(answer) : kind === "trade" ? normalizeTrade(answer)
+  const kind = item.task === "news" ? "news" : item.task === "trade" ? "trade" : item.task === "gpqa" ? "letter" : item.task === "agent" ? "agent" : "number";
+  const norm = kind === "agent" ? normalizeAgent(answer) : kind === "news" ? normalizeNews(answer) : kind === "trade" ? normalizeTrade(answer)
     : kind === "letter" ? (/^[A-D]$/i.test(String(answer).trim()) ? String(answer).trim().toUpperCase() : null) : normalize(answer);
   if (norm === null || (kind === "number" && !/^-?\d+(\.\d+)?$/.test(norm)))
-    return json({ error: { news: "answer must be sentiment|category", trade: "answer must be BUY, SELL or SKIP", letter: "answer must be A, B, C or D", number: "answer must be a number" }[kind] }, 422);
+    return json({ error: { news: "answer must be sentiment|category", trade: "answer must be BUY, SELL or SKIP", letter: "answer must be A, B, C or D", agent: "answer must be one known tool call", number: "answer must be a number" }[kind] }, 422);
   const t = Date.now();
   const serverMs = t - a.assigned_at; // measured here, so a node can't lie about how long it took
   const tooFast = serverMs < minMs(b.model) ? 1 : 0;
@@ -601,6 +618,16 @@ ${item.question}
       `what a careful trader should weigh: is this genuinely new, is it material to this company, is it confirmed ` +
       `or speculative, and could it already be known to the market.`;
     leaks = ["buy", "sell", "skip", "long", "short", "bullish", "bearish", "upside", "downside"];
+  } else if (item.task === "agent") {
+    prompt =
+      `A user said to an AI assistant that controls their Android phone:
+"${item.question}"
+
+` +
+      `Assistants chose different tool calls. Do NOT name a tool and do not write any tool call. In 1-3 sentences, ` +
+      `point out what the user actually wants and any detail that is easy to miss (which app, which setting, ` +
+      `whether a question back to the user is needed first).`;
+    leaks = [...AGENT_TOOLS];
   } else if (isNews) {
     const names = ["sentiment", "category"];
     const meta = item.meta || {};

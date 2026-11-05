@@ -90,6 +90,43 @@ def parse_letter(text):
     return hits[-1].upper() if hits else None
 
 
+# ---- agent task: pick the tool call a phone assistant should make (tool list served by the coordinator) ----
+AGENT_HARNESSES = {
+    "direct": "Pick the single best tool call for the user's request.",
+    "think_first": "Briefly think about what the user wants, then pick the single best tool call.",
+    "careful": "Pick the tool call carefully: check the tool name and every argument against the tool list.",
+    "safe": "Pick the tool call a careful assistant would make. If the request is unclear, use ask_user; if no tool is needed, use say.",
+    "helper": "You are a helpful phone assistant. Decide which one tool call to make next.",
+}
+AGENT_FORMAT = 'End with one final line exactly like this: CALL: {"tool": "<name>", "args": {...}}'
+AGENT_TOOLS_TEXT = None
+
+
+def agent_tools_text(url):
+    """The tool list, fetched once from the coordinator."""
+    global AGENT_TOOLS_TEXT
+    if AGENT_TOOLS_TEXT is None:
+        req = urllib.request.Request(f"{url}/agent_tools.json", headers={"user-agent": "data-refinery-node/1.0"})
+        tools = json.loads(urllib.request.urlopen(req, timeout=30).read())["tools"]
+        AGENT_TOOLS_TEXT = "\n".join(
+            f"- {t['name']}({', '.join(f'{k}: {v}' for k, v in t['args'].items())}): {t['desc']}" for t in tools)
+    return AGENT_TOOLS_TEXT
+
+
+def parse_agent(text):
+    """The tool call from the last CALL: line, as compact JSON, or None."""
+    for line in reversed(text.splitlines()):
+        if "CALL" in line.upper() and "{" in line:
+            raw = line[line.index("{"):line.rindex("}") + 1]
+            try:
+                c = json.loads(raw)
+            except ValueError:
+                continue
+            if isinstance(c, dict) and isinstance(c.get("tool"), str):
+                return json.dumps({"tool": c["tool"], "args": c.get("args") or {}}, sort_keys=True)
+    return None
+
+
 def parse_trade(text):
     """BUY / SELL / SKIP from the last DECISION: line, or None."""
     hits = re.findall(r"DECISION\s*:\s*\**\s*(BUY|SELL|SKIP)", text, re.I)
@@ -169,9 +206,14 @@ def solve(ollama, model, harness, job):
     """One vote. The job says the task; a hint is present only in the re-check round after a disagreement."""
     news = job.get("task") == "news"
     trade = job.get("task") == "trade"
+    agent = job.get("task") == "agent"
     if job.get("task") == "gpqa":
         system = f"{GPQA_HARNESSES[harness]} {GPQA_FORMAT}"
         user = job["question"]
+    elif agent:
+        system = (f"You control a rooted Android phone through these tools:\n{agent_tools_text(job['_url'])}\n\n"
+                  f"{AGENT_HARNESSES[harness]} {AGENT_FORMAT}")
+        user = f"User: {job['question']}"
     elif trade:
         ctx = job.get("context") or {}
         system = f"{NEWS_HARNESSES[harness]}\n{TRADE_GUIDE}\n{TRADE_FORMAT}"
@@ -210,7 +252,8 @@ def solve(ollama, model, harness, job):
         res = post(f"{ollama}/api/chat", body, timeout=tmo)
     # Some models still inline their thinking; drop it so only the worked answer is kept and parsed.
     text = re.sub(r"<think>.*?</think>", "", res["message"]["content"], flags=re.S).strip()
-    answer = parse_letter(text) if job.get("task") == "gpqa" else parse_trade(text) if trade else parse_news(text) if news else parse(text)
+    answer = (parse_letter(text) if job.get("task") == "gpqa" else parse_agent(text) if agent else parse_trade(text) if trade
+              else parse_news(text) if news else parse(text))
     if answer is None and job.get("task") == "gpqa":
         # Reasoned but never wrote the ANSWER line (rambled or got cut off): ask once for just the letter.
         follow = dict(body, messages=body["messages"] + [{"role": "assistant", "content": text[-3000:]},
@@ -268,7 +311,9 @@ def main():
             time.sleep(job.get("retry_after", 10))
             continue
 
-        harnesses = NEWS_HARNESSES if job.get("task") in ("news", "trade") else GPQA_HARNESSES if job.get("task") == "gpqa" else HARNESSES
+        job["_url"] = url
+        harnesses = (NEWS_HARNESSES if job.get("task") in ("news", "trade") else GPQA_HARNESSES if job.get("task") == "gpqa"
+                     else AGENT_HARNESSES if job.get("task") == "agent" else HARNESSES)
         model, harness = pick_pair(models, weights, job["used_pairs"], harnesses, args.diverse)
         t = time.time()
         try:
