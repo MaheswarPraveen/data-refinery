@@ -119,7 +119,7 @@ export default {
       if (req.method === "GET" && pathname === "/kaggle.sh") return new Response(kaggleScript, { headers: { "content-type": "text/x-shellscript; charset=utf-8", "cache-control": "no-cache" } });
       if (req.method === "GET" && pathname === "/node.py") return new Response(nodeScript, { headers: { "content-type": "text/x-python; charset=utf-8", "cache-control": "no-cache" } });
       if (req.method === "GET" && pathname === "/") return new Response(homePage, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-cache" } });
-      if (req.method === "GET" && (pathname === "/gsm8k" || pathname === "/gsm8k-mixed" || pathname === "/gpqa" || pathname === "/audit")) return new Response(dashboard, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-cache" } });
+      if (req.method === "GET" && (pathname === "/gsm8k" || pathname === "/gsm8k-mixed" || pathname === "/gpqa" || pathname === "/audit" || pathname === "/agent")) return new Response(dashboard, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-cache" } });
       return json({ error: "not found" }, 404);
     } catch (err) {
       const msg = String(err?.message || err);
@@ -766,7 +766,7 @@ async function stats(env, wanted) {
     ),
     // Per run when ?task= is given (a run must not show another run's models), else the global totals.
     wanted
-      ? env.DB.prepare("SELECT v.model, v.harness, COUNT(*) AS votes, SUM(CASE WHEN v.answer = i.gold THEN 1 ELSE 0 END) AS correct FROM votes v JOIN items i ON i.id = v.item_id WHERE i.task = ? GROUP BY 1, 2 ORDER BY 1, 2").bind(wanted)
+      ? env.DB.prepare("SELECT v.model, v.harness, COUNT(*) AS votes, SUM(CASE WHEN v.answer = COALESCE(NULLIF(i.gold, ''), CASE WHEN i.status = 'accepted' THEN i.final_answer END) THEN 1 ELSE 0 END) AS correct FROM votes v JOIN items i ON i.id = v.item_id WHERE i.task = ? GROUP BY 1, 2 ORDER BY 1, 2").bind(wanted)
       : env.DB.prepare("SELECT model, harness, votes, correct FROM pair_stats ORDER BY model, harness"),
     // Recent activity shows WHO worked, never WHAT they answered: nodes must not see each other's answers.
     env.DB.prepare(

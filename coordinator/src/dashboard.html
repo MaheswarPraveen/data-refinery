@@ -404,8 +404,8 @@
 // /gsm8k = first run (small Llamas); /gsm8k-mixed = Llama + Qwen + Granite run with the hint judge.
 const DEBUG = new URLSearchParams(location.search).has("debug");
 if (DEBUG) addEventListener("DOMContentLoaded", () => { const st = document.createElement("style"); st.textContent = ".why{display:block!important}"; document.head.append(st); document.querySelectorAll("details").forEach((d) => d.open = true); });
-const TASK = { "/gsm8k-mixed": "gsm8k_mixed", "/gpqa": "gpqa", "/audit": "audit" }[location.pathname] || "gsm8k";
-const MIXED = TASK === "gsm8k_mixed" || TASK === "gpqa" || TASK === "audit";
+const TASK = { "/gsm8k-mixed": "gsm8k_mixed", "/gpqa": "gpqa", "/audit": "audit", "/agent": "agent" }[location.pathname] || "gsm8k";
+const MIXED = TASK === "gsm8k_mixed" || TASK === "gpqa" || TASK === "audit" || TASK === "agent";
 if (TASK === "audit") addEventListener("DOMContentLoaded", async () => {
   // The primary example: a noisy labelled dataset in, a refined one out, told in three steps.
   document.querySelector("h1").textContent = "Error Detection Test";
@@ -527,13 +527,23 @@ if (TASK === "gpqa") addEventListener("DOMContentLoaded", async () => {
   document.querySelector("h1").textContent = "GPQA-Diamond · PhD-level science";
   document.querySelector("header .sub").textContent = "PhD-level science questions (A–D). Paused early: too hard for small models.";
 });
+if (TASK === "agent") addEventListener("DOMContentLoaded", () => {
+  document.querySelector("h1").textContent = "Agent run · phone tool calls";
+  document.querySelector("header .sub").textContent = "Phone requests (\"close gmail\", \"my phone is hot\") voted on by 5 model families. 4–5 of 5 picking the same tool call: kept as training data.";
+});
 if (TASK === "gsm8k_mixed") addEventListener("DOMContentLoaded", () => {
   const jw = [...document.querySelectorAll("h2")].find((h) => h.textContent === "Judge");
   if (jw) jw.nextElementSibling.textContent = "Steps in only when 3 of 5 agree. It writes one hint, never the answer; 5 fresh votes then need 4+ in agreement.";
   document.querySelector("h1").textContent = "GSM8K run 2 · mixed families";
   document.querySelector("header .sub").textContent = "Maths problems voted on by 10 model families. 4–5 of 5 agree: kept.";
 });
-const HARNESSES = TASK === "gpqa" ? [
+const HARNESSES = TASK === "agent" ? [
+  ["direct", "Direct", "Told: pick the single best tool call.", "Pick the best tool call."],
+  ["think_first", "Think first", "Told: think briefly, then pick the tool call.", "Think, then pick."],
+  ["careful", "Careful", "Told: check tool name and every argument.", "Check every argument."],
+  ["safe", "Safe", "Told: ask the user if unclear; just reply if no tool is needed.", "Ask or reply when unsure."],
+  ["helper", "Helper", "Told: act as a helpful phone assistant.", "Helpful assistant."],
+] : TASK === "gpqa" ? [
   ["direct", "Direct", "Told: answer it, keep the reasoning short.", "Answer directly, short reasoning."],
   ["step_by_step", "Step by step", "Told: think step by step and write out each step.", "Think step by step."],
   ["principles_first", "Principles", "Told: name the principles or formulas first, then use them.", "Name the principles first, then apply."],
@@ -546,7 +556,7 @@ const HARNESSES = TASK === "gpqa" ? [
   ["check_backwards", "Check back", "Told: solve, then check by working backwards from the answer; fix it if the check fails.", "Solve, then verify by working backwards from the answer."],
   ["teacher", "Teacher", "Told: explain it to a student like a teacher, then give the result.", "Explain it like a teacher, then answer."],
 ];
-const MODEL_NAMES = { "llama3.2:1b": "Llama 3.2 1B", "llama3.2:3b": "Llama 3.2 3B", "llama3.1:8b": "Llama 3.1 8B",
+const MODEL_NAMES = { "phi4-mini": "Phi-4 mini", "llama3.2:1b": "Llama 3.2 1B", "llama3.2:3b": "Llama 3.2 3B", "llama3.1:8b": "Llama 3.1 8B",
   "qwen3.5:9b": "Qwen 3.5 9B", "granite4.2:8b": "Granite 4.2 8B",
   "qwen3.5:4b": "Qwen 3.5 4B", "granite4.2:3b": "Granite 4.2 3B", "phi4-mini": "Phi-4 mini", "gemma4:e4b": "Gemma 4 E4B", "ministral-3:3b": "Ministral 3 3B",
   "exaone3.5:2.4b": "EXAONE 3.5 2.4B", "granite3.3:2b": "Granite 3.3 2B", "falcon3:3b": "Falcon 3 3B" };
